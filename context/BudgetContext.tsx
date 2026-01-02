@@ -377,7 +377,12 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             .filter(t => t.type === 'expense' && !budgets.some(b => b.category === t.category))
             .reduce((acc, t) => acc + t.amount, 0);
 
-        return income - deductions - nonBudgetExpenses;
+        // Also subtract debts (money lent out) for the current month
+        const currentMonthDebts = getCurrentMonthTransactions()
+            .filter(t => t.type === 'debt')
+            .reduce((acc, t) => acc + t.amount, 0);
+
+        return income - deductions - nonBudgetExpenses - currentMonthDebts;
     };
 
     const getDebts = () => {
