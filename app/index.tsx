@@ -3,6 +3,7 @@ import TransactionModal from '@/components/TransactionModal';
 import { Colors } from '@/constants/Colors';
 import { Transaction, useBudget } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -77,57 +78,60 @@ export default function Dashboard() {
               setShowTransactionModal(true);
             }}
           >
-            <Text style={styles.addButtonText}>+</Text>
+            <Ionicons name="add" size={32} color="#fff" />
           </TouchableOpacity>
         </View>
 
         {/* Main Card - Safe to Spend */}
         <View style={[styles.mainCard, { backgroundColor: theme.tint }]}>
-          <Text style={styles.mainCardLabel}>Safe to Spend</Text>
+          <View style={styles.mainCardHeader}>
+            <Text style={styles.mainCardLabel}>Safe to Spend</Text>
+            <Text style={styles.mainCardMonth}>{getMonthName()}</Text>
+          </View>
           <Text style={styles.mainCardAmount}>{formatCurrency(safeToSpend)}</Text>
-          <Text style={styles.mainCardSubtext}>After all bills & spending</Text>
+          <View style={styles.mainCardFooter}>
+            <View style={styles.mainCardStat}>
+              <Text style={styles.statLabel}>Income</Text>
+              {/* <Text style={styles.statValue}>{formatCurrency(getCurrentMonthIncome())}</Text> */}
+              <Text style={styles.statValue}>****</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.mainCardStat}>
+              <Text style={styles.statLabel}>Spent</Text>
+              <Text style={styles.statValue}>{formatCurrency(currentSpent)}</Text>
+            </View>
+          </View>
         </View>
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
-          <Link href="/budgets" asChild>
-            <TouchableOpacity style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <Text style={styles.actionIcon}>📊</Text>
+          <Link href="/budgets" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '15', borderColor: theme.border }]}>
+            <TouchableOpacity>
+              <View style={styles.actionIconContainer}>
+                <Ionicons name="pie-chart" size={24} color={theme.tint} />
+              </View>
               <Text style={[styles.actionText, { color: theme.text }]}>Budgets</Text>
             </TouchableOpacity>
           </Link>
-          <Link href="/bills" asChild>
-            <TouchableOpacity style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <Text style={styles.actionIcon}>📋</Text>
+          <Link href="/bills" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '15', borderColor: theme.border }]}>
+            <TouchableOpacity>
+              <View style={styles.actionIconContainer}>
+                <Ionicons name="receipt" size={24} color={theme.tint} />
+              </View>
               <Text style={[styles.actionText, { color: theme.text }]}>Bills</Text>
             </TouchableOpacity>
           </Link>
-          <Link href="/debts" asChild>
-            <TouchableOpacity style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <Text style={styles.actionIcon}>💸</Text>
+          <Link href="/debts" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '15', borderColor: theme.border }]}>
+            <TouchableOpacity>
+              <View style={styles.actionIconContainer}>
+                <Ionicons name="cash" size={24} color={theme.tint} />
+              </View>
               <Text style={[styles.actionText, { color: theme.text }]}>Debts</Text>
             </TouchableOpacity>
           </Link>
         </View>
 
-        {/* This Month Summary */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>{getMonthName()}</Text>
-          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: theme.text }]}>Recurring Bills</Text>
-              <Text style={[styles.summaryValue, { color: theme.danger }]}>
-                -{formatCurrency(recurringBills)}
-              </Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: theme.text }]}>Spent So Far</Text>
-              <Text style={[styles.summaryValue, { color: theme.warning }]}>
-                -{formatCurrency(currentSpent)}
-              </Text>
-            </View>
-          </View>
-        </View>
+        {/* Summary Section removed as it's now in the main card */}
 
         {/* Budget Status */}
         {budgets.length > 0 && (
@@ -322,114 +326,154 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: '300',
-  },
-  mainCard: {
-    borderRadius: 24,
-    padding: 32,
-    alignItems: 'center',
-    marginBottom: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  mainCard: {
+    borderRadius: 28,
+    padding: 24,
+    marginBottom: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  mainCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   mainCardLabel: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 14,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  mainCardMonth: {
     color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 8,
+    fontSize: 13,
+    fontWeight: '600',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   mainCardAmount: {
     color: '#fff',
-    fontSize: 48,
-    fontWeight: 'bold',
+    fontSize: 44,
+    fontWeight: '800',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  mainCardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+    padding: 16,
+  },
+  mainCardStat: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statLabel: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 12,
+    fontWeight: '500',
     marginBottom: 4,
   },
-  mainCardSubtext: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 14,
+  statValue: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  statDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   quickActions: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
+    marginBottom: 40,
+    gap: 8,
   },
-  actionCard: {
+  actionLink: {
     flex: 1,
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
     alignItems: 'center',
+    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
   },
-  actionIcon: {
-    fontSize: 32,
+  actionIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 8,
   },
   actionText: {
     fontSize: 14,
     fontWeight: '600',
+    letterSpacing: -0.2,
+    textAlign: 'center',
   },
   section: {
-    marginBottom: 28,
+    marginBottom: 32,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
+    paddingHorizontal: 4,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
+    letterSpacing: -0.5,
   },
   seeAllText: {
     fontSize: 14,
     fontWeight: '600',
   },
   card: {
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 16,
     borderWidth: 1,
   },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  summaryLabel: {
-    fontSize: 16,
-  },
-  summaryValue: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
   budgetItem: {
-    borderRadius: 12,
+    borderRadius: 20,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   budgetHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   budgetCategory: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   budgetAmount: {
     fontSize: 14,
@@ -464,13 +508,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    borderRadius: 12,
-    marginBottom: 8,
+    borderRadius: 20,
+    marginBottom: 10,
     borderWidth: 1,
   },
   transactionCategory: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     marginBottom: 4,
   },
   transactionDate: {
