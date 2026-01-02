@@ -49,7 +49,7 @@ export default function Dashboard() {
   };
 
   const getBudgetColor = (percentage: number) => {
-    if (percentage >= 90) return theme.danger;
+    if (percentage >= 100) return theme.danger;
     if (percentage >= 80) return theme.warning;
     return theme.success;
   };
@@ -176,7 +176,7 @@ export default function Dashboard() {
                     </Text>
                     {status.percentage >= 80 && (
                       <Text style={[styles.budgetWarning, { color: budgetColor }]}>
-                        {status.percentage >= 90 ? '⛔ Over budget!' : '⚠️ Running low'}
+                        {status.percentage >= 100 ? '⛔ Over budget!' : '⚠️ Running low'}
                       </Text>
                     )}
                   </View>

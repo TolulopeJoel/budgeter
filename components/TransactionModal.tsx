@@ -1,3 +1,4 @@
+import CategoryPicker from '@/components/CategoryPicker';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
 import { Transaction, TransactionType, useBudget } from '@/context/BudgetContext';
@@ -32,7 +33,6 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('');
     const [note, setNote] = useState('');
-    const [showCategoryPicker, setShowCategoryPicker] = useState(false);
 
     const [amountError, setAmountError] = useState(false);
     const [categoryError, setCategoryError] = useState(false);
@@ -191,27 +191,17 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
 
                                 {type === 'expense' && (
                                     <View style={styles.inputGroup}>
-                                        <Text style={[styles.label, { color: theme.text }]}>Category</Text>
-                                        <TouchableOpacity
-                                            style={[
-                                                styles.dropdownTrigger,
-                                                {
-                                                    borderColor: categoryError ? theme.danger : theme.border,
-                                                    backgroundColor: categoryError
-                                                        ? theme.danger + '10'
-                                                        : theme.background,
-                                                },
-                                            ]}
-                                            onPress={() => setShowCategoryPicker(true)}
-                                        >
-                                            <Text style={[
-                                                styles.dropdownText,
-                                                { color: category ? theme.text : theme.icon }
-                                            ]}>
-                                                {category || 'Odogwu 😏'}
-                                            </Text>
-                                            <IconSymbol name="chevron.down" size={20} color={theme.icon} />
-                                        </TouchableOpacity>
+                                        <CategoryPicker
+                                            label="Category"
+                                            value={category}
+                                            onSelect={(c) => {
+                                                setCategory(c);
+                                                setCategoryError(false);
+                                            }}
+                                            categories={categories}
+                                            error={categoryError}
+                                            placeholder="Odogwu 😏"
+                                        />
                                     </View>
                                 )}
 
@@ -252,50 +242,7 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                 </View>
             </TouchableWithoutFeedback>
 
-            {/* Category Picker Modal */}
-            <Modal visible={showCategoryPicker} transparent animationType="slide">
-                <TouchableWithoutFeedback onPress={() => setShowCategoryPicker(false)}>
-                    <View style={styles.innerModalOverlay}>
-                        <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
-                            <View style={[styles.innerModalContent, { backgroundColor: theme.card }]}>
-                                <View style={styles.innerModalHeader}>
-                                    <Text style={[styles.innerModalTitle, { color: theme.text }]}>Select Category</Text>
-                                    <TouchableOpacity onPress={() => setShowCategoryPicker(false)}>
-                                        <IconSymbol name="xmark.circle.fill" size={24} color={theme.icon} />
-                                    </TouchableOpacity>
-                                </View>
-                                <ScrollView style={styles.categoryPickerList} showsVerticalScrollIndicator={false}>
-                                    {categories.map((c) => (
-                                        <TouchableOpacity
-                                            key={c}
-                                            style={[
-                                                styles.categoryOption,
-                                                category === c && { backgroundColor: theme.tint + '15' }
-                                            ]}
-                                            onPress={() => {
-                                                setCategory(c);
-                                                setCategoryError(false);
-                                                setShowCategoryPicker(false);
-                                            }}
-                                        >
-                                            <Text style={[
-                                                styles.categoryOptionText,
-                                                { color: theme.text },
-                                                category === c && { color: theme.tint, fontWeight: 'bold' }
-                                            ]}>
-                                                {c}
-                                            </Text>
-                                            {category === c && (
-                                                <IconSymbol name="checkmark" size={20} color={theme.tint} />
-                                            )}
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-                            </View>
-                        </TouchableWithoutFeedback>
-                    </View>
-                </TouchableWithoutFeedback>
-            </Modal>
+
         </Modal>
     );
 }
@@ -384,27 +331,6 @@ const styles = StyleSheet.create({
     dropdownText: {
         fontSize: 16,
     },
-    categoryPickerList: {
-        maxHeight: 400,
-    },
-    innerModalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    categoryOption: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 12,
-        borderRadius: 12,
-        marginBottom: 4,
-    },
-    categoryOptionText: {
-        fontSize: 16,
-    },
     buttonContainer: {
         marginTop: 8,
         gap: 12,
@@ -426,28 +352,6 @@ const styles = StyleSheet.create({
     deleteButtonText: {
         fontSize: 15,
         fontWeight: '600',
-    },
-    innerModalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    innerModalContent: {
-        width: '100%',
-        padding: 24,
-        borderRadius: 24,
-    },
-    innerModalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 20,
-    },
-    innerModalButtons: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        gap: 12,
     },
     innerModalButton: {
         paddingHorizontal: 20,

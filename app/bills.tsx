@@ -1,3 +1,4 @@
+import CategoryPicker from '@/components/CategoryPicker';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
 import { useBudget } from '@/context/BudgetContext';
@@ -22,7 +23,6 @@ export default function RecurringBills() {
 
     const [isAdding, setIsAdding] = useState(false);
     const [editingBill, setEditingBill] = useState<string | null>(null);
-    const [showNewCategoryModal, setShowNewCategoryModal] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [formData, setFormData] = useState({
         name: '',
@@ -112,15 +112,6 @@ export default function RecurringBills() {
     const sortedBills = [...recurringBills].sort((a, b) => a.dueDay - b.dueDay);
     const totalBills = getTotalRecurringBills();
 
-    const handleAddCategory = async () => {
-        if (newCategoryName.trim()) {
-            await addCategory(newCategoryName.trim());
-            setFormData({ ...formData, category: newCategoryName.trim() });
-            setNewCategoryName('');
-            setShowNewCategoryModal(false);
-        }
-    };
-
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
             {/* ... (Header and Content remain same) ... */}
@@ -177,7 +168,7 @@ export default function RecurringBills() {
                                             { backgroundColor: theme.tint + '15' },
                                         ]}
                                     >
-                                        <IconSymbol name={getCategoryIcon(bill.category)} size={24} color={theme.tint} />
+                                        <IconSymbol name={getCategoryIcon(bill.category) as any} size={24} color={theme.tint} />
                                     </View>
 
                                     <View style={styles.billInfo}>
@@ -294,33 +285,13 @@ export default function RecurringBills() {
                             </View>
 
                             <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: theme.text }]}>Category</Text>
-                                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-                                    {categories.map(cat => (
-                                        <TouchableOpacity
-                                            key={cat}
-                                            style={[
-                                                styles.categoryChip,
-                                                formData.category === cat && { backgroundColor: theme.tint },
-                                                { borderColor: theme.border }
-                                            ]}
-                                            onPress={() => setFormData({ ...formData, category: cat })}
-                                        >
-                                            <Text style={[
-                                                styles.categoryText,
-                                                formData.category === cat ? { color: '#fff' } : { color: theme.text }
-                                            ]}>
-                                                {cat}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                    <TouchableOpacity
-                                        style={[styles.categoryChip, { borderColor: theme.tint, borderStyle: 'dashed' }]}
-                                        onPress={() => setShowNewCategoryModal(true)}
-                                    >
-                                        <Text style={[styles.categoryText, { color: theme.tint }]}>+ New</Text>
-                                    </TouchableOpacity>
-                                </ScrollView>
+                                <CategoryPicker
+                                    label="Category"
+                                    value={formData.category}
+                                    onSelect={(cat) => setFormData({ ...formData, category: cat })}
+                                    categories={categories}
+                                    placeholder="Odogwu 😏"
+                                />
                             </View>
                         </ScrollView>
 
@@ -334,37 +305,6 @@ export default function RecurringBills() {
                         </TouchableOpacity>
                     </View>
                 </KeyboardAvoidingView>
-            </Modal>
-
-            {/* New Category Modal */}
-            <Modal visible={showNewCategoryModal} transparent animationType="fade">
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: theme.card, maxHeight: 'auto' }]}>
-                        <Text style={[styles.modalTitle, { color: theme.text }]}>New Category</Text>
-                        <TextInput
-                            style={[styles.input, { color: theme.text, borderColor: theme.border, marginBottom: 20 }]}
-                            placeholder="Category Name"
-                            placeholderTextColor={theme.icon}
-                            value={newCategoryName}
-                            onChangeText={setNewCategoryName}
-                            autoFocus
-                        />
-                        <View style={styles.row}>
-                            <TouchableOpacity
-                                style={[styles.modalButton, { backgroundColor: theme.background, marginRight: 10 }]}
-                                onPress={() => setShowNewCategoryModal(false)}
-                            >
-                                <Text style={[styles.modalButtonText, { color: theme.text }]}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalButton, { backgroundColor: theme.tint }]}
-                                onPress={handleAddCategory}
-                            >
-                                <Text style={[styles.modalButtonText, { color: '#fff' }]}>Add</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
             </Modal>
         </View>
     );
@@ -554,18 +494,15 @@ const styles = StyleSheet.create({
     halfInput: {
         flex: 1,
     },
-    categoryScroll: {
+    categoryHeader: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
     },
-    categoryChip: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-        borderWidth: 1,
-        marginRight: 8,
-    },
-    categoryText: {
-        fontWeight: '500',
+    addNewText: {
+        fontSize: 14,
+        fontWeight: '600',
     },
     saveButton: {
         padding: 16,
@@ -577,15 +514,5 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
-    },
-    modalButton: {
-        flex: 1,
-        padding: 16,
-        borderRadius: 12,
-        alignItems: 'center',
-    },
-    modalButtonText: {
-        fontSize: 16,
-        fontWeight: '600',
     },
 });
