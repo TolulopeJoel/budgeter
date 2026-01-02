@@ -14,20 +14,22 @@ export default function RecurringBills() {
         updateRecurringBill,
         deleteRecurringBill,
         getTotalRecurringBills,
+        categories,
+        addCategory,
     } = useBudget();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
 
     const [isAdding, setIsAdding] = useState(false);
     const [editingBill, setEditingBill] = useState<string | null>(null);
+    const [showNewCategoryModal, setShowNewCategoryModal] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         amount: '',
         category: 'Utilities',
         dueDay: '1',
     });
-
-    const billCategories = ['Rent', 'Utilities', 'Insurance', 'Subscriptions', 'Loan Payment', 'Other'];
 
     const handleOpenAdd = () => {
         setFormData({ name: '', amount: '', category: 'Utilities', dueDay: '1' });
@@ -105,8 +107,18 @@ export default function RecurringBills() {
     const sortedBills = [...recurringBills].sort((a, b) => a.dueDay - b.dueDay);
     const totalBills = getTotalRecurringBills();
 
+    const handleAddCategory = async () => {
+        if (newCategoryName.trim()) {
+            await addCategory(newCategoryName.trim());
+            setFormData({ ...formData, category: newCategoryName.trim() });
+            setNewCategoryName('');
+            setShowNewCategoryModal(false);
+        }
+    };
+
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
+            {/* ... (Header and Content remain same) ... */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
                     <IconSymbol name="chevron.left" size={28} color={theme.text} />
@@ -145,7 +157,7 @@ export default function RecurringBills() {
                             >
                                 <View style={styles.billContent}>
                                     <View style={[styles.iconContainer, { backgroundColor: theme.background }]}>
-                                        <IconSymbol name={getCategoryIcon(bill.category)} size={24} color={theme.tint} />
+                                        <IconSymbol name={getCategoryIcon(bill.category) as any} size={24} color={theme.tint} />
                                     </View>
 
                                     <View style={styles.billInfo}>
@@ -259,7 +271,7 @@ export default function RecurringBills() {
                             <View style={styles.inputGroup}>
                                 <Text style={[styles.label, { color: theme.text }]}>Category</Text>
                                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-                                    {billCategories.map(cat => (
+                                    {categories.map(cat => (
                                         <TouchableOpacity
                                             key={cat}
                                             style={[
@@ -277,6 +289,12 @@ export default function RecurringBills() {
                                             </Text>
                                         </TouchableOpacity>
                                     ))}
+                                    <TouchableOpacity
+                                        style={[styles.categoryChip, { borderColor: theme.tint, borderStyle: 'dashed' }]}
+                                        onPress={() => setShowNewCategoryModal(true)}
+                                    >
+                                        <Text style={[styles.categoryText, { color: theme.tint }]}>+ New</Text>
+                                    </TouchableOpacity>
                                 </ScrollView>
                             </View>
                         </ScrollView>
@@ -289,6 +307,37 @@ export default function RecurringBills() {
                                 {editingBill ? 'Update Bill' : 'Add Bill'}
                             </Text>
                         </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* New Category Modal */}
+            <Modal visible={showNewCategoryModal} transparent animationType="fade">
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: theme.card, maxHeight: 'auto' }]}>
+                        <Text style={[styles.modalTitle, { color: theme.text }]}>New Category</Text>
+                        <TextInput
+                            style={[styles.input, { color: theme.text, borderColor: theme.border, marginBottom: 20 }]}
+                            placeholder="Category Name"
+                            placeholderTextColor={theme.icon}
+                            value={newCategoryName}
+                            onChangeText={setNewCategoryName}
+                            autoFocus
+                        />
+                        <View style={styles.row}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: theme.background, marginRight: 10 }]}
+                                onPress={() => setShowNewCategoryModal(false)}
+                            >
+                                <Text style={[styles.modalButtonText, { color: theme.text }]}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: theme.tint }]}
+                                onPress={handleAddCategory}
+                            >
+                                <Text style={[styles.modalButtonText, { color: '#fff' }]}>Add</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </Modal>
@@ -501,5 +550,15 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    modalButton: {
+        flex: 1,
+        padding: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    modalButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

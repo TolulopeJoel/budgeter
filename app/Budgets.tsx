@@ -8,17 +8,29 @@ import { Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpac
 
 export default function Budgets() {
     const router = useRouter();
-    const { categories, budgets, setBudgetLimit, getBudgetStatus } = useBudget();
+    const { categories, budgets, setBudgetLimit, getBudgetStatus, addCategory } = useBudget();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
 
     const [editingCategory, setEditingCategory] = useState<string | null>(null);
     const [editAmount, setEditAmount] = useState('');
+    const [showNewCategoryModal, setShowNewCategoryModal] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
 
     const handleEditBudget = (category: string) => {
         const budget = budgets.find(b => b.category === category);
         setEditAmount(budget?.limit.toString() || '');
         setEditingCategory(category);
+    };
+
+    const handleAddCategory = async () => {
+        if (newCategoryName.trim()) {
+            await addCategory(newCategoryName.trim());
+            setNewCategoryName('');
+            setShowNewCategoryModal(false);
+            // Immediately open budget editor for new category
+            handleEditBudget(newCategoryName.trim());
+        }
     };
 
     const handleSaveBudget = async () => {
@@ -133,22 +145,27 @@ export default function Budgets() {
                 )}
 
                 {/* Available Categories */}
-                {categoriesWithoutBudgets.length > 0 && (
-                    <View style={styles.section}>
-                        <Text style={[styles.sectionTitle, { color: theme.text }]}>Add Budget Limit</Text>
+                <View style={styles.section}>
+                    <Text style={[styles.sectionTitle, { color: theme.text }]}>Add Budget Limit</Text>
 
-                        {categoriesWithoutBudgets.map(category => (
-                            <TouchableOpacity
-                                key={category}
-                                style={[styles.categoryCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-                                onPress={() => handleEditBudget(category)}
-                            >
-                                <Text style={[styles.categoryName, { color: theme.text }]}>{category}</Text>
-                                <IconSymbol name="plus.circle" size={24} color={theme.tint} />
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                )}
+                    {categoriesWithoutBudgets.map(category => (
+                        <TouchableOpacity
+                            key={category}
+                            style={[styles.categoryCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+                            onPress={() => handleEditBudget(category)}
+                        >
+                            <Text style={[styles.categoryName, { color: theme.text }]}>{category}</Text>
+                            <IconSymbol name="plus.circle" size={24} color={theme.tint} />
+                        </TouchableOpacity>
+                    ))}
+
+                    <TouchableOpacity
+                        style={[styles.categoryCard, { backgroundColor: theme.card, borderColor: theme.border, borderStyle: 'dashed' }]}
+                        onPress={() => setShowNewCategoryModal(true)}
+                    >
+                        <Text style={[styles.categoryName, { color: theme.tint }]}>+ Create New Category</Text>
+                    </TouchableOpacity>
+                </View>
             </ScrollView>
 
             {/* Edit Budget Modal */}
@@ -192,6 +209,37 @@ export default function Budgets() {
                                 disabled={!editAmount}
                             >
                                 <Text style={[styles.modalButtonText, { color: '#fff' }]}>Save Budget</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* New Category Modal */}
+            <Modal visible={showNewCategoryModal} transparent animationType="fade">
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+                        <Text style={[styles.modalTitle, { color: theme.text }]}>New Category</Text>
+                        <TextInput
+                            style={[styles.modalInput, { color: theme.text, borderColor: theme.border, marginBottom: 20 }]}
+                            placeholder="Category Name"
+                            placeholderTextColor={theme.icon}
+                            value={newCategoryName}
+                            onChangeText={setNewCategoryName}
+                            autoFocus
+                        />
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: theme.background }]}
+                                onPress={() => setShowNewCategoryModal(false)}
+                            >
+                                <Text style={[styles.modalButtonText, { color: theme.text }]}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: theme.tint }]}
+                                onPress={handleAddCategory}
+                            >
+                                <Text style={[styles.modalButtonText, { color: '#fff' }]}>Create</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

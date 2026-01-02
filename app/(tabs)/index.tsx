@@ -111,6 +111,12 @@ export default function Dashboard() {
                 <Text style={[styles.actionText, { color: theme.text }]}>Bills</Text>
               </TouchableOpacity>
             </Link>
+            <Link href="/debts" asChild>
+              <TouchableOpacity style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <Text style={styles.actionIcon}>💸</Text>
+                <Text style={[styles.actionText, { color: theme.text }]}>Debts</Text>
+              </TouchableOpacity>
+            </Link>
           </View>
         )}
 

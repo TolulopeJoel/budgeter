@@ -31,8 +31,10 @@ export default function AddTransaction() {
                 setCategory(transaction.category);
                 setNote(transaction.note || '');
             }
+        } else if (params.initialType) {
+            setType(params.initialType as TransactionType);
         }
-    }, [params.id, transactions]);
+    }, [params.id, params.initialType, transactions]);
 
     const handleSave = async () => {
         if (!amount || !category) return;
