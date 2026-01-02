@@ -4,12 +4,12 @@ import { TransactionType, useBudget } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function AddTransaction() {
     const router = useRouter();
     const params = useLocalSearchParams();
-    const { addTransaction, updateTransaction, transactions, categories, addCategory } = useBudget();
+    const { addTransaction, updateTransaction, deleteTransaction, transactions, categories, addCategory } = useBudget();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
 
@@ -63,6 +63,26 @@ export default function AddTransaction() {
             setNewCategory('');
             setIsAddingCategory(false);
         }
+    };
+
+    const handleDelete = () => {
+        Alert.alert(
+            'Delete Transaction',
+            'Are you sure you want to delete this transaction? This action cannot be undone.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        if (params.id) {
+                            await deleteTransaction(params.id as string);
+                            router.back();
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     return (
@@ -153,6 +173,15 @@ export default function AddTransaction() {
                 >
                     <Text style={styles.saveButtonText}>{isEditing ? 'Update Transaction' : 'Save Transaction'}</Text>
                 </TouchableOpacity>
+
+                {isEditing && (
+                    <TouchableOpacity
+                        style={[styles.deleteButton, { backgroundColor: theme.danger }]}
+                        onPress={handleDelete}
+                    >
+                        <Text style={styles.deleteButtonText}>Delete Transaction</Text>
+                    </TouchableOpacity>
+                )}
             </ScrollView>
 
             <Modal visible={isAddingCategory} transparent animationType="fade">
@@ -253,6 +282,17 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
+    },
+    deleteButton: {
+        padding: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginTop: 12,
+    },
+    deleteButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
     modalOverlay: {
         flex: 1,

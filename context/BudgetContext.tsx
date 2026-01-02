@@ -78,7 +78,7 @@ const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [categories, setCategories] = useState<string[]>([
-        'Salary', 'Food', 'Rent', 'Transport', 'Entertainment', 'Utilities', 'Shopping', 'Healthcare'
+        'Salary', 'Food', 'Rent', 'Transport', 'Entertainment', 'Utilities', 'Shopping', 'Healthcare', 'Others'
     ]);
     const [budgets, setBudgets] = useState<Budget[]>([]);
     const [recurringBills, setRecurringBills] = useState<RecurringBill[]>([]);
@@ -214,11 +214,26 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const deleteCategory = async (category: string) => {
+        // Reassign all transactions with this category to "Others"
+        const updatedTransactions = transactions.map(t =>
+            t.category === category ? { ...t, category: 'Others' } : t
+        );
+        setTransactions(updatedTransactions);
+        await saveTransactions(updatedTransactions);
+
+        // Reassign all recurring bills with this category to "Others"
+        const updatedBills = recurringBills.map(b =>
+            b.category === category ? { ...b, category: 'Others' } : b
+        );
+        setRecurringBills(updatedBills);
+        await saveBills(updatedBills);
+
+        // Remove the category from the list
         const updated = categories.filter(c => c !== category);
         setCategories(updated);
         await saveCategories(updated);
 
-        // Optional: Remove budgets associated with this category
+        // Remove budgets associated with this category
         await deleteBudget(category);
     };
 
@@ -352,10 +367,11 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const getSafeToSpend = () => {
         const income = currentPeriod?.income || 0;
-        const recurringTotal = getTotalRecurringBills();
         const spent = getCurrentMonthExpenses();
 
-        return income - recurringTotal - spent;
+        // Only subtract actual expenses (which already includes any paid recurring bills)
+        // This prevents double-counting recurring bills
+        return income - spent;
     };
 
     const getDebts = () => {

@@ -4,7 +4,7 @@ import { useBudget } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Link } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function Dashboard() {
   const {
@@ -20,6 +20,8 @@ export default function Dashboard() {
 
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
+
+  const [showAllTransactions, setShowAllTransactions] = React.useState(false);
 
   // Real calculations from context
   const safeToSpend = getSafeToSpend();
@@ -211,7 +213,7 @@ export default function Dashboard() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Activity</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowAllTransactions(true)}>
               <Text style={[styles.seeAllText, { color: theme.tint }]}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -255,6 +257,66 @@ export default function Dashboard() {
           )}
         </View>
       </ScrollView>
+
+      {/* All Transactions Modal */}
+      <Modal visible={showAllTransactions} animationType="slide" presentationStyle="pageSheet">
+        <View style={[styles.modalContainer, { backgroundColor: theme.background }]}>
+          <View style={styles.modalHeader}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>All Transactions</Text>
+            <TouchableOpacity onPress={() => setShowAllTransactions(false)}>
+              <Text style={[styles.modalCloseButton, { color: theme.tint }]}>Done</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+            {recentTransactions.length > 0 ? (
+              transactions
+                .filter(t => {
+                  if (!currentPeriod) return false;
+                  const transDate = new Date(t.date);
+                  const periodStart = new Date(currentPeriod.startDate);
+                  return transDate >= periodStart;
+                })
+                .map((t) => (
+                  <Link href={{ pathname: '/add', params: { id: t.id } }} key={t.id} asChild>
+                    <TouchableOpacity
+                      style={[styles.transactionItem, { backgroundColor: theme.card, borderColor: theme.border }]}
+                    >
+                      <View>
+                        <Text style={[styles.transactionCategory, { color: theme.text }]}>
+                          {t.category}
+                        </Text>
+                        <Text style={[styles.transactionDate, { color: theme.icon }]}>
+                          {new Date(t.date).toLocaleDateString('en-NG', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                          {t.note && ` • ${t.note}`}
+                        </Text>
+                      </View>
+                      <Text
+                        style={[
+                          styles.transactionAmount,
+                          { color: t.type === 'income' ? theme.success : theme.danger }
+                        ]}
+                      >
+                        {t.type === 'income' ? '+' : '-'}
+                        {formatCurrency(t.amount)}
+                      </Text>
+                    </TouchableOpacity>
+                  </Link>
+                ))
+            ) : (
+              <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
+                <Text style={[styles.emptyStateText, { color: theme.icon }]}>
+                  No transactions yet. Tap + to add one!
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -470,5 +532,28 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 14,
     textAlign: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    paddingTop: 60,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  modalCloseButton: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalContent: {
+    flex: 1,
+    paddingHorizontal: 20,
   },
 });
