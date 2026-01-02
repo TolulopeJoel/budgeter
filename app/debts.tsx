@@ -1,9 +1,10 @@
+import TransactionModal from '@/components/TransactionModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
-import { useBudget } from '@/context/BudgetContext';
+import { Transaction, useBudget } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Link, useRouter } from 'expo-router';
-import React from 'react';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function Debts() {
@@ -11,6 +12,8 @@ export default function Debts() {
     const { transactions, getDebts } = useBudget();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
+    const [showTransactionModal, setShowTransactionModal] = useState(false);
+    const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
     const debts = transactions.filter(t => t.type === 'debt');
     const totalDebt = getDebts();
@@ -26,11 +29,12 @@ export default function Debts() {
                     <IconSymbol name="chevron.left" size={28} color={theme.text} />
                 </TouchableOpacity>
                 <Text style={[styles.title, { color: theme.text }]}>Debts</Text>
-                <Link href={{ pathname: '/add', params: { initialType: 'debt' } }} asChild>
-                    <TouchableOpacity>
-                        <IconSymbol name="plus.circle.fill" size={28} color={theme.tint} />
-                    </TouchableOpacity>
-                </Link>
+                <TouchableOpacity onPress={() => {
+                    setEditingTransaction(null);
+                    setShowTransactionModal(true);
+                }}>
+                    <IconSymbol name="plus.circle.fill" size={28} color={theme.tint} />
+                </TouchableOpacity>
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -50,29 +54,32 @@ export default function Debts() {
                         <Text style={[styles.sectionTitle, { color: theme.text }]}>History</Text>
 
                         {debts.map(debt => (
-                            <Link href={{ pathname: '/add', params: { id: debt.id } }} key={debt.id} asChild>
-                                <TouchableOpacity
-                                    style={[styles.debtCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-                                >
-                                    <View style={styles.debtContent}>
-                                        <View style={[styles.iconContainer, { backgroundColor: theme.background }]}>
-                                            <IconSymbol name="creditcard.fill" size={24} color={theme.danger} />
-                                        </View>
+                            <TouchableOpacity
+                                key={debt.id}
+                                style={[styles.debtCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+                                onPress={() => {
+                                    setEditingTransaction(debt);
+                                    setShowTransactionModal(true);
+                                }}
+                            >
+                                <View style={styles.debtContent}>
+                                    <View style={[styles.iconContainer, { backgroundColor: theme.background }]}>
+                                        <IconSymbol name="creditcard.fill" size={24} color={theme.danger} />
+                                    </View>
 
-                                        <View style={styles.debtInfo}>
-                                            <Text style={[styles.debtCategory, { color: theme.text }]}>{debt.category}</Text>
-                                            <Text style={[styles.debtDate, { color: theme.icon }]}>
-                                                {new Date(debt.date).toLocaleDateString()}
-                                                {debt.note && ` • ${debt.note}`}
-                                            </Text>
-                                        </View>
-
-                                        <Text style={[styles.debtAmount, { color: theme.danger }]}>
-                                            {formatCurrency(debt.amount)}
+                                    <View style={styles.debtInfo}>
+                                        <Text style={[styles.debtCategory, { color: theme.text }]}>{debt.category}</Text>
+                                        <Text style={[styles.debtDate, { color: theme.icon }]}>
+                                            {new Date(debt.date).toLocaleDateString()}
+                                            {debt.note && ` • ${debt.note}`}
                                         </Text>
                                     </View>
-                                </TouchableOpacity>
-                            </Link>
+
+                                    <Text style={[styles.debtAmount, { color: theme.danger }]}>
+                                        {formatCurrency(debt.amount)}
+                                    </Text>
+                                </View>
+                            </TouchableOpacity>
                         ))}
                     </View>
                 ) : (
@@ -82,14 +89,23 @@ export default function Debts() {
                         <Text style={[styles.emptyText, { color: theme.icon }]}>
                             You don't have any recorded debts.
                         </Text>
-                        <Link href={{ pathname: '/add', params: { initialType: 'debt' } }} asChild>
-                            <TouchableOpacity style={[styles.emptyButton, { backgroundColor: theme.tint }]}>
-                                <Text style={styles.emptyButtonText}>Add Debt Record</Text>
-                            </TouchableOpacity>
-                        </Link>
+                        <TouchableOpacity
+                            style={[styles.emptyButton, { backgroundColor: theme.tint }]}
+                            onPress={() => {
+                                setEditingTransaction(null);
+                                setShowTransactionModal(true);
+                            }}
+                        >
+                            <Text style={styles.emptyButtonText}>Add Debt Record</Text>
+                        </TouchableOpacity>
                     </View>
                 )}
             </ScrollView>
+            <TransactionModal
+                visible={showTransactionModal}
+                onClose={() => setShowTransactionModal(false)}
+                editingTransaction={editingTransaction}
+            />
         </View>
     );
 }

@@ -1,9 +1,10 @@
 import MonthConfirmModal from '@/components/MonthConfirmModal';
+import TransactionModal from '@/components/TransactionModal';
 import { Colors } from '@/constants/Colors';
-import { useBudget } from '@/context/BudgetContext';
+import { Transaction, useBudget } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Link } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function Dashboard() {
@@ -21,7 +22,9 @@ export default function Dashboard() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
 
-  const [showAllTransactions, setShowAllTransactions] = React.useState(false);
+  const [showAllTransactions, setShowAllTransactions] = useState(false);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   // Real calculations from context
   const safeToSpend = getSafeToSpend();
@@ -68,11 +71,15 @@ export default function Dashboard() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.headerTitle, { color: theme.text }]}>Budgeter</Text>
-          <Link href="/add" asChild>
-            <TouchableOpacity style={[styles.addButton, { backgroundColor: theme.tint }]}>
-              <Text style={styles.addButtonText}>+</Text>
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity
+            style={[styles.addButton, { backgroundColor: theme.tint }]}
+            onPress={() => {
+              setEditingTransaction(null);
+              setShowTransactionModal(true);
+            }}
+          >
+            <Text style={styles.addButtonText}>+</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Main Card - Safe to Spend */}
@@ -127,12 +134,6 @@ export default function Dashboard() {
           <Text style={[styles.sectionTitle, { color: theme.text }]}>{getMonthName()}</Text>
           <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: theme.text }]}>Income</Text>
-              <Text style={[styles.summaryValue, { color: theme.success }]}>
-                {formatCurrency(monthlyIncome)}
-              </Text>
-            </View>
-            <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, { color: theme.text }]}>Recurring Bills</Text>
               <Text style={[styles.summaryValue, { color: theme.danger }]}>
                 -{formatCurrency(recurringBills)}
@@ -142,15 +143,6 @@ export default function Dashboard() {
               <Text style={[styles.summaryLabel, { color: theme.text }]}>Spent So Far</Text>
               <Text style={[styles.summaryValue, { color: theme.warning }]}>
                 -{formatCurrency(currentSpent)}
-              </Text>
-            </View>
-            <View style={[styles.divider, { backgroundColor: theme.border }]} />
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: theme.text, fontWeight: 'bold' }]}>
-                Remaining
-              </Text>
-              <Text style={[styles.summaryValue, { color: theme.text, fontWeight: 'bold' }]}>
-                {formatCurrency(safeToSpend)}
               </Text>
             </View>
           </View>
@@ -220,33 +212,36 @@ export default function Dashboard() {
 
           {recentTransactions.length > 0 ? (
             recentTransactions.map((t) => (
-              <Link href={{ pathname: '/add', params: { id: t.id } }} key={t.id} asChild>
-                <TouchableOpacity
-                  style={[styles.transactionItem, { backgroundColor: theme.card, borderColor: theme.border }]}
-                >
-                  <View>
-                    <Text style={[styles.transactionCategory, { color: theme.text }]}>
-                      {t.category}
-                    </Text>
-                    <Text style={[styles.transactionDate, { color: theme.icon }]}>
-                      {new Date(t.date).toLocaleDateString('en-NG', {
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                      {t.note && ` • ${t.note}`}
-                    </Text>
-                  </View>
-                  <Text
-                    style={[
-                      styles.transactionAmount,
-                      { color: t.type === 'income' ? theme.success : theme.danger }
-                    ]}
-                  >
-                    {t.type === 'income' ? '+' : '-'}
-                    {formatCurrency(t.amount)}
+              <TouchableOpacity
+                key={t.id}
+                style={[styles.transactionItem, { backgroundColor: theme.card, borderColor: theme.border }]}
+                onPress={() => {
+                  setEditingTransaction(t);
+                  setShowTransactionModal(true);
+                }}
+              >
+                <View>
+                  <Text style={[styles.transactionCategory, { color: theme.text }]}>
+                    {t.category}
                   </Text>
-                </TouchableOpacity>
-              </Link>
+                  <Text style={[styles.transactionDate, { color: theme.icon }]}>
+                    {new Date(t.date).toLocaleDateString('en-NG', {
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                    {t.note && ` • ${t.note}`}
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.transactionAmount,
+                    { color: t.type === 'income' ? theme.success : theme.danger }
+                  ]}
+                >
+                  {t.type === 'income' ? '+' : '-'}
+                  {formatCurrency(t.amount)}
+                </Text>
+              </TouchableOpacity>
             ))
           ) : (
             <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
@@ -278,34 +273,37 @@ export default function Dashboard() {
                   return transDate >= periodStart;
                 })
                 .map((t) => (
-                  <Link href={{ pathname: '/add', params: { id: t.id } }} key={t.id} asChild>
-                    <TouchableOpacity
-                      style={[styles.transactionItem, { backgroundColor: theme.card, borderColor: theme.border }]}
-                    >
-                      <View>
-                        <Text style={[styles.transactionCategory, { color: theme.text }]}>
-                          {t.category}
-                        </Text>
-                        <Text style={[styles.transactionDate, { color: theme.icon }]}>
-                          {new Date(t.date).toLocaleDateString('en-NG', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
-                          {t.note && ` • ${t.note}`}
-                        </Text>
-                      </View>
-                      <Text
-                        style={[
-                          styles.transactionAmount,
-                          { color: t.type === 'income' ? theme.success : theme.danger }
-                        ]}
-                      >
-                        {t.type === 'income' ? '+' : '-'}
-                        {formatCurrency(t.amount)}
+                  <TouchableOpacity
+                    key={t.id}
+                    style={[styles.transactionItem, { backgroundColor: theme.card, borderColor: theme.border }]}
+                    onPress={() => {
+                      setEditingTransaction(t);
+                      setShowTransactionModal(true);
+                    }}
+                  >
+                    <View>
+                      <Text style={[styles.transactionCategory, { color: theme.text }]}>
+                        {t.category}
                       </Text>
-                    </TouchableOpacity>
-                  </Link>
+                      <Text style={[styles.transactionDate, { color: theme.icon }]}>
+                        {new Date(t.date).toLocaleDateString('en-NG', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                        {t.note && ` • ${t.note}`}
+                      </Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.transactionAmount,
+                        { color: t.type === 'income' ? theme.success : theme.danger }
+                      ]}
+                    >
+                      {t.type === 'income' ? '+' : '-'}
+                      {formatCurrency(t.amount)}
+                    </Text>
+                  </TouchableOpacity>
                 ))
             ) : (
               <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
@@ -317,6 +315,11 @@ export default function Dashboard() {
           </ScrollView>
         </View>
       </Modal>
+      <TransactionModal
+        visible={showTransactionModal}
+        onClose={() => setShowTransactionModal(false)}
+        editingTransaction={editingTransaction}
+      />
     </>
   );
 }
@@ -453,11 +456,6 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 16,
     fontWeight: '600',
-  },
-  divider: {
-    height: 1,
-    marginVertical: 8,
-    opacity: 0.3,
   },
   budgetItem: {
     borderRadius: 12,
