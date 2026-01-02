@@ -63,7 +63,7 @@ export default function Dashboard() {
       const periodStart = new Date(currentPeriod.startDate);
       return transDate >= periodStart;
     })
-    .slice(0, 5);
+    .slice(0, 3);
 
   return (
     <>
