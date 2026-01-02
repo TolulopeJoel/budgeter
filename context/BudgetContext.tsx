@@ -28,7 +28,6 @@ export interface RecurringBill {
 
 export interface MonthlyPeriod {
     month: string; // Format: "2025-01" (YYYY-MM)
-    income: number;
     startDate: string;
     confirmed: boolean; // User must confirm to start new month
 }
@@ -59,7 +58,6 @@ export interface BudgetContextType {
 
     // Monthly Period
     currentPeriod: MonthlyPeriod | null;
-    setMonthlyIncome: (income: number) => Promise<void>;
     confirmNewMonth: () => Promise<void>;
     needsMonthConfirmation: () => boolean;
 
@@ -116,7 +114,6 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
                 const initialPeriod: MonthlyPeriod = {
                     month: monthKey,
-                    income: 0,
                     startDate: now.toISOString(),
                     confirmed: false,
                 };
@@ -300,14 +297,6 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     // Monthly Period functions
-    const setMonthlyIncome = async (income: number) => {
-        if (!currentPeriod) return;
-
-        const updated = { ...currentPeriod, income };
-        setCurrentPeriod(updated);
-        await savePeriod(updated);
-    };
-
     const needsMonthConfirmation = () => {
         if (!currentPeriod) return false;
 
@@ -323,7 +312,6 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         const newPeriod: MonthlyPeriod = {
             month: monthKey,
-            income: currentPeriod?.income || 0, // Carry over income
             startDate: now.toISOString(),
             confirmed: true,
         };
@@ -366,11 +354,9 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const getSafeToSpend = () => {
-        const income = currentPeriod?.income || 0;
+        const income = getCurrentMonthIncome();
         const spent = getCurrentMonthExpenses();
 
-        // Only subtract actual expenses (which already includes any paid recurring bills)
-        // This prevents double-counting recurring bills
         return income - spent;
     };
 
@@ -404,7 +390,6 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 getTotalRecurringBills,
 
                 currentPeriod,
-                setMonthlyIncome,
                 confirmNewMonth,
                 needsMonthConfirmation,
 

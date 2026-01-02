@@ -28,7 +28,6 @@ export default function Dashboard() {
 
   // Real calculations from context
   const safeToSpend = getSafeToSpend();
-  const monthlyIncome = currentPeriod?.income || 0;
   const recurringBills = getTotalRecurringBills();
   const currentSpent = getCurrentMonthExpenses();
 
@@ -89,45 +88,27 @@ export default function Dashboard() {
           <Text style={styles.mainCardSubtext}>After all bills & spending</Text>
         </View>
 
-        {/* Setup Warning - Show if not configured */}
-        {monthlyIncome === 0 && (
-          <Link href="/setup" asChild>
-            <TouchableOpacity
-              style={[styles.warningCard, { backgroundColor: theme.warning + '20', borderColor: theme.warning }]}
-            >
-              <Text style={[styles.warningText, { color: theme.warning }]}>
-                ⚠️ Set up your monthly income and recurring bills to get started
-              </Text>
-              <View style={[styles.warningButton, { backgroundColor: theme.warning }]}>
-                <Text style={styles.warningButtonText}>Set Up Now</Text>
-              </View>
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <Link href="/budgets" asChild>
+            <TouchableOpacity style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <Text style={styles.actionIcon}>📊</Text>
+              <Text style={[styles.actionText, { color: theme.text }]}>Budgets</Text>
             </TouchableOpacity>
           </Link>
-        )}
-
-        {/* Quick Actions */}
-        {monthlyIncome > 0 && (
-          <View style={styles.quickActions}>
-            <Link href="/budgets" asChild>
-              <TouchableOpacity style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <Text style={styles.actionIcon}>📊</Text>
-                <Text style={[styles.actionText, { color: theme.text }]}>Budgets</Text>
-              </TouchableOpacity>
-            </Link>
-            <Link href="/bills" asChild>
-              <TouchableOpacity style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <Text style={styles.actionIcon}>📋</Text>
-                <Text style={[styles.actionText, { color: theme.text }]}>Bills</Text>
-              </TouchableOpacity>
-            </Link>
-            <Link href="/debts" asChild>
-              <TouchableOpacity style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <Text style={styles.actionIcon}>💸</Text>
-                <Text style={[styles.actionText, { color: theme.text }]}>Debts</Text>
-              </TouchableOpacity>
-            </Link>
-          </View>
-        )}
+          <Link href="/bills" asChild>
+            <TouchableOpacity style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <Text style={styles.actionIcon}>📋</Text>
+              <Text style={[styles.actionText, { color: theme.text }]}>Bills</Text>
+            </TouchableOpacity>
+          </Link>
+          <Link href="/debts" asChild>
+            <TouchableOpacity style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <Text style={styles.actionIcon}>💸</Text>
+              <Text style={[styles.actionText, { color: theme.text }]}>Debts</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
 
         {/* This Month Summary */}
         <View style={styles.section}>
@@ -378,29 +359,6 @@ const styles = StyleSheet.create({
   mainCardSubtext: {
     color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 14,
-  },
-  warningCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 2,
-    alignItems: 'center',
-  },
-  warningText: {
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  warningButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  warningButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
   },
   quickActions: {
     flexDirection: 'row',
