@@ -1,10 +1,11 @@
+import InputModal from '@/components/InputModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
 import { useBudget } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function Budgets() {
     const router = useRouter();
@@ -29,6 +30,7 @@ export default function Budgets() {
 
     // Manage Categories State
     const [showManageCategories, setShowManageCategories] = useState(false);
+    const [showRenameModal, setShowRenameModal] = useState(false);
     const [renamingCategory, setRenamingCategory] = useState<string | null>(null);
     const [renameInput, setRenameInput] = useState('');
 
@@ -78,6 +80,7 @@ export default function Budgets() {
             await updateCategory(renamingCategory, renameInput.trim());
             setRenamingCategory(null);
             setRenameInput('');
+            setShowRenameModal(false);
         }
     };
 
@@ -232,109 +235,81 @@ export default function Budgets() {
             </ScrollView>
 
             {/* Edit Budget Modal */}
-            <Modal visible={editingCategory !== null} transparent animationType="slide">
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-                        <Text style={[styles.modalTitle, { color: theme.text }]}>
-                            Set Budget for {editingCategory}
+            <InputModal
+                visible={editingCategory !== null}
+                title={`Set Budget for ${editingCategory}`}
+                value={editAmount}
+                onChangeText={setEditAmount}
+                onConfirm={handleSaveBudget}
+                onCancel={() => {
+                    setEditingCategory(null);
+                    setEditAmount('');
+                }}
+                placeholder="0"
+                keyboardType="numeric"
+                prefix="₦"
+                confirmText="Save Budget"
+                disabled={!editAmount}
+            >
+                <View style={styles.typeToggleContainer}>
+                    <TouchableOpacity
+                        style={[
+                            styles.typeToggleButton,
+                            editType === 'flexible' && { backgroundColor: theme.tint + '20', borderColor: theme.tint }
+                        ]}
+                        onPress={() => setEditType('flexible')}
+                    >
+                        <Text style={[styles.typeToggleText, { color: editType === 'flexible' ? theme.tint : theme.text }]}>
+                            Flexible
                         </Text>
-
-                        <View style={styles.inputContainer}>
-                            <Text style={[styles.currencySymbol, { color: theme.text }]}>₦</Text>
-                            <TextInput
-                                style={[styles.modalInput, { color: theme.text, borderColor: theme.border }]}
-                                placeholder="0"
-                                placeholderTextColor={theme.icon}
-                                keyboardType="numeric"
-                                value={editAmount}
-                                onChangeText={setEditAmount}
-                                autoFocus
-                            />
-                        </View>
-
-                        <View style={styles.typeToggleContainer}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.typeToggleButton,
-                                    editType === 'flexible' && { backgroundColor: theme.tint + '20', borderColor: theme.tint }
-                                ]}
-                                onPress={() => setEditType('flexible')}
-                            >
-                                <Text style={[styles.typeToggleText, { color: editType === 'flexible' ? theme.tint : theme.text }]}>
-                                    Flexible
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[
-                                    styles.typeToggleButton,
-                                    editType === 'fixed' && { backgroundColor: theme.tint + '20', borderColor: theme.tint }
-                                ]}
-                                onPress={() => setEditType('fixed')}
-                            >
-                                <Text style={[styles.typeToggleText, { color: editType === 'fixed' ? theme.tint : theme.text }]}>
-                                    Fixed
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        <Text style={[styles.helperText, { color: theme.icon }]}>
-                            {editType === 'fixed'
-                                ? "Fixed budgets are reserved from your 'Safe to Spend' immediately, even if not yet spent."
-                                : "Flexible budgets only deduct from 'Safe to Spend' as you actually spend money."}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[
+                            styles.typeToggleButton,
+                            editType === 'fixed' && { backgroundColor: theme.tint + '20', borderColor: theme.tint }
+                        ]}
+                        onPress={() => setEditType('fixed')}
+                    >
+                        <Text style={[styles.typeToggleText, { color: editType === 'fixed' ? theme.tint : theme.text }]}>
+                            Fixed
                         </Text>
-
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.modalButton, { backgroundColor: theme.background }]}
-                                onPress={() => {
-                                    setEditingCategory(null);
-                                    setEditAmount('');
-                                }}
-                            >
-                                <Text style={[styles.modalButtonText, { color: theme.text }]}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalButton, { backgroundColor: theme.tint }]}
-                                onPress={handleSaveBudget}
-                                disabled={!editAmount}
-                            >
-                                <Text style={[styles.modalButtonText, { color: '#fff' }]}>Save Budget</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+                    </TouchableOpacity>
                 </View>
-            </Modal>
+
+                <Text style={[styles.helperText, { color: theme.icon }]}>
+                    {editType === 'fixed'
+                        ? "Fixed budgets are reserved from your 'Safe to Spend' immediately, even if not yet spent."
+                        : "Flexible budgets only deduct from 'Safe to Spend' as you actually spend money."}
+                </Text>
+            </InputModal>
 
             {/* New Category Modal */}
-            <Modal visible={showNewCategoryModal} transparent animationType="fade">
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-                        <Text style={[styles.modalTitle, { color: theme.text }]}>New Category</Text>
-                        <TextInput
-                            style={[styles.modalInput, { color: theme.text, borderColor: theme.border, marginBottom: 20 }]}
-                            placeholder="Category Name"
-                            placeholderTextColor={theme.icon}
-                            value={newCategoryName}
-                            onChangeText={setNewCategoryName}
-                            autoFocus
-                        />
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.modalButton, { backgroundColor: theme.background }]}
-                                onPress={() => setShowNewCategoryModal(false)}
-                            >
-                                <Text style={[styles.modalButtonText, { color: theme.text }]}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalButton, { backgroundColor: theme.tint }]}
-                                onPress={handleAddCategory}
-                            >
-                                <Text style={[styles.modalButtonText, { color: '#fff' }]}>Create</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+            <InputModal
+                visible={showNewCategoryModal}
+                title="New Category"
+                value={newCategoryName}
+                onChangeText={setNewCategoryName}
+                onConfirm={handleAddCategory}
+                onCancel={() => setShowNewCategoryModal(false)}
+                placeholder="Category Name"
+                confirmText="Create"
+            />
+
+            {/* Rename Category Modal */}
+            <InputModal
+                visible={showRenameModal}
+                title="Rename Category"
+                value={renameInput}
+                onChangeText={setRenameInput}
+                onConfirm={handleRenameCategory}
+                onCancel={() => {
+                    setShowRenameModal(false);
+                    setRenamingCategory(null);
+                    setRenameInput('');
+                }}
+                placeholder="Category Name"
+                confirmText="Rename"
+            />
 
             {/* Manage Categories Modal */}
             <Modal visible={showManageCategories} animationType="slide" presentationStyle="pageSheet">
@@ -349,53 +324,32 @@ export default function Budgets() {
                     <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                         {categories.map(category => (
                             <View key={category} style={[styles.categoryRow, { borderBottomColor: theme.border }]}>
-                                {renamingCategory === category ? (
-                                    <View style={styles.renameContainer}>
-                                        <TextInput
-                                            style={[styles.renameInput, { color: theme.text, borderColor: theme.tint }]}
-                                            value={renameInput}
-                                            onChangeText={setRenameInput}
-                                            autoFocus
-                                            returnKeyType="done"
-                                            onSubmitEditing={handleRenameCategory}
-                                        />
-                                        <TouchableOpacity onPress={handleRenameCategory}>
-                                            <IconSymbol name="checkmark.circle.fill" size={28} color={theme.success} />
-                                        </TouchableOpacity>
-                                        <TouchableOpacity onPress={() => setRenamingCategory(null)}>
-                                            <IconSymbol name="xmark.circle.fill" size={28} color={theme.danger} />
-                                        </TouchableOpacity>
-                                    </View>
-                                ) : (
-                                    <>
-                                        <Text style={[styles.categoryRowText, { color: theme.text }]}>{category}</Text>
-                                        <View style={styles.categoryActions}>
-                                            <TouchableOpacity
-                                                style={[
-                                                    styles.iconButton,
-                                                    { backgroundColor: theme.card }
-                                                ]}
-                                                onPress={() => {
-                                                    setRenamingCategory(category);
-                                                    setRenameInput(category);
-                                                }}
-                                            >
-                                                <IconSymbol name="pencil" size={18} color={theme.text} />
-                                            </TouchableOpacity>
+                                <Text style={[styles.categoryRowText, { color: theme.text }]}>{category}</Text>
+                                <View style={styles.categoryActions}>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.iconButton,
+                                            { backgroundColor: theme.card }
+                                        ]}
+                                        onPress={() => {
+                                            setRenamingCategory(category);
+                                            setRenameInput(category);
+                                            setShowRenameModal(true);
+                                        }}
+                                    >
+                                        <IconSymbol name="pencil" size={18} color={theme.text} />
+                                    </TouchableOpacity>
 
-                                            <TouchableOpacity
-                                                style={[
-                                                    styles.iconButton,
-                                                    { backgroundColor: theme.card }
-                                                ]}
-                                                onPress={() => handleDeleteCategory(category)}
-                                            >
-                                                <IconSymbol name="trash" size={18} color={theme.danger} />
-                                            </TouchableOpacity>
-                                        </View>
-
-                                    </>
-                                )}
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.iconButton,
+                                            { backgroundColor: theme.card }
+                                        ]}
+                                        onPress={() => handleDeleteCategory(category)}
+                                    >
+                                        <IconSymbol name="trash" size={18} color={theme.danger} />
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         ))}
                     </ScrollView>
@@ -500,57 +454,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
     },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'flex-end',
-    },
-    modalContent: {
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        padding: 24,
-        paddingBottom: 40,
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 24,
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    currencySymbol: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        marginRight: 8,
-    },
-    modalInput: {
-        flex: 1,
-        fontSize: 32,
-        fontWeight: 'bold',
-        borderBottomWidth: 2,
-        paddingVertical: 8,
-    },
     helperText: {
         fontSize: 14,
         lineHeight: 20,
         marginBottom: 24,
-    },
-    modalButtons: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    modalButton: {
-        flex: 1,
-        padding: 16,
-        borderRadius: 12,
-        alignItems: 'center',
-    },
-    modalButtonText: {
-        fontSize: 16,
-        fontWeight: '600',
     },
     fullScreenModal: {
         flex: 1,
@@ -569,6 +476,7 @@ const styles = StyleSheet.create({
     categoryActions: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 8,
     },
     renameContainer: {
         flex: 1,

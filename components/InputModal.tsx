@@ -1,0 +1,136 @@
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import React from 'react';
+import { KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+interface InputModalProps {
+    visible: boolean;
+    title: string;
+    value: string;
+    onChangeText: (text: string) => void;
+    onConfirm: () => void;
+    onCancel: () => void;
+    placeholder?: string;
+    confirmText?: string;
+    cancelText?: string;
+    keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad';
+    prefix?: string;
+    children?: React.ReactNode;
+    disabled?: boolean;
+}
+
+export default function InputModal({
+    visible,
+    title,
+    value,
+    onChangeText,
+    onConfirm,
+    onCancel,
+    placeholder = 'Enter value',
+    confirmText = 'Save',
+    cancelText = 'Cancel',
+    keyboardType = 'default',
+    prefix,
+    children,
+    disabled = false,
+}: InputModalProps) {
+    const colorScheme = useColorScheme();
+    const theme = Colors[colorScheme ?? 'light'];
+
+    return (
+        <Modal visible={visible} transparent animationType="fade">
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.overlay}
+            >
+                <View style={[styles.content, { backgroundColor: theme.card }]}>
+                    <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
+
+                    <View style={styles.inputContainer}>
+                        {prefix && (
+                            <Text style={[styles.prefix, { color: theme.text }]}>{prefix}</Text>
+                        )}
+                        <TextInput
+                            style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+                            placeholder={placeholder}
+                            placeholderTextColor={theme.icon}
+                            keyboardType={keyboardType}
+                            value={value}
+                            onChangeText={onChangeText}
+                            autoFocus
+                        />
+                    </View>
+
+                    {children}
+
+                    <View style={styles.buttons}>
+                        <TouchableOpacity
+                            style={[styles.button, { backgroundColor: theme.background }]}
+                            onPress={onCancel}
+                        >
+                            <Text style={[styles.buttonText, { color: theme.text }]}>{cancelText}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.button, { backgroundColor: theme.tint, opacity: disabled ? 0.5 : 1 }]}
+                            onPress={onConfirm}
+                            disabled={disabled}
+                        >
+                            <Text style={[styles.buttonText, { color: '#fff' }]}>{confirmText}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </KeyboardAvoidingView>
+        </Modal>
+    );
+}
+
+const styles = StyleSheet.create({
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+    },
+    content: {
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        padding: 24,
+        paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 24,
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    prefix: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        marginRight: 8,
+    },
+    input: {
+        flex: 1,
+        fontSize: 32,
+        fontWeight: 'bold',
+        borderBottomWidth: 2,
+        paddingVertical: 8,
+    },
+    buttons: {
+        flexDirection: 'row',
+        gap: 12,
+        marginTop: 8,
+    },
+    button: {
+        flex: 1,
+        padding: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    buttonText: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+});
