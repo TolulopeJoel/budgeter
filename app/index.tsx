@@ -80,15 +80,6 @@ export default function Dashboard() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.headerTitle, { color: theme.text }]}>Budgeter</Text>
-          <TouchableOpacity
-            style={[styles.addButton, { backgroundColor: theme.tint }]}
-            onPress={() => {
-              setEditingTransaction(null);
-              setShowTransactionModal(true);
-            }}
-          >
-            <Ionicons name="add" size={32} color="#fff" />
-          </TouchableOpacity>
         </View>
 
         {/* Main Card - Safe to Spend */}
@@ -388,6 +379,17 @@ export default function Dashboard() {
         onClose={() => setShowTransactionModal(false)}
         editingTransaction={editingTransaction}
       />
+
+      <TouchableOpacity
+        style={[styles.floatingButton, { backgroundColor: theme.tint }]}
+        onPress={() => {
+          setEditingTransaction(null);
+          setShowTransactionModal(true);
+        }}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add" size={28} color="#fff" />
+      </TouchableOpacity>
     </>
   );
 }
@@ -419,6 +421,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
+  },
+  floatingButton: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 64,
+    height: 64,
+    borderRadius: 18, // This creates the squircle effect
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+    zIndex: 1000,
   },
   mainCard: {
     borderRadius: 28,
