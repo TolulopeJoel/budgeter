@@ -4,11 +4,20 @@ import { useBudget } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function Budgets() {
     const router = useRouter();
-    const { categories, budgets, setBudgetLimit, getBudgetStatus, addCategory } = useBudget();
+    const {
+        categories,
+        budgets,
+        setBudgetLimit,
+        getBudgetStatus,
+        addCategory,
+        updateCategory,
+        deleteCategory,
+        deleteBudget
+    } = useBudget();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
 
@@ -16,6 +25,11 @@ export default function Budgets() {
     const [editAmount, setEditAmount] = useState('');
     const [showNewCategoryModal, setShowNewCategoryModal] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
+
+    // Manage Categories State
+    const [showManageCategories, setShowManageCategories] = useState(false);
+    const [renamingCategory, setRenamingCategory] = useState<string | null>(null);
+    const [renameInput, setRenameInput] = useState('');
 
     const handleEditBudget = (category: string) => {
         const budget = budgets.find(b => b.category === category);
@@ -42,7 +56,41 @@ export default function Budgets() {
     };
 
     const handleRemoveBudget = async (category: string) => {
-        await setBudgetLimit(category, 0);
+        Alert.alert(
+            'Remove Budget Limit',
+            `Are you sure you want to remove the budget limit for ${category}?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Remove',
+                    style: 'destructive',
+                    onPress: async () => await deleteBudget(category)
+                }
+            ]
+        );
+    };
+
+    const handleRenameCategory = async () => {
+        if (renamingCategory && renameInput.trim() && renameInput.trim() !== renamingCategory) {
+            await updateCategory(renamingCategory, renameInput.trim());
+            setRenamingCategory(null);
+            setRenameInput('');
+        }
+    };
+
+    const handleDeleteCategory = (category: string) => {
+        Alert.alert(
+            'Delete Category',
+            `Are you sure you want to delete "${category}"? This will update all associated transactions to "Uncategorized" or delete them depending on implementation.`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => await deleteCategory(category)
+                }
+            ]
+        );
     };
 
     const formatCurrency = (amount: number) => {
@@ -74,16 +122,23 @@ export default function Budgets() {
                     <IconSymbol name="chevron.left" size={28} color={theme.text} />
                 </TouchableOpacity>
                 <Text style={[styles.title, { color: theme.text }]}>Budget Management</Text>
-                <View style={{ width: 28 }} />
+                <TouchableOpacity
+                    onPress={() => setShowManageCategories(true)}
+                    style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18,
+                        backgroundColor: theme.card,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    <IconSymbol name="list.bullet" size={20} color={theme.text} />
+                </TouchableOpacity>
+
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                <View style={[styles.infoCard, { backgroundColor: theme.tint + '20', borderColor: theme.tint }]}>
-                    <Text style={[styles.infoText, { color: theme.tint }]}>
-                        💡 Set spending limits for each category to track your expenses better
-                    </Text>
-                </View>
-
                 {/* Active Budgets */}
                 {categoriesWithBudgets.length > 0 && (
                     <View style={styles.section}>
@@ -245,6 +300,72 @@ export default function Budgets() {
                     </View>
                 </View>
             </Modal>
+
+            {/* Manage Categories Modal */}
+            <Modal visible={showManageCategories} animationType="slide" presentationStyle="pageSheet">
+                <View style={[styles.fullScreenModal, { backgroundColor: theme.background }]}>
+                    <View style={styles.header}>
+                        <Text style={[styles.title, { color: theme.text }]}>Manage Categories</Text>
+                        <TouchableOpacity onPress={() => setShowManageCategories(false)}>
+                            <IconSymbol name="xmark.circle.fill" size={28} color={theme.icon} />
+                        </TouchableOpacity>
+                    </View>
+
+                    <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                        {categories.map(category => (
+                            <View key={category} style={[styles.categoryRow, { borderBottomColor: theme.border }]}>
+                                {renamingCategory === category ? (
+                                    <View style={styles.renameContainer}>
+                                        <TextInput
+                                            style={[styles.renameInput, { color: theme.text, borderColor: theme.tint }]}
+                                            value={renameInput}
+                                            onChangeText={setRenameInput}
+                                            autoFocus
+                                            returnKeyType="done"
+                                            onSubmitEditing={handleRenameCategory}
+                                        />
+                                        <TouchableOpacity onPress={handleRenameCategory}>
+                                            <IconSymbol name="checkmark.circle.fill" size={28} color={theme.success} />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={() => setRenamingCategory(null)}>
+                                            <IconSymbol name="xmark.circle.fill" size={28} color={theme.danger} />
+                                        </TouchableOpacity>
+                                    </View>
+                                ) : (
+                                    <>
+                                        <Text style={[styles.categoryRowText, { color: theme.text }]}>{category}</Text>
+                                        <View style={styles.categoryActions}>
+                                            <TouchableOpacity
+                                                style={[
+                                                    styles.iconButton,
+                                                    { backgroundColor: theme.card }
+                                                ]}
+                                                onPress={() => {
+                                                    setRenamingCategory(category);
+                                                    setRenameInput(category);
+                                                }}
+                                            >
+                                                <IconSymbol name="pencil" size={18} color={theme.text} />
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity
+                                                style={[
+                                                    styles.iconButton,
+                                                    { backgroundColor: theme.card }
+                                                ]}
+                                                onPress={() => handleDeleteCategory(category)}
+                                            >
+                                                <IconSymbol name="trash" size={18} color={theme.danger} />
+                                            </TouchableOpacity>
+                                        </View>
+
+                                    </>
+                                )}
+                            </View>
+                        ))}
+                    </ScrollView>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -268,16 +389,6 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         paddingHorizontal: 20,
-    },
-    infoCard: {
-        padding: 16,
-        borderRadius: 12,
-        borderWidth: 1,
-        marginBottom: 24,
-    },
-    infoText: {
-        fontSize: 14,
-        lineHeight: 20,
     },
     section: {
         marginBottom: 32,
@@ -312,9 +423,9 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     iconButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -405,5 +516,36 @@ const styles = StyleSheet.create({
     modalButtonText: {
         fontSize: 16,
         fontWeight: '600',
+    },
+    fullScreenModal: {
+        flex: 1,
+    },
+    categoryRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+    },
+    categoryRowText: {
+        fontSize: 16,
+        fontWeight: '500',
+    },
+    categoryActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    renameContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    renameInput: {
+        flex: 1,
+        fontSize: 16,
+        padding: 8,
+        borderWidth: 1,
+        borderRadius: 8,
     },
 });

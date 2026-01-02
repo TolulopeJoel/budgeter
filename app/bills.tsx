@@ -4,7 +4,7 @@ import { useBudget } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function RecurringBills() {
     const router = useRouter();
@@ -27,12 +27,17 @@ export default function RecurringBills() {
     const [formData, setFormData] = useState({
         name: '',
         amount: '',
-        category: 'Utilities',
+        category: categories[0] || 'Food',
         dueDay: '1',
     });
 
     const handleOpenAdd = () => {
-        setFormData({ name: '', amount: '', category: 'Utilities', dueDay: '1' });
+        setFormData({
+            name: '',
+            amount: '',
+            category: categories[0] || 'Utilities',
+            dueDay: '1'
+        });
         setIsAdding(true);
     };
 
@@ -70,7 +75,7 @@ export default function RecurringBills() {
             setIsAdding(false);
         }
 
-        setFormData({ name: '', amount: '', category: 'Utilities', dueDay: '1' });
+        setFormData({ name: '', amount: '', category: categories[0] || 'Food', dueDay: '1' });
     };
 
     const handleDelete = (billId: string) => {
@@ -124,8 +129,18 @@ export default function RecurringBills() {
                     <IconSymbol name="chevron.left" size={28} color={theme.text} />
                 </TouchableOpacity>
                 <Text style={[styles.title, { color: theme.text }]}>Recurring Bills</Text>
-                <TouchableOpacity onPress={handleOpenAdd}>
-                    <IconSymbol name="plus.circle.fill" size={28} color={theme.tint} />
+                <TouchableOpacity
+                    onPress={handleOpenAdd}
+                    style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18,
+                        backgroundColor: theme.card,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    <IconSymbol name="plus" size={20} color={theme.tint} />
                 </TouchableOpacity>
             </View>
 
@@ -156,8 +171,13 @@ export default function RecurringBills() {
                                 style={[styles.billCard, { backgroundColor: theme.card, borderColor: theme.border }]}
                             >
                                 <View style={styles.billContent}>
-                                    <View style={[styles.iconContainer, { backgroundColor: theme.background }]}>
-                                        <IconSymbol name={getCategoryIcon(bill.category) as any} size={24} color={theme.tint} />
+                                    <View
+                                        style={[
+                                            styles.iconContainer,
+                                            { backgroundColor: theme.tint + '15' },
+                                        ]}
+                                    >
+                                        <IconSymbol name={getCategoryIcon(bill.category)} size={24} color={theme.tint} />
                                     </View>
 
                                     <View style={styles.billInfo}>
@@ -181,14 +201,16 @@ export default function RecurringBills() {
                                                 style={styles.actionButton}
                                                 onPress={() => handleOpenEdit(bill.id)}
                                             >
-                                                <IconSymbol name="pencil" size={16} color={theme.icon} />
+                                                <IconSymbol name="pencil" size={18} color={theme.text} />
                                             </TouchableOpacity>
+
                                             <TouchableOpacity
                                                 style={styles.actionButton}
                                                 onPress={() => handleDelete(bill.id)}
                                             >
-                                                <IconSymbol name="trash" size={16} color={theme.danger} />
+                                                <IconSymbol name="trash" size={18} color={theme.danger} />
                                             </TouchableOpacity>
+
                                         </View>
                                     </View>
                                 </View>
@@ -214,7 +236,10 @@ export default function RecurringBills() {
 
             {/* Add/Edit Modal */}
             <Modal visible={isAdding || editingBill !== null} transparent animationType="slide">
-                <View style={styles.modalOverlay}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.modalOverlay}
+                >
                     <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
                         <View style={styles.modalHeader}>
                             <Text style={[styles.modalTitle, { color: theme.text }]}>
@@ -308,7 +333,7 @@ export default function RecurringBills() {
                             </Text>
                         </TouchableOpacity>
                     </View>
-                </View>
+                </KeyboardAvoidingView>
             </Modal>
 
             {/* New Category Modal */}
@@ -451,10 +476,12 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     actionButton: {
-        width: 28,
-        height: 28,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.05)',
     },
     emptyState: {
         padding: 40,

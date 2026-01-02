@@ -44,7 +44,10 @@ export interface BudgetContextType {
     categories: string[];
     budgets: Budget[];
     addCategory: (category: string) => Promise<void>;
+    updateCategory: (oldName: string, newName: string) => Promise<void>;
+    deleteCategory: (category: string) => Promise<void>;
     setBudgetLimit: (category: string, limit: number) => Promise<void>;
+    deleteBudget: (category: string) => Promise<void>;
     getBudgetStatus: (category: string) => { spent: number; limit: number; percentage: number };
 
     // Recurring Bills
@@ -180,6 +183,45 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     };
 
+    const updateCategory = async (oldName: string, newName: string) => {
+        if (categories.includes(newName)) return; // Prevent duplicates
+
+        // Update category list
+        const updatedCategories = categories.map(c => c === oldName ? newName : c);
+        setCategories(updatedCategories);
+        await saveCategories(updatedCategories);
+
+        // Update related transactions
+        const updatedTransactions = transactions.map(t =>
+            t.category === oldName ? { ...t, category: newName } : t
+        );
+        setTransactions(updatedTransactions);
+        await saveTransactions(updatedTransactions);
+
+        // Update related budgets
+        const updatedBudgets = budgets.map(b =>
+            b.category === oldName ? { ...b, category: newName } : b
+        );
+        setBudgets(updatedBudgets);
+        await saveBudgets(updatedBudgets);
+
+        // Update related recurring bills
+        const updatedBills = recurringBills.map(b =>
+            b.category === oldName ? { ...b, category: newName } : b
+        );
+        setRecurringBills(updatedBills);
+        await saveBills(updatedBills);
+    };
+
+    const deleteCategory = async (category: string) => {
+        const updated = categories.filter(c => c !== category);
+        setCategories(updated);
+        await saveCategories(updated);
+
+        // Optional: Remove budgets associated with this category
+        await deleteBudget(category);
+    };
+
     // Budget functions
     const setBudgetLimit = async (category: string, limit: number) => {
         const existing = budgets.find(b => b.category === category);
@@ -191,6 +233,12 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             updated = [...budgets, { category, limit }];
         }
 
+        setBudgets(updated);
+        await saveBudgets(updated);
+    };
+
+    const deleteBudget = async (category: string) => {
+        const updated = budgets.filter(b => b.category !== category);
         setBudgets(updated);
         await saveBudgets(updated);
     };
@@ -327,7 +375,10 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 categories,
                 budgets,
                 addCategory,
+                updateCategory,
+                deleteCategory,
                 setBudgetLimit,
+                deleteBudget,
                 getBudgetStatus,
 
                 recurringBills,
