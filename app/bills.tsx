@@ -157,9 +157,10 @@ export default function RecurringBills() {
                         <Text style={[styles.sectionTitle, { color: theme.text }]}>Your Bills</Text>
 
                         {sortedBills.map(bill => (
-                            <View
+                            <TouchableOpacity
                                 key={bill.id}
                                 style={[styles.billCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+                                onPress={() => handleOpenEdit(bill.id)}
                             >
                                 <View style={styles.billContent}>
                                     <View
@@ -190,22 +191,14 @@ export default function RecurringBills() {
                                         <View style={styles.billActions}>
                                             <TouchableOpacity
                                                 style={styles.actionButton}
-                                                onPress={() => handleOpenEdit(bill.id)}
-                                            >
-                                                <IconSymbol name="pencil" size={18} color={theme.text} />
-                                            </TouchableOpacity>
-
-                                            <TouchableOpacity
-                                                style={styles.actionButton}
                                                 onPress={() => handleDelete(bill.id)}
                                             >
                                                 <IconSymbol name="trash" size={18} color={theme.danger} />
                                             </TouchableOpacity>
-
                                         </View>
                                     </View>
                                 </View>
-                            </View>
+                            </TouchableOpacity>
                         ))}
                     </View>
                 ) : (

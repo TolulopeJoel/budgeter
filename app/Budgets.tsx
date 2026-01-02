@@ -87,7 +87,7 @@ export default function Budgets() {
     const handleDeleteCategory = (category: string) => {
         Alert.alert(
             'Delete Category',
-            `Are you sure you want to delete "${category}"? This will update all associated transactions to "Uncategorized" or delete them depending on implementation.`,
+            `Are you sure you want to delete "${category}"? This will update all associated transactions to "Others"`,
             [
                 { text: 'Cancel', style: 'cancel' },
                 {
@@ -155,9 +155,10 @@ export default function Budgets() {
                             const budgetColor = getBudgetColor(status.percentage);
 
                             return (
-                                <View
+                                <TouchableOpacity
                                     key={category}
                                     style={[styles.budgetCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+                                    onPress={() => handleEditBudget(category)}
                                 >
                                     <View style={styles.budgetHeader}>
                                         <View>
@@ -172,12 +173,6 @@ export default function Budgets() {
                                             </Text>
                                         </View>
                                         <View style={styles.budgetActions}>
-                                            <TouchableOpacity
-                                                style={[styles.iconButton, { backgroundColor: theme.background }]}
-                                                onPress={() => handleEditBudget(category)}
-                                            >
-                                                <IconSymbol name="pencil" size={18} color={theme.text} />
-                                            </TouchableOpacity>
                                             <TouchableOpacity
                                                 style={[styles.iconButton, { backgroundColor: theme.background }]}
                                                 onPress={() => handleRemoveBudget(category)}
@@ -204,7 +199,7 @@ export default function Budgets() {
                                             {formatCurrency(Math.max(0, status.limit - status.spent))} left
                                         </Text>
                                     </View>
-                                </View>
+                                </TouchableOpacity>
                             );
                         })}
                     </View>
@@ -323,23 +318,17 @@ export default function Budgets() {
 
                     <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                         {categories.map(category => (
-                            <View key={category} style={[styles.categoryRow, { borderBottomColor: theme.border }]}>
+                            <TouchableOpacity
+                                key={category}
+                                style={[styles.categoryRow, { borderBottomColor: theme.border }]}
+                                onPress={() => {
+                                    setRenamingCategory(category);
+                                    setRenameInput(category);
+                                    setShowRenameModal(true);
+                                }}
+                            >
                                 <Text style={[styles.categoryRowText, { color: theme.text }]}>{category}</Text>
                                 <View style={styles.categoryActions}>
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.iconButton,
-                                            { backgroundColor: theme.card }
-                                        ]}
-                                        onPress={() => {
-                                            setRenamingCategory(category);
-                                            setRenameInput(category);
-                                            setShowRenameModal(true);
-                                        }}
-                                    >
-                                        <IconSymbol name="pencil" size={18} color={theme.text} />
-                                    </TouchableOpacity>
-
                                     <TouchableOpacity
                                         style={[
                                             styles.iconButton,
@@ -350,7 +339,7 @@ export default function Budgets() {
                                         <IconSymbol name="trash" size={18} color={theme.danger} />
                                     </TouchableOpacity>
                                 </View>
-                            </View>
+                            </TouchableOpacity>
                         ))}
                     </ScrollView>
                 </View>
