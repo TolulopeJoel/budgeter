@@ -393,30 +393,48 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const getSafeToSpend = () => {
         const income = getCurrentMonthIncome();
+        const currentMonthTransactions = getCurrentMonthTransactions();
 
-        // Calculate total deductions
-        const deductions = budgets.reduce((acc, budget) => {
+        // 1. Calculate deductions from budgets
+        const budgetDeductions = budgets.reduce((acc, budget) => {
             const status = getBudgetStatus(budget.category);
+            const billsInCategory = recurringBills
+                .filter(b => b.category === budget.category)
+                .reduce((sum, b) => sum + b.amount, 0);
+
             if (budget.type === 'fixed') {
-                // For fixed budgets, we reserve the limit or what's spent (whichever is higher)
-                return acc + Math.max(budget.limit, status.spent);
+                // For fixed budgets, reserve the highest of: limit, actual spent, or upcoming bills
+                return acc + Math.max(budget.limit, status.spent, billsInCategory);
             } else {
-                // For flexible budgets, we only deduct what's actually spent
-                return acc + status.spent;
+                // For flexible budgets, reserve the highest of: actual spent or upcoming bills
+                return acc + Math.max(status.spent, billsInCategory);
             }
         }, 0);
 
-        // Also subtract expenses that are NOT in any budget category
-        const nonBudgetExpenses = getCurrentMonthTransactions()
-            .filter(t => t.type === 'expense' && !budgets.some(b => b.category === t.category))
-            .reduce((acc, t) => acc + t.amount, 0);
+        // 2. Calculate deductions for non-budgeted categories that have bills or spending
+        const nonBudgetedCategories = new Set([
+            ...currentMonthTransactions.filter(t => t.type === 'expense').map(t => t.category),
+            ...recurringBills.map(b => b.category)
+        ]);
 
-        // Also subtract debts (money lent out) for the current month
-        const currentMonthDebts = getCurrentMonthTransactions()
+        const nonBudgetDeductions = Array.from(nonBudgetedCategories)
+            .filter(cat => !budgets.some(b => b.category === cat))
+            .reduce((acc, cat) => {
+                const spent = currentMonthTransactions
+                    .filter(t => t.type === 'expense' && t.category === cat)
+                    .reduce((sum, t) => sum + t.amount, 0);
+                const bills = recurringBills
+                    .filter(b => b.category === cat)
+                    .reduce((sum, b) => sum + b.amount, 0);
+                return acc + Math.max(spent, bills);
+            }, 0);
+
+        // 3. Subtract debts (money lent out) for the current month
+        const currentMonthDebts = currentMonthTransactions
             .filter(t => t.type === 'debt')
             .reduce((acc, t) => acc + t.amount, 0);
 
-        return income - deductions - nonBudgetExpenses - currentMonthDebts;
+        return income - budgetDeductions - nonBudgetDeductions - currentMonthDebts;
     };
 
     const getDebts = () => {
