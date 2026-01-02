@@ -106,7 +106,7 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
-          <Link href="/budgets" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '15', borderColor: theme.border }]}>
+          <Link href="/budgets" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '10', borderColor: theme.border }]}>
             <TouchableOpacity>
               <View style={styles.actionIconContainer}>
                 <Ionicons name="pie-chart" size={24} color={theme.tint} />
@@ -114,7 +114,7 @@ export default function Dashboard() {
               <Text style={[styles.actionText, { color: theme.text }]}>Budgets</Text>
             </TouchableOpacity>
           </Link>
-          <Link href="/bills" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '15', borderColor: theme.border }]}>
+          <Link href="/bills" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '10', borderColor: theme.border }]}>
             <TouchableOpacity>
               <View style={styles.actionIconContainer}>
                 <Ionicons name="receipt" size={24} color={theme.tint} />
@@ -122,7 +122,7 @@ export default function Dashboard() {
               <Text style={[styles.actionText, { color: theme.text }]}>Bills</Text>
             </TouchableOpacity>
           </Link>
-          <Link href="/debts" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '15', borderColor: theme.border }]}>
+          <Link href="/debts" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '10', borderColor: theme.border }]}>
             <TouchableOpacity>
               <View style={styles.actionIconContainer}>
                 <Ionicons name="cash" size={24} color={theme.tint} />
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
   },
   progressBarContainer: {
     height: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(150, 150, 150, 0.1)',
     borderRadius: 4,
     overflow: 'hidden',
     marginBottom: 8,

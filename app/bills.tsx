@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.05)',
+        backgroundColor: 'rgba(150, 150, 150, 0.1)',
     },
     emptyState: {
         padding: 40,

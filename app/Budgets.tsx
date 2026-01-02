@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     },
     progressBarContainer: {
         height: 8,
-        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+        backgroundColor: 'rgba(150, 150, 150, 0.1)',
         borderRadius: 4,
         overflow: 'hidden',
         marginBottom: 12,
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: 'transparent',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+        backgroundColor: 'rgba(150, 150, 150, 0.1)',
     },
     typeToggleText: {
         fontSize: 14,
