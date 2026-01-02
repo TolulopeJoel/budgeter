@@ -52,7 +52,28 @@ export default function Dashboard() {
   const getBudgetColor = (percentage: number) => {
     if (percentage >= 100) return theme.danger;
     if (percentage >= 80) return theme.warning;
-    return theme.success;
+    return theme.tint;
+  };
+
+  const getCategoryIcon = (category: string) => {
+    const icons: Record<string, string> = {
+      'Rent': 'house.fill',
+      'Utilities': 'bolt.fill',
+      'Insurance': 'shield.fill',
+      'Subscriptions': 'play.rectangle.fill',
+      'Loan Payment': 'creditcard.fill',
+      'Food': 'cart.fill',
+      'Transport': 'car.fill',
+      'Entertainment': 'gamecontroller.fill',
+      'Shopping': 'bag.fill',
+      'Health': 'heart.fill',
+      'Education': 'book.fill',
+      'Salary': 'cash.fill',
+      'Income': 'arrow.down.circle.fill',
+      'Debt': 'creditcard.fill',
+      'Others': 'ellipsis.circle.fill',
+    };
+    return icons[category] || 'ellipsis.circle.fill';
   };
 
   // Filter current month transactions
@@ -157,12 +178,22 @@ export default function Dashboard() {
                   onPress={() => setSelectedCategory(budget.category)}
                 >
                   <View style={styles.budgetHeader}>
-                    <Text style={[styles.budgetCategory, { color: theme.text }]}>
-                      {budget.category}
-                    </Text>
-                    <Text style={[styles.budgetAmount, { color: theme.text }]}>
-                      {formatCurrency(status.spent)} / {formatCurrency(status.limit)}
-                    </Text>
+                    <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
+                      <Ionicons name={getCategoryIcon(budget.category).replace('.fill', '') as any} size={20} color={theme.tint} />
+                    </View>
+                    <View style={styles.budgetInfo}>
+                      <Text style={[styles.budgetCategory, { color: theme.text }]}>
+                        {budget.category}
+                      </Text>
+                      <Text style={[styles.budgetAmount, { color: theme.icon }]}>
+                        {formatCurrency(status.spent)} of {formatCurrency(status.limit)}
+                      </Text>
+                    </View>
+                    <View style={styles.budgetRight}>
+                      <Text style={[styles.budgetPercentage, { color: budgetColor }]}>
+                        {status.percentage.toFixed(0)}%
+                      </Text>
+                    </View>
                   </View>
                   <View style={styles.progressBarContainer}>
                     <View
@@ -171,16 +202,6 @@ export default function Dashboard() {
                         { width: `${status.percentage}%`, backgroundColor: budgetColor }
                       ]}
                     />
-                  </View>
-                  <View style={styles.budgetFooter}>
-                    <Text style={[styles.budgetPercentage, { color: budgetColor }]}>
-                      {status.percentage.toFixed(0)}% used
-                    </Text>
-                    {status.percentage >= 80 && (
-                      <Text style={[styles.budgetWarning, { color: budgetColor }]}>
-                        {status.percentage >= 100 ? '⛔ Over budget!' : '⚠️ Running low'}
-                      </Text>
-                    )}
                   </View>
                 </TouchableOpacity>
               );
@@ -207,25 +228,34 @@ export default function Dashboard() {
                   setShowTransactionModal(true);
                 }}
               >
-                <View>
-                  <Text style={[styles.transactionCategory, { color: theme.text }]}>
-                    {t.category}
-                  </Text>
-                  <Text style={[styles.transactionDate, { color: theme.icon }]}>
-                    {new Date(t.date).toLocaleDateString('en-NG', {
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                    {t.note && ` • ${t.note}`}
-                  </Text>
+                <View style={styles.transactionLeft}>
+                  <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.tint) + '10' }]}>
+                    <Ionicons
+                      name={getCategoryIcon(t.category).replace('.fill', '') as any}
+                      size={20}
+                      color={t.type === 'income' ? theme.success : theme.tint}
+                    />
+                  </View>
+                  <View>
+                    <Text style={[styles.transactionCategory, { color: theme.text }]}>
+                      {t.category}
+                    </Text>
+                    <Text style={[styles.transactionDate, { color: theme.icon }]}>
+                      {new Date(t.date).toLocaleDateString('en-NG', {
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                      {t.note && ` • ${t.note}`}
+                    </Text>
+                  </View>
                 </View>
                 <Text
                   style={[
                     styles.transactionAmount,
-                    { color: t.type === 'income' ? theme.success : theme.danger }
+                    { color: t.type === 'income' ? theme.success : theme.text }
                   ]}
                 >
-                  {t.type === 'income' ? '+' : '-'}
+                  {t.type === 'income' ? '+' : ''}
                   {formatCurrency(t.amount)}
                 </Text>
               </TouchableOpacity>
@@ -526,74 +556,87 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   budgetItem: {
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   budgetHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
+  },
+  categoryIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  budgetInfo: {
+    flex: 1,
   },
   budgetCategory: {
     fontSize: 16,
     fontWeight: '700',
+    marginBottom: 2,
   },
   budgetAmount: {
-    fontSize: 14,
-    opacity: 0.7,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  budgetRight: {
+    alignItems: 'flex-end',
   },
   progressBarContainer: {
-    height: 8,
+    height: 6,
     backgroundColor: 'rgba(150, 150, 150, 0.1)',
-    borderRadius: 4,
+    borderRadius: 3,
     overflow: 'hidden',
-    marginBottom: 8,
   },
   progressBar: {
     height: '100%',
-    borderRadius: 4,
-  },
-  budgetFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    borderRadius: 3,
   },
   budgetPercentage: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  budgetWarning: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
   },
   transactionItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    padding: 12,
     borderRadius: 20,
-    marginBottom: 10,
+    marginBottom: 8,
     borderWidth: 1,
   },
+  transactionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  transactionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
   transactionCategory: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   transactionDate: {
-    fontSize: 13,
+    fontSize: 12,
+    fontWeight: '500',
   },
   transactionAmount: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '700',
   },
   emptyState: {
     padding: 32,

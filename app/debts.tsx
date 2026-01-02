@@ -63,8 +63,8 @@ export default function Debts() {
                                 }}
                             >
                                 <View style={styles.debtContent}>
-                                    <View style={[styles.iconContainer, { backgroundColor: theme.background }]}>
-                                        <IconSymbol name="creditcard.fill" size={24} color={theme.danger} />
+                                    <View style={[styles.iconContainer, { backgroundColor: theme.danger + '10' }]}>
+                                        <IconSymbol name="creditcard.fill" size={20} color={theme.danger} />
                                     </View>
 
                                     <View style={styles.debtInfo}>
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     },
     debtCard: {
         padding: 16,
-        borderRadius: 12,
+        borderRadius: 24,
         borderWidth: 1,
         marginBottom: 12,
     },
@@ -166,9 +166,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     iconContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+        width: 40,
+        height: 40,
+        borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
@@ -178,15 +178,16 @@ const styles = StyleSheet.create({
     },
     debtCategory: {
         fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 4,
+        fontWeight: '700',
+        marginBottom: 2,
     },
     debtDate: {
-        fontSize: 13,
+        fontSize: 12,
+        fontWeight: '500',
     },
     debtAmount: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '700',
     },
     emptyState: {
         padding: 40,

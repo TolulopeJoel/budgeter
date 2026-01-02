@@ -106,7 +106,28 @@ export default function Budgets() {
     const getBudgetColor = (percentage: number) => {
         if (percentage >= 90) return theme.danger;
         if (percentage >= 80) return theme.warning;
-        return theme.success;
+        return theme.tint;
+    };
+
+    const getCategoryIcon = (category: string) => {
+        const icons: Record<string, string> = {
+            'Rent': 'house.fill',
+            'Utilities': 'bolt.fill',
+            'Insurance': 'shield.fill',
+            'Subscriptions': 'play.rectangle.fill',
+            'Loan Payment': 'creditcard.fill',
+            'Food': 'cart.fill',
+            'Transport': 'car.fill',
+            'Entertainment': 'gamecontroller.fill',
+            'Shopping': 'bag.fill',
+            'Health': 'heart.fill',
+            'Education': 'book.fill',
+            'Salary': 'cash.fill',
+            'Income': 'arrow.down.circle.fill',
+            'Debt': 'creditcard.fill',
+            'Others': 'ellipsis.circle.fill',
+        };
+        return icons[category] || 'ellipsis.circle.fill';
     };
 
     // Categories with budgets
@@ -161,24 +182,24 @@ export default function Budgets() {
                                     onPress={() => handleEditBudget(category)}
                                 >
                                     <View style={styles.budgetHeader}>
-                                        <View>
+                                        <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
+                                            <IconSymbol name={getCategoryIcon(category) as any} size={20} color={theme.tint} />
+                                        </View>
+                                        <View style={styles.budgetInfo}>
                                             <Text style={[styles.budgetCategory, { color: theme.text }]}>
                                                 {category}
-                                                <Text style={[styles.typeTag, { color: status.type === 'fixed' ? theme.tint : theme.icon }]}>
+                                                <Text style={[styles.typeTag, { color: theme.icon }]}>
                                                     {status.type === 'fixed' ? ' • Fixed' : ' • Flexible'}
                                                 </Text>
                                             </Text>
                                             <Text style={[styles.budgetAmount, { color: theme.icon }]}>
-                                                {formatCurrency(status.spent)} / {formatCurrency(status.limit)}
+                                                {formatCurrency(status.spent)} of {formatCurrency(status.limit)}
                                             </Text>
                                         </View>
-                                        <View style={styles.budgetActions}>
-                                            <TouchableOpacity
-                                                style={[styles.iconButton, { backgroundColor: theme.background }]}
-                                                onPress={() => handleRemoveBudget(category)}
-                                            >
-                                                <IconSymbol name="trash" size={18} color={theme.danger} />
-                                            </TouchableOpacity>
+                                        <View style={styles.budgetRight}>
+                                            <Text style={[styles.budgetPercentage, { color: budgetColor }]}>
+                                                {status.percentage.toFixed(0)}%
+                                            </Text>
                                         </View>
                                     </View>
 
@@ -192,12 +213,15 @@ export default function Budgets() {
                                     </View>
 
                                     <View style={styles.budgetFooter}>
-                                        <Text style={[styles.budgetPercentage, { color: budgetColor }]}>
-                                            {status.percentage.toFixed(0)}% used
+                                        <Text style={[styles.budgetRemaining, { color: theme.icon }]}>
+                                            {formatCurrency(Math.max(0, status.limit - status.spent))} remaining
                                         </Text>
-                                        <Text style={[styles.budgetRemaining, { color: theme.text }]}>
-                                            {formatCurrency(Math.max(0, status.limit - status.spent))} left
-                                        </Text>
+                                        <TouchableOpacity
+                                            style={[styles.iconButton, { backgroundColor: theme.danger + '10' }]}
+                                            onPress={() => handleRemoveBudget(category)}
+                                        >
+                                            <IconSymbol name="trash" size={16} color={theme.danger} />
+                                        </TouchableOpacity>
                                     </View>
                                 </TouchableOpacity>
                             );
@@ -378,45 +402,55 @@ const styles = StyleSheet.create({
     },
     budgetCard: {
         padding: 16,
-        borderRadius: 12,
+        borderRadius: 24,
         borderWidth: 1,
         marginBottom: 12,
     },
     budgetHeader: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 12,
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    categoryIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    budgetInfo: {
+        flex: 1,
     },
     budgetCategory: {
         fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 4,
+        fontWeight: '700',
+        marginBottom: 2,
     },
     budgetAmount: {
-        fontSize: 14,
+        fontSize: 13,
+        fontWeight: '500',
     },
-    budgetActions: {
-        flexDirection: 'row',
-        gap: 8,
+    budgetRight: {
+        alignItems: 'flex-end',
     },
     iconButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+        width: 32,
+        height: 32,
+        borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
     },
     progressBarContainer: {
-        height: 8,
+        height: 6,
         backgroundColor: 'rgba(150, 150, 150, 0.1)',
-        borderRadius: 4,
+        borderRadius: 3,
         overflow: 'hidden',
         marginBottom: 12,
     },
     progressBar: {
         height: '100%',
-        borderRadius: 4,
+        borderRadius: 3,
     },
     budgetFooter: {
         flexDirection: 'row',
@@ -425,10 +459,11 @@ const styles = StyleSheet.create({
     },
     budgetPercentage: {
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '700',
     },
     budgetRemaining: {
-        fontSize: 14,
+        fontSize: 12,
+        fontWeight: '600',
     },
     categoryCard: {
         flexDirection: 'row',

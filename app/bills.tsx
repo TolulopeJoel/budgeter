@@ -166,10 +166,10 @@ export default function RecurringBills() {
                                     <View
                                         style={[
                                             styles.iconContainer,
-                                            { backgroundColor: theme.tint + '15' },
+                                            { backgroundColor: theme.tint + '10' },
                                         ]}
                                     >
-                                        <IconSymbol name={getCategoryIcon(bill.category) as any} size={24} color={theme.tint} />
+                                        <IconSymbol name={getCategoryIcon(bill.category) as any} size={20} color={theme.tint} />
                                     </View>
 
                                     <View style={styles.billInfo}>
@@ -188,14 +188,12 @@ export default function RecurringBills() {
                                         <Text style={[styles.billAmount, { color: theme.danger }]}>
                                             {formatCurrency(bill.amount)}
                                         </Text>
-                                        <View style={styles.billActions}>
-                                            <TouchableOpacity
-                                                style={styles.actionButton}
-                                                onPress={() => handleDelete(bill.id)}
-                                            >
-                                                <IconSymbol name="trash" size={18} color={theme.danger} />
-                                            </TouchableOpacity>
-                                        </View>
+                                        <TouchableOpacity
+                                            style={[styles.actionButton, { backgroundColor: theme.danger + '10' }]}
+                                            onPress={() => handleDelete(bill.id)}
+                                        >
+                                            <IconSymbol name="trash" size={16} color={theme.danger} />
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
                             </TouchableOpacity>
@@ -362,7 +360,7 @@ const styles = StyleSheet.create({
     },
     billCard: {
         padding: 16,
-        borderRadius: 12,
+        borderRadius: 24,
         borderWidth: 1,
         marginBottom: 12,
     },
@@ -371,9 +369,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     iconContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+        width: 40,
+        height: 40,
+        borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
@@ -383,38 +381,35 @@ const styles = StyleSheet.create({
     },
     billName: {
         fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 4,
+        fontWeight: '700',
+        marginBottom: 2,
     },
     billMeta: {
         flexDirection: 'row',
     },
     billCategory: {
-        fontSize: 13,
+        fontSize: 12,
+        fontWeight: '500',
     },
     billDue: {
-        fontSize: 13,
+        fontSize: 12,
+        fontWeight: '500',
         marginLeft: 4,
     },
     billRight: {
         alignItems: 'flex-end',
+        gap: 8,
     },
     billAmount: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 8,
-    },
-    billActions: {
-        flexDirection: 'row',
-        gap: 8,
+        fontSize: 16,
+        fontWeight: '700',
     },
     actionButton: {
         width: 32,
         height: 32,
-        borderRadius: 16,
+        borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(150, 150, 150, 0.1)',
     },
     emptyState: {
         padding: 40,
