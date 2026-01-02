@@ -2,13 +2,14 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
 import { TransactionType, useBudget } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function AddTransaction() {
     const router = useRouter();
-    const { addTransaction } = useBudget();
+    const params = useLocalSearchParams();
+    const { addTransaction, updateTransaction, transactions, categories, addCategory } = useBudget();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
 
@@ -16,25 +17,56 @@ export default function AddTransaction() {
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('');
     const [note, setNote] = useState('');
+    const [isAddingCategory, setIsAddingCategory] = useState(false);
+    const [newCategory, setNewCategory] = useState('');
+
+    const isEditing = !!params.id;
+
+    useEffect(() => {
+        if (isEditing) {
+            const transaction = transactions.find(t => t.id === params.id);
+            if (transaction) {
+                setType(transaction.type);
+                setAmount(transaction.amount.toString());
+                setCategory(transaction.category);
+                setNote(transaction.note || '');
+            }
+        }
+    }, [params.id, transactions]);
 
     const handleSave = async () => {
         if (!amount || !category) return;
 
-        await addTransaction({
+        const transactionData = {
             type,
             amount: parseFloat(amount),
             category,
             note,
-            date: new Date().toISOString(),
-        });
+            date: isEditing ? transactions.find(t => t.id === params.id)!.date : new Date().toISOString(),
+        };
+
+        if (isEditing) {
+            await updateTransaction({ ...transactionData, id: params.id as string });
+        } else {
+            await addTransaction(transactionData);
+        }
 
         router.back();
+    };
+
+    const handleAddCategory = async () => {
+        if (newCategory) {
+            await addCategory(newCategory);
+            setCategory(newCategory);
+            setNewCategory('');
+            setIsAddingCategory(false);
+        }
     };
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
             <View style={styles.header}>
-                <Text style={[styles.title, { color: theme.text }]}>New Transaction</Text>
+                <Text style={[styles.title, { color: theme.text }]}>{isEditing ? 'Edit Transaction' : 'New Transaction'}</Text>
                 <TouchableOpacity onPress={() => router.back()}>
                     <IconSymbol name="xmark.circle.fill" size={30} color={theme.icon} />
                 </TouchableOpacity>
@@ -76,13 +108,30 @@ export default function AddTransaction() {
 
                 <View style={styles.inputGroup}>
                     <Text style={[styles.label, { color: theme.text }]}>Category</Text>
-                    <TextInput
-                        style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.card }]}
-                        placeholder="e.g., Food, Salary"
-                        placeholderTextColor={theme.icon}
-                        value={category}
-                        onChangeText={setCategory}
-                    />
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryList}>
+                        {categories.map((c) => (
+                            <TouchableOpacity
+                                key={c}
+                                style={[
+                                    styles.categoryChip,
+                                    category === c && { backgroundColor: theme.tint },
+                                    { borderColor: theme.border }
+                                ]}
+                                onPress={() => setCategory(c)}
+                            >
+                                <Text style={[
+                                    styles.categoryText,
+                                    category === c ? { color: '#fff' } : { color: theme.text }
+                                ]}>{c}</Text>
+                            </TouchableOpacity>
+                        ))}
+                        <TouchableOpacity
+                            style={[styles.categoryChip, { borderColor: theme.tint, borderStyle: 'dashed' }]}
+                            onPress={() => setIsAddingCategory(true)}
+                        >
+                            <Text style={{ color: theme.tint }}>+ New</Text>
+                        </TouchableOpacity>
+                    </ScrollView>
                 </View>
 
                 <View style={styles.inputGroup}>
@@ -100,9 +149,33 @@ export default function AddTransaction() {
                     style={[styles.saveButton, { backgroundColor: theme.primary }]}
                     onPress={handleSave}
                 >
-                    <Text style={styles.saveButtonText}>Save Transaction</Text>
+                    <Text style={styles.saveButtonText}>{isEditing ? 'Update Transaction' : 'Save Transaction'}</Text>
                 </TouchableOpacity>
             </ScrollView>
+
+            <Modal visible={isAddingCategory} transparent animationType="fade">
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+                        <Text style={[styles.modalTitle, { color: theme.text }]}>New Category</Text>
+                        <TextInput
+                            style={[styles.input, { color: theme.text, borderColor: theme.border, marginBottom: 16 }]}
+                            placeholder="Category Name"
+                            placeholderTextColor={theme.icon}
+                            value={newCategory}
+                            onChangeText={setNewCategory}
+                            autoFocus
+                        />
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity onPress={() => setIsAddingCategory(false)} style={styles.modalButton}>
+                                <Text style={{ color: theme.text }}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={handleAddCategory} style={[styles.modalButton, { backgroundColor: theme.tint }]}>
+                                <Text style={{ color: '#fff' }}>Add</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -155,6 +228,19 @@ const styles = StyleSheet.create({
         padding: 12,
         fontSize: 16,
     },
+    categoryList: {
+        flexDirection: 'row',
+    },
+    categoryChip: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        borderWidth: 1,
+        marginRight: 8,
+    },
+    categoryText: {
+        fontWeight: '500',
+    },
     saveButton: {
         padding: 16,
         borderRadius: 12,
@@ -165,5 +251,31 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        width: '80%',
+        padding: 20,
+        borderRadius: 16,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 16,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        gap: 12,
+    },
+    modalButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 8,
     },
 });
