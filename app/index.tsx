@@ -5,6 +5,7 @@ import { Colors } from '@/constants/Colors';
 import { Transaction, useBudget } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -113,8 +114,8 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
-          <Link href="/budgets" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '10', borderColor: theme.border }]}>
-            <TouchableOpacity>
+          <Link href="/Budgets" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '10', borderColor: theme.border }]}>
+            <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
               <View style={styles.actionIconContainer}>
                 <Ionicons name="pie-chart" size={24} color={theme.tint} />
               </View>
@@ -122,7 +123,7 @@ export default function Dashboard() {
             </TouchableOpacity>
           </Link>
           <Link href="/bills" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '10', borderColor: theme.border }]}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
               <View style={styles.actionIconContainer}>
                 <Ionicons name="receipt" size={24} color={theme.tint} />
               </View>
@@ -130,7 +131,7 @@ export default function Dashboard() {
             </TouchableOpacity>
           </Link>
           <Link href="/debts" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '10', borderColor: theme.border }]}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
               <View style={styles.actionIconContainer}>
                 <Ionicons name="cash" size={24} color={theme.tint} />
               </View>

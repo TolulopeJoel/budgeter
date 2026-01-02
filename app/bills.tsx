@@ -3,6 +3,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
 import { useBudget } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -75,6 +76,7 @@ export default function RecurringBills() {
             setIsAdding(false);
         }
 
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setFormData({ name: '', amount: '', category: categories[0]?.name || 'Food', dueDay: '1' });
     };
 
@@ -87,7 +89,10 @@ export default function RecurringBills() {
                 {
                     text: 'Delete',
                     style: 'destructive',
-                    onPress: () => deleteRecurringBill(billId),
+                    onPress: () => {
+                        deleteRecurringBill(billId);
+                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    },
                 },
             ]
         );

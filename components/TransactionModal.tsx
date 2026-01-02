@@ -3,6 +3,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
 import { Transaction, TransactionType, useBudget } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
 import {
     Alert,
@@ -101,6 +102,7 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
             await addTransaction(transactionData);
         }
 
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         onClose();
     };
 
@@ -116,6 +118,7 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                     onPress: async () => {
                         if (editingTransaction) {
                             await deleteTransaction(editingTransaction.id);
+                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                             onClose();
                         }
                     }

@@ -4,6 +4,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
 import { useBudget } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -51,6 +52,7 @@ export default function Budgets() {
             setNewCategoryName('');
             setNewCategoryIcon('ellipsis.circle.fill');
             setShowNewCategoryModal(false);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             // Immediately open budget editor for new category
             handleEditBudget(newCategoryName.trim());
         }
@@ -59,6 +61,7 @@ export default function Budgets() {
     const handleSaveBudget = async () => {
         if (editingCategory && editAmount) {
             await setBudgetLimit(editingCategory, parseFloat(editAmount), editType);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             setEditingCategory(null);
             setEditAmount('');
             setEditType('flexible');
@@ -74,7 +77,10 @@ export default function Budgets() {
                 {
                     text: 'Remove',
                     style: 'destructive',
-                    onPress: async () => await deleteBudget(category)
+                    onPress: async () => {
+                        await deleteBudget(category);
+                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    }
                 }
             ]
         );
@@ -83,6 +89,7 @@ export default function Budgets() {
     const handleRenameCategory = async () => {
         if (renamingCategory && renameInput.trim()) {
             await updateCategory(renamingCategory, renameInput.trim(), renameIcon);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             setRenamingCategory(null);
             setRenameInput('');
             setRenameIcon('ellipsis.circle.fill');
@@ -99,7 +106,10 @@ export default function Budgets() {
                 {
                     text: 'Delete',
                     style: 'destructive',
-                    onPress: async () => await deleteCategory(category)
+                    onPress: async () => {
+                        await deleteCategory(category);
+                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    }
                 }
             ]
         );

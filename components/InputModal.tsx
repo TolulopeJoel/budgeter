@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -75,7 +76,10 @@ export default function InputModal({
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.button, { backgroundColor: theme.tint, opacity: disabled ? 0.5 : 1 }]}
-                            onPress={onConfirm}
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                onConfirm();
+                            }}
                             disabled={disabled}
                         >
                             <Text style={[styles.buttonText, { color: '#fff' }]}>{confirmText}</Text>
