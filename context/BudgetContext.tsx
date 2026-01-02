@@ -11,6 +11,7 @@ export interface Transaction {
     amount: number;
     date: string;
     note?: string;
+    originalCategory?: string;
 }
 
 export type BudgetType = 'flexible' | 'fixed';
@@ -27,6 +28,7 @@ export interface RecurringBill {
     amount: number;
     category: string;
     dueDay: number; // Day of month (1-31)
+    originalCategory?: string;
 }
 
 export interface MonthlyPeriod {
@@ -163,7 +165,14 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const updateTransaction = async (transaction: Transaction) => {
-        const updated = transactions.map((t) => (t.id === transaction.id ? transaction : t));
+        const updated = transactions.map((t) => {
+            if (t.id === transaction.id) {
+                // If category is manually changed, clear originalCategory
+                const originalCategory = t.category !== transaction.category ? undefined : transaction.originalCategory;
+                return { ...transaction, originalCategory };
+            }
+            return t;
+        });
         setTransactions(updated);
         await saveTransactions(updated);
     };
@@ -180,6 +189,24 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             const updated = [...categories, category];
             setCategories(updated);
             await saveCategories(updated);
+
+            // Restore original category for transactions in "Others"
+            const updatedTransactions = transactions.map(t =>
+                (t.category === 'Others' && t.originalCategory === category)
+                    ? { ...t, category, originalCategory: undefined }
+                    : t
+            );
+            setTransactions(updatedTransactions);
+            await saveTransactions(updatedTransactions);
+
+            // Restore original category for recurring bills in "Others"
+            const updatedBills = recurringBills.map(b =>
+                (b.category === 'Others' && b.originalCategory === category)
+                    ? { ...b, category, originalCategory: undefined }
+                    : b
+            );
+            setRecurringBills(updatedBills);
+            await saveBills(updatedBills);
         }
     };
 
@@ -214,16 +241,16 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const deleteCategory = async (category: string) => {
-        // Reassign all transactions with this category to "Others"
+        // Reassign all transactions with this category to "Others" and store original
         const updatedTransactions = transactions.map(t =>
-            t.category === category ? { ...t, category: 'Others' } : t
+            t.category === category ? { ...t, category: 'Others', originalCategory: category } : t
         );
         setTransactions(updatedTransactions);
         await saveTransactions(updatedTransactions);
 
-        // Reassign all recurring bills with this category to "Others"
+        // Reassign all recurring bills with this category to "Others" and store original
         const updatedBills = recurringBills.map(b =>
-            b.category === category ? { ...b, category: 'Others' } : b
+            b.category === category ? { ...b, category: 'Others', originalCategory: category } : b
         );
         setRecurringBills(updatedBills);
         await saveBills(updatedBills);
@@ -285,7 +312,14 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const updateRecurringBill = async (bill: RecurringBill) => {
-        const updated = recurringBills.map(b => b.id === bill.id ? bill : b);
+        const updated = recurringBills.map(b => {
+            if (b.id === bill.id) {
+                // If category is manually changed, clear originalCategory
+                const originalCategory = b.category !== bill.category ? undefined : bill.originalCategory;
+                return { ...bill, originalCategory };
+            }
+            return b;
+        });
         setRecurringBills(updated);
         await saveBills(updated);
     };
