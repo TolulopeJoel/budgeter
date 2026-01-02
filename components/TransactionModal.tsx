@@ -36,10 +36,12 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
 
     const [amountError, setAmountError] = useState(false);
     const [categoryError, setCategoryError] = useState(false);
+    const [noteError, setNoteError] = useState(false);
 
     useEffect(() => {
         setAmountError(false);
         setCategoryError(false);
+        setNoteError(false);
     }, [visible]);
 
 
@@ -75,6 +77,11 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
 
         if (type === 'expense' && !category) {
             setCategoryError(true);
+            hasError = true;
+        }
+
+        if ((type === 'income' || type === 'debt') && !note.trim()) {
+            setNoteError(true);
             hasError = true;
         }
 
@@ -206,13 +213,25 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                                 )}
 
                                 <View style={styles.inputGroup}>
-                                    <Text style={[styles.label, { color: theme.text }]}>Note (Optional)</Text>
+                                    <Text style={[styles.label, { color: theme.text }]}>
+                                        {type === 'expense' ? 'Note (Optional)' : 'Note'}
+                                    </Text>
                                     <TextInput
-                                        style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]}
-                                        placeholder="What was this for?"
+                                        style={[
+                                            styles.input,
+                                            {
+                                                color: theme.text,
+                                                borderColor: noteError ? theme.danger : theme.border,
+                                                backgroundColor: noteError ? theme.danger + '10' : theme.background
+                                            }
+                                        ]}
+                                        placeholder={type === 'income' ? "Where did this income come from?" : (type === 'debt' ? "Who did you lend this to?" : "What was this for?")}
                                         placeholderTextColor={theme.icon}
                                         value={note}
-                                        onChangeText={setNote}
+                                        onChangeText={(value) => {
+                                            setNote(value);
+                                            if (value) setNoteError(false);
+                                        }}
                                         multiline
                                     />
                                 </View>
