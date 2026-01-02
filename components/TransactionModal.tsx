@@ -24,7 +24,7 @@ interface TransactionModalProps {
 }
 
 export default function TransactionModal({ visible, onClose, editingTransaction }: TransactionModalProps) {
-    const { addTransaction, updateTransaction, deleteTransaction, categories, addCategory } = useBudget();
+    const { addTransaction, updateTransaction, deleteTransaction, categories } = useBudget();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
 
@@ -32,8 +32,16 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('');
     const [note, setNote] = useState('');
-    const [isAddingCategory, setIsAddingCategory] = useState(false);
-    const [newCategory, setNewCategory] = useState('');
+    const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+
+    const [amountError, setAmountError] = useState(false);
+    const [categoryError, setCategoryError] = useState(false);
+
+    useEffect(() => {
+        setAmountError(false);
+        setCategoryError(false);
+    }, [visible]);
+
 
     useEffect(() => {
         if (editingTransaction) {
@@ -51,16 +59,26 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
     }, [editingTransaction, visible]);
 
     const handleSave = async () => {
+        let hasError = false;
+
         if (!amount) {
-            Alert.alert('Error', 'Please enter an amount');
-            return;
+            setAmountError(true);
+            hasError = true;
+        } else {
+            const parsedAmount = parseFloat(amount);
+            if ((type === 'income' || type === 'expense') && parsedAmount <= 0) {
+                setAmountError(true);
+                hasError = true;
+                Alert.alert('Invalid Amount', 'Income and Expense amounts cannot be negative.');
+            }
         }
 
-        // Only require category for expenses
         if (type === 'expense' && !category) {
-            Alert.alert('Error', 'Please select a category');
-            return;
+            setCategoryError(true);
+            hasError = true;
         }
+
+        if (hasError) return;
 
         const transactionData = {
             type,
@@ -77,15 +95,6 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
         }
 
         onClose();
-    };
-
-    const handleAddCategory = async () => {
-        if (newCategory.trim()) {
-            await addCategory(newCategory.trim());
-            setCategory(newCategory.trim());
-            setNewCategory('');
-            setIsAddingCategory(false);
-        }
     };
 
     const handleDelete = () => {
@@ -132,14 +141,16 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                             </View>
 
                             <ScrollView showsVerticalScrollIndicator={false}>
-                                <View style={styles.typeSelector}>
+                                <View style={[styles.typeSelector]}>
                                     {(['expense', 'income', 'debt'] as TransactionType[]).map((t) => (
                                         <TouchableOpacity
                                             key={t}
+                                            disabled={!!editingTransaction}
                                             style={[
                                                 styles.typeButton,
                                                 type === t && { backgroundColor: theme.tint },
-                                                { borderColor: theme.border }
+                                                { borderColor: theme.border },
+                                                editingTransaction && type !== t && { opacity: 0.04 }
                                             ]}
                                             onPress={() => setType(t)}
                                         >
@@ -158,44 +169,49 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                                     <View style={styles.amountInputContainer}>
                                         <Text style={[styles.currencySymbol, { color: theme.text }]}>₦</Text>
                                         <TextInput
-                                            style={[styles.amountInput, { color: theme.text, borderBottomColor: theme.border }]}
+                                            style={[
+                                                styles.amountInput,
+                                                {
+                                                    color: theme.text,
+                                                    borderBottomColor: amountError ? theme.danger : theme.border,
+                                                },
+                                            ]}
                                             placeholder="0"
                                             placeholderTextColor={theme.icon}
                                             keyboardType="numeric"
                                             value={amount}
-                                            onChangeText={setAmount}
-                                            autoFocus={!editingTransaction}
+                                            onChangeText={(value) => {
+                                                setAmount(value);
+                                                if (value) setAmountError(false);
+                                            }}
                                         />
+
                                     </View>
                                 </View>
 
                                 {type === 'expense' && (
                                     <View style={styles.inputGroup}>
                                         <Text style={[styles.label, { color: theme.text }]}>Category</Text>
-                                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryList}>
-                                            {categories.map((c) => (
-                                                <TouchableOpacity
-                                                    key={c}
-                                                    style={[
-                                                        styles.categoryChip,
-                                                        category === c && { backgroundColor: theme.tint },
-                                                        { borderColor: theme.border }
-                                                    ]}
-                                                    onPress={() => setCategory(c)}
-                                                >
-                                                    <Text style={[
-                                                        styles.categoryText,
-                                                        category === c ? { color: '#fff' } : { color: theme.text }
-                                                    ]}>{c}</Text>
-                                                </TouchableOpacity>
-                                            ))}
-                                            <TouchableOpacity
-                                                style={[styles.categoryChip, { borderColor: theme.tint, borderStyle: 'dashed' }]}
-                                                onPress={() => setIsAddingCategory(true)}
-                                            >
-                                                <Text style={{ color: theme.tint }}>+ New</Text>
-                                            </TouchableOpacity>
-                                        </ScrollView>
+                                        <TouchableOpacity
+                                            style={[
+                                                styles.dropdownTrigger,
+                                                {
+                                                    borderColor: categoryError ? theme.danger : theme.border,
+                                                    backgroundColor: categoryError
+                                                        ? theme.danger + '10'
+                                                        : theme.background,
+                                                },
+                                            ]}
+                                            onPress={() => setShowCategoryPicker(true)}
+                                        >
+                                            <Text style={[
+                                                styles.dropdownText,
+                                                { color: category ? theme.text : theme.icon }
+                                            ]}>
+                                                {category || 'Odogwu 😏'}
+                                            </Text>
+                                            <IconSymbol name="chevron.down" size={20} color={theme.icon} />
+                                        </TouchableOpacity>
                                     </View>
                                 )}
 
@@ -236,28 +252,49 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                 </View>
             </TouchableWithoutFeedback>
 
-            <Modal visible={isAddingCategory} transparent animationType="fade">
-                <View style={styles.innerModalOverlay}>
-                    <View style={[styles.innerModalContent, { backgroundColor: theme.card }]}>
-                        <Text style={[styles.innerModalTitle, { color: theme.text }]}>New Category</Text>
-                        <TextInput
-                            style={[styles.input, { color: theme.text, borderColor: theme.border, marginBottom: 20 }]}
-                            placeholder="Category Name"
-                            placeholderTextColor={theme.icon}
-                            value={newCategory}
-                            onChangeText={setNewCategory}
-                            autoFocus
-                        />
-                        <View style={styles.innerModalButtons}>
-                            <TouchableOpacity onPress={() => setIsAddingCategory(false)} style={styles.innerModalButton}>
-                                <Text style={{ color: theme.text }}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={handleAddCategory} style={[styles.innerModalButton, { backgroundColor: theme.tint }]}>
-                                <Text style={{ color: '#fff' }}>Add</Text>
-                            </TouchableOpacity>
-                        </View>
+            {/* Category Picker Modal */}
+            <Modal visible={showCategoryPicker} transparent animationType="slide">
+                <TouchableWithoutFeedback onPress={() => setShowCategoryPicker(false)}>
+                    <View style={styles.innerModalOverlay}>
+                        <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
+                            <View style={[styles.innerModalContent, { backgroundColor: theme.card }]}>
+                                <View style={styles.innerModalHeader}>
+                                    <Text style={[styles.innerModalTitle, { color: theme.text }]}>Select Category</Text>
+                                    <TouchableOpacity onPress={() => setShowCategoryPicker(false)}>
+                                        <IconSymbol name="xmark.circle.fill" size={24} color={theme.icon} />
+                                    </TouchableOpacity>
+                                </View>
+                                <ScrollView style={styles.categoryPickerList} showsVerticalScrollIndicator={false}>
+                                    {categories.map((c) => (
+                                        <TouchableOpacity
+                                            key={c}
+                                            style={[
+                                                styles.categoryOption,
+                                                category === c && { backgroundColor: theme.tint + '15' }
+                                            ]}
+                                            onPress={() => {
+                                                setCategory(c);
+                                                setCategoryError(false);
+                                                setShowCategoryPicker(false);
+                                            }}
+                                        >
+                                            <Text style={[
+                                                styles.categoryOptionText,
+                                                { color: theme.text },
+                                                category === c && { color: theme.tint, fontWeight: 'bold' }
+                                            ]}>
+                                                {c}
+                                            </Text>
+                                            {category === c && (
+                                                <IconSymbol name="checkmark" size={20} color={theme.tint} />
+                                            )}
+                                        </TouchableOpacity>
+                                    ))}
+                                </ScrollView>
+                            </View>
+                        </TouchableWithoutFeedback>
                     </View>
-                </View>
+                </TouchableWithoutFeedback>
             </Modal>
         </Modal>
     );
@@ -301,6 +338,9 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         fontSize: 14,
     },
+    disabledTypeSelector: {
+        opacity: 0.8,
+    },
     inputGroup: {
         marginBottom: 24,
     },
@@ -333,18 +373,37 @@ const styles = StyleSheet.create({
         fontSize: 16,
         minHeight: 50,
     },
-    categoryList: {
+    dropdownTrigger: {
         flexDirection: 'row',
-    },
-    categoryChip: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
+        justifyContent: 'space-between',
+        alignItems: 'center',
         borderWidth: 1,
-        marginRight: 8,
+        borderRadius: 12,
+        padding: 14,
     },
-    categoryText: {
-        fontWeight: '500',
+    dropdownText: {
+        fontSize: 16,
+    },
+    categoryPickerList: {
+        maxHeight: 400,
+    },
+    innerModalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    categoryOption: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 12,
+        borderRadius: 12,
+        marginBottom: 4,
+    },
+    categoryOptionText: {
+        fontSize: 16,
     },
     buttonContainer: {
         marginTop: 8,
