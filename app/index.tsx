@@ -26,6 +26,7 @@ export default function Dashboard() {
   const [showAllTransactions, setShowAllTransactions] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Real calculations from context
   const safeToSpend = getSafeToSpend();
@@ -150,9 +151,10 @@ export default function Dashboard() {
               const budgetColor = getBudgetColor(status.percentage);
 
               return (
-                <View
+                <TouchableOpacity
                   key={budget.category}
                   style={[styles.budgetItem, { backgroundColor: theme.card, borderColor: theme.border }]}
+                  onPress={() => setSelectedCategory(budget.category)}
                 >
                   <View style={styles.budgetHeader}>
                     <Text style={[styles.budgetCategory, { color: theme.text }]}>
@@ -180,7 +182,7 @@ export default function Dashboard() {
                       </Text>
                     )}
                   </View>
-                </View>
+                </TouchableOpacity>
               );
             })}
           </View>
@@ -237,6 +239,75 @@ export default function Dashboard() {
           )}
         </View>
       </ScrollView>
+
+      {/* Category Transactions Modal */}
+      <Modal visible={selectedCategory !== null} animationType="slide" presentationStyle="pageSheet">
+        <View style={[styles.modalContainer, { backgroundColor: theme.background }]}>
+          <View style={styles.modalHeader}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>{selectedCategory} Activity</Text>
+            <TouchableOpacity onPress={() => setSelectedCategory(null)}>
+              <Text style={[styles.modalCloseButton, { color: theme.tint }]}>Done</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+            {transactions
+              .filter(t => {
+                if (!currentPeriod) return false;
+                const transDate = new Date(t.date);
+                const periodStart = new Date(currentPeriod.startDate);
+                return transDate >= periodStart && t.category === selectedCategory;
+              }).length > 0 ? (
+              transactions
+                .filter(t => {
+                  if (!currentPeriod) return false;
+                  const transDate = new Date(t.date);
+                  const periodStart = new Date(currentPeriod.startDate);
+                  return transDate >= periodStart && t.category === selectedCategory;
+                })
+                .map((t) => (
+                  <TouchableOpacity
+                    key={t.id}
+                    style={[styles.transactionItem, { backgroundColor: theme.card, borderColor: theme.border }]}
+                    onPress={() => {
+                      setEditingTransaction(t);
+                      setShowTransactionModal(true);
+                    }}
+                  >
+                    <View>
+                      <Text style={[styles.transactionCategory, { color: theme.text }]}>
+                        {t.category}
+                      </Text>
+                      <Text style={[styles.transactionDate, { color: theme.icon }]}>
+                        {new Date(t.date).toLocaleDateString('en-NG', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                        {t.note && ` • ${t.note}`}
+                      </Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.transactionAmount,
+                        { color: t.type === 'income' ? theme.success : theme.danger }
+                      ]}
+                    >
+                      {t.type === 'income' ? '+' : '-'}
+                      {formatCurrency(t.amount)}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+            ) : (
+              <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
+                <Text style={[styles.emptyStateText, { color: theme.icon }]}>
+                  No transactions for this category yet.
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
 
       {/* All Transactions Modal */}
       <Modal visible={showAllTransactions} animationType="slide" presentationStyle="pageSheet">
