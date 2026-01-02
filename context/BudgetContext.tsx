@@ -125,34 +125,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             if (storedTransactions) setTransactions(JSON.parse(storedTransactions));
             if (storedCategories) {
                 const parsed = JSON.parse(storedCategories);
-                // Migration: if stored categories are strings, convert to Category objects
-                if (parsed.length > 0 && typeof parsed[0] === 'string') {
-                    const defaultIcons: Record<string, string> = {
-                        'Rent': 'house.fill',
-                        'Utilities': 'bolt.fill',
-                        'Insurance': 'shield.fill',
-                        'Subscriptions': 'play.rectangle.fill',
-                        'Loan Payment': 'creditcard.fill',
-                        'Food': 'cart.fill',
-                        'Transport': 'car.fill',
-                        'Entertainment': 'gamecontroller.fill',
-                        'Shopping': 'bag.fill',
-                        'Health': 'heart.fill',
-                        'Education': 'book.fill',
-                        'Salary': 'cash.fill',
-                        'Income': 'arrow.down.circle.fill',
-                        'Debt': 'creditcard.fill',
-                        'Others': 'ellipsis.circle.fill',
-                    };
-                    const migrated: Category[] = parsed.map((name: string) => ({
-                        name,
-                        icon: defaultIcons[name] || 'ellipsis.circle.fill'
-                    }));
-                    setCategories(migrated);
-                    await saveCategories(migrated);
-                } else {
-                    setCategories(parsed);
-                }
+                setCategories(parsed);
             }
             if (storedBudgets) setBudgets(JSON.parse(storedBudgets));
             if (storedBills) setRecurringBills(JSON.parse(storedBills));

@@ -146,11 +146,6 @@ export default function Dashboard() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: theme.text }]}>Budget Status</Text>
-              <Link href="/budgets" asChild>
-                <TouchableOpacity>
-                  <Text style={[styles.seeAllText, { color: theme.tint }]}>Manage</Text>
-                </TouchableOpacity>
-              </Link>
             </View>
 
             {budgets.map((budget) => {
