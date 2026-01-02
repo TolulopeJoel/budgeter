@@ -13,9 +13,12 @@ export interface Transaction {
     note?: string;
 }
 
+export type BudgetType = 'flexible' | 'fixed';
+
 export interface Budget {
     category: string;
     limit: number;
+    type: BudgetType;
 }
 
 export interface RecurringBill {
@@ -45,9 +48,9 @@ export interface BudgetContextType {
     addCategory: (category: string) => Promise<void>;
     updateCategory: (oldName: string, newName: string) => Promise<void>;
     deleteCategory: (category: string) => Promise<void>;
-    setBudgetLimit: (category: string, limit: number) => Promise<void>;
+    setBudgetLimit: (category: string, limit: number, type: BudgetType) => Promise<void>;
     deleteBudget: (category: string) => Promise<void>;
-    getBudgetStatus: (category: string) => { spent: number; limit: number; percentage: number };
+    getBudgetStatus: (category: string) => { spent: number; limit: number; percentage: number; type: BudgetType };
 
     // Recurring Bills
     recurringBills: RecurringBill[];
@@ -235,14 +238,14 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     // Budget functions
-    const setBudgetLimit = async (category: string, limit: number) => {
+    const setBudgetLimit = async (category: string, limit: number, type: BudgetType) => {
         const existing = budgets.find(b => b.category === category);
         let updated: Budget[];
 
         if (existing) {
-            updated = budgets.map(b => b.category === category ? { ...b, limit } : b);
+            updated = budgets.map(b => b.category === category ? { ...b, limit, type } : b);
         } else {
-            updated = [...budgets, { category, limit }];
+            updated = [...budgets, { category, limit, type }];
         }
 
         setBudgets(updated);
@@ -258,6 +261,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const getBudgetStatus = (category: string) => {
         const budget = budgets.find(b => b.category === category);
         const limit = budget?.limit || 0;
+        const type = budget?.type || 'flexible';
 
         // Calculate spent for current month only
         const spent = getCurrentMonthTransactions()
@@ -266,7 +270,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         const percentage = limit > 0 ? (spent / limit) * 100 : 0;
 
-        return { spent, limit, percentage };
+        return { spent, limit, percentage, type };
     };
 
     // Recurring Bills functions
@@ -355,9 +359,25 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const getSafeToSpend = () => {
         const income = getCurrentMonthIncome();
-        const spent = getCurrentMonthExpenses();
 
-        return income - spent;
+        // Calculate total deductions
+        const deductions = budgets.reduce((acc, budget) => {
+            const status = getBudgetStatus(budget.category);
+            if (budget.type === 'fixed') {
+                // For fixed budgets, we reserve the limit or what's spent (whichever is higher)
+                return acc + Math.max(budget.limit, status.spent);
+            } else {
+                // For flexible budgets, we only deduct what's actually spent
+                return acc + status.spent;
+            }
+        }, 0);
+
+        // Also subtract expenses that are NOT in any budget category
+        const nonBudgetExpenses = getCurrentMonthTransactions()
+            .filter(t => t.type === 'expense' && !budgets.some(b => b.category === t.category))
+            .reduce((acc, t) => acc + t.amount, 0);
+
+        return income - deductions - nonBudgetExpenses;
     };
 
     const getDebts = () => {

@@ -23,6 +23,7 @@ export default function Budgets() {
 
     const [editingCategory, setEditingCategory] = useState<string | null>(null);
     const [editAmount, setEditAmount] = useState('');
+    const [editType, setEditType] = useState<'flexible' | 'fixed'>('flexible');
     const [showNewCategoryModal, setShowNewCategoryModal] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
 
@@ -34,6 +35,7 @@ export default function Budgets() {
     const handleEditBudget = (category: string) => {
         const budget = budgets.find(b => b.category === category);
         setEditAmount(budget?.limit.toString() || '');
+        setEditType(budget?.type || 'flexible');
         setEditingCategory(category);
     };
 
@@ -49,9 +51,10 @@ export default function Budgets() {
 
     const handleSaveBudget = async () => {
         if (editingCategory && editAmount) {
-            await setBudgetLimit(editingCategory, parseFloat(editAmount));
+            await setBudgetLimit(editingCategory, parseFloat(editAmount), editType);
             setEditingCategory(null);
             setEditAmount('');
+            setEditType('flexible');
         }
     };
 
@@ -155,7 +158,12 @@ export default function Budgets() {
                                 >
                                     <View style={styles.budgetHeader}>
                                         <View>
-                                            <Text style={[styles.budgetCategory, { color: theme.text }]}>{category}</Text>
+                                            <Text style={[styles.budgetCategory, { color: theme.text }]}>
+                                                {category}
+                                                <Text style={[styles.typeTag, { color: status.type === 'fixed' ? theme.tint : theme.icon }]}>
+                                                    {status.type === 'fixed' ? ' • Fixed' : ' • Flexible'}
+                                                </Text>
+                                            </Text>
                                             <Text style={[styles.budgetAmount, { color: theme.icon }]}>
                                                 {formatCurrency(status.spent)} / {formatCurrency(status.limit)}
                                             </Text>
@@ -244,8 +252,35 @@ export default function Budgets() {
                             />
                         </View>
 
+                        <View style={styles.typeToggleContainer}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.typeToggleButton,
+                                    editType === 'flexible' && { backgroundColor: theme.tint + '20', borderColor: theme.tint }
+                                ]}
+                                onPress={() => setEditType('flexible')}
+                            >
+                                <Text style={[styles.typeToggleText, { color: editType === 'flexible' ? theme.tint : theme.text }]}>
+                                    Flexible
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    styles.typeToggleButton,
+                                    editType === 'fixed' && { backgroundColor: theme.tint + '20', borderColor: theme.tint }
+                                ]}
+                                onPress={() => setEditType('fixed')}
+                            >
+                                <Text style={[styles.typeToggleText, { color: editType === 'fixed' ? theme.tint : theme.text }]}>
+                                    Fixed
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
                         <Text style={[styles.helperText, { color: theme.icon }]}>
-                            This is the maximum amount you want to spend on {editingCategory} this month
+                            {editType === 'fixed'
+                                ? "Fixed budgets are reserved from your 'Safe to Spend' immediately, even if not yet spent."
+                                : "Flexible budgets only deduct from 'Safe to Spend' as you actually spend money."}
                         </Text>
 
                         <View style={styles.modalButtons}>
@@ -547,5 +582,27 @@ const styles = StyleSheet.create({
         padding: 8,
         borderWidth: 1,
         borderRadius: 8,
+    },
+    typeTag: {
+        fontSize: 12,
+        fontWeight: '500',
+    },
+    typeToggleContainer: {
+        flexDirection: 'row',
+        gap: 12,
+        marginBottom: 16,
+    },
+    typeToggleButton: {
+        flex: 1,
+        paddingVertical: 10,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'transparent',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    },
+    typeToggleText: {
+        fontSize: 14,
+        fontWeight: '600',
     },
 });
