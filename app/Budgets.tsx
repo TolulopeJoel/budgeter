@@ -1,3 +1,4 @@
+import { IconPicker } from '@/components/IconPicker';
 import InputModal from '@/components/InputModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
@@ -27,12 +28,15 @@ export default function Budgets() {
     const [editType, setEditType] = useState<'flexible' | 'fixed'>('flexible');
     const [showNewCategoryModal, setShowNewCategoryModal] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
+    const [newCategoryIcon, setNewCategoryIcon] = useState('ellipsis.circle.fill');
 
     // Manage Categories State
     const [showManageCategories, setShowManageCategories] = useState(false);
     const [showRenameModal, setShowRenameModal] = useState(false);
     const [renamingCategory, setRenamingCategory] = useState<string | null>(null);
     const [renameInput, setRenameInput] = useState('');
+    const [renameIcon, setRenameIcon] = useState('ellipsis.circle.fill');
+    const [showIconPicker, setShowIconPicker] = useState(false);
 
     const handleEditBudget = (category: string) => {
         const budget = budgets.find(b => b.category === category);
@@ -43,8 +47,9 @@ export default function Budgets() {
 
     const handleAddCategory = async () => {
         if (newCategoryName.trim()) {
-            await addCategory(newCategoryName.trim());
+            await addCategory(newCategoryName.trim(), newCategoryIcon);
             setNewCategoryName('');
+            setNewCategoryIcon('ellipsis.circle.fill');
             setShowNewCategoryModal(false);
             // Immediately open budget editor for new category
             handleEditBudget(newCategoryName.trim());
@@ -76,10 +81,11 @@ export default function Budgets() {
     };
 
     const handleRenameCategory = async () => {
-        if (renamingCategory && renameInput.trim() && renameInput.trim() !== renamingCategory) {
-            await updateCategory(renamingCategory, renameInput.trim());
+        if (renamingCategory && renameInput.trim()) {
+            await updateCategory(renamingCategory, renameInput.trim(), renameIcon);
             setRenamingCategory(null);
             setRenameInput('');
+            setRenameIcon('ellipsis.circle.fill');
             setShowRenameModal(false);
         }
     };
@@ -109,38 +115,22 @@ export default function Budgets() {
         return theme.tint;
     };
 
-    const getCategoryIcon = (category: string) => {
-        const icons: Record<string, string> = {
-            'Rent': 'house.fill',
-            'Utilities': 'bolt.fill',
-            'Insurance': 'shield.fill',
-            'Subscriptions': 'play.rectangle.fill',
-            'Loan Payment': 'creditcard.fill',
-            'Food': 'cart.fill',
-            'Transport': 'car.fill',
-            'Entertainment': 'gamecontroller.fill',
-            'Shopping': 'bag.fill',
-            'Health': 'heart.fill',
-            'Education': 'book.fill',
-            'Salary': 'cash.fill',
-            'Income': 'arrow.down.circle.fill',
-            'Debt': 'creditcard.fill',
-            'Others': 'ellipsis.circle.fill',
-        };
-        return icons[category] || 'ellipsis.circle.fill';
+    const getCategoryIcon = (categoryName: string) => {
+        const category = categories.find(c => c.name === categoryName);
+        return category?.icon || 'ellipsis.circle.fill';
     };
 
     // Categories with budgets
     const categoriesWithBudgets = categories.filter(cat => {
-        const budget = budgets.find(b => b.category === cat);
+        const budget = budgets.find(b => b.category === cat.name);
         return budget && budget.limit > 0;
-    });
+    }).map(cat => cat.name);
 
     // Categories without budgets (excluding income categories)
     const categoriesWithoutBudgets = categories.filter(cat => {
-        const budget = budgets.find(b => b.category === cat);
-        return (!budget || budget.limit === 0) && cat !== 'Salary';
-    });
+        const budget = budgets.find(b => b.category === cat.name);
+        return (!budget || budget.limit === 0) && cat.name !== 'Salary';
+    }).map(cat => cat.name);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -305,19 +295,42 @@ export default function Budgets() {
             {/* New Category Modal */}
             <InputModal
                 visible={showNewCategoryModal}
-                title="New Category"
+                title=""
                 value={newCategoryName}
                 onChangeText={setNewCategoryName}
                 onConfirm={handleAddCategory}
-                onCancel={() => setShowNewCategoryModal(false)}
+                onCancel={() => {
+                    setShowNewCategoryModal(false);
+                    setShowIconPicker(false);
+                }}
                 placeholder="Category Name"
                 confirmText="Create"
-            />
+                leftElement={
+                    <TouchableOpacity
+                        style={[styles.sketchIconPlaceholder, { backgroundColor: theme.card, borderColor: theme.border }]}
+                        onPress={() => setShowIconPicker(!showIconPicker)}
+                    >
+                        <IconSymbol name={newCategoryIcon as any} size={28} color={theme.tint} />
+                    </TouchableOpacity>
+                }
+            >
+                {showIconPicker && (
+                    <View style={styles.sketchIconPickerContainer}>
+                        <IconPicker
+                            selectedIcon={newCategoryIcon}
+                            onSelect={(icon) => {
+                                setNewCategoryIcon(icon);
+                                setShowIconPicker(false);
+                            }}
+                        />
+                    </View>
+                )}
+            </InputModal>
 
             {/* Rename Category Modal */}
             <InputModal
                 visible={showRenameModal}
-                title="Rename Category"
+                title=""
                 value={renameInput}
                 onChangeText={setRenameInput}
                 onConfirm={handleRenameCategory}
@@ -325,10 +338,31 @@ export default function Budgets() {
                     setShowRenameModal(false);
                     setRenamingCategory(null);
                     setRenameInput('');
+                    setShowIconPicker(false);
                 }}
                 placeholder="Category Name"
                 confirmText="Rename"
-            />
+                leftElement={
+                    <TouchableOpacity
+                        style={[styles.sketchIconPlaceholder, { backgroundColor: theme.card, borderColor: theme.border }]}
+                        onPress={() => setShowIconPicker(!showIconPicker)}
+                    >
+                        <IconSymbol name={renameIcon as any} size={28} color={theme.tint} />
+                    </TouchableOpacity>
+                }
+            >
+                {showIconPicker && (
+                    <View style={styles.sketchIconPickerContainer}>
+                        <IconPicker
+                            selectedIcon={renameIcon}
+                            onSelect={(icon) => {
+                                setRenameIcon(icon);
+                                setShowIconPicker(false);
+                            }}
+                        />
+                    </View>
+                )}
+            </InputModal>
 
             {/* Manage Categories Modal */}
             <Modal visible={showManageCategories} animationType="slide" presentationStyle="pageSheet">
@@ -343,22 +377,28 @@ export default function Budgets() {
                     <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                         {categories.map(category => (
                             <TouchableOpacity
-                                key={category}
+                                key={category.name}
                                 style={[styles.categoryRow, { borderBottomColor: theme.border }]}
                                 onPress={() => {
-                                    setRenamingCategory(category);
-                                    setRenameInput(category);
+                                    setRenamingCategory(category.name);
+                                    setRenameInput(category.name);
+                                    setRenameIcon(category.icon);
                                     setShowRenameModal(true);
                                 }}
                             >
-                                <Text style={[styles.categoryRowText, { color: theme.text }]}>{category}</Text>
+                                <View style={styles.categoryRowLeft}>
+                                    <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10', marginRight: 12 }]}>
+                                        <IconSymbol name={category.icon as any} size={20} color={theme.tint} />
+                                    </View>
+                                    <Text style={[styles.categoryRowText, { color: theme.text }]}>{category.name}</Text>
+                                </View>
                                 <View style={styles.categoryActions}>
                                     <TouchableOpacity
                                         style={[
                                             styles.iconButton,
                                             { backgroundColor: theme.card }
                                         ]}
-                                        onPress={() => handleDeleteCategory(category)}
+                                        onPress={() => handleDeleteCategory(category.name)}
                                     >
                                         <IconSymbol name="trash" size={18} color={theme.danger} />
                                     </TouchableOpacity>
@@ -497,6 +537,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
     },
+    categoryRowLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     categoryActions: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -536,5 +580,18 @@ const styles = StyleSheet.create({
     typeToggleText: {
         fontSize: 14,
         fontWeight: '600',
+    },
+    sketchIconPlaceholder: {
+        width: 64,
+        height: 64,
+        borderRadius: 16,
+        borderWidth: 2,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    sketchIconPickerContainer: {
+        marginTop: 16,
+        maxHeight: 250,
     },
 });

@@ -27,7 +27,7 @@ export default function RecurringBills() {
     const [formData, setFormData] = useState({
         name: '',
         amount: '',
-        category: categories[0] || 'Food',
+        category: categories[0]?.name || 'Food',
         dueDay: '1',
     });
 
@@ -35,7 +35,7 @@ export default function RecurringBills() {
         setFormData({
             name: '',
             amount: '',
-            category: categories[0] || 'Utilities',
+            category: categories[0]?.name || 'Utilities',
             dueDay: '1'
         });
         setIsAdding(true);
@@ -75,7 +75,7 @@ export default function RecurringBills() {
             setIsAdding(false);
         }
 
-        setFormData({ name: '', amount: '', category: categories[0] || 'Food', dueDay: '1' });
+        setFormData({ name: '', amount: '', category: categories[0]?.name || 'Food', dueDay: '1' });
     };
 
     const handleDelete = (billId: string) => {
@@ -97,16 +97,9 @@ export default function RecurringBills() {
         return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
     };
 
-    const getCategoryIcon = (category: string) => {
-        const icons: Record<string, string> = {
-            'Rent': 'house.fill',
-            'Utilities': 'bolt.fill',
-            'Insurance': 'shield.fill',
-            'Subscriptions': 'play.rectangle.fill',
-            'Loan Payment': 'creditcard.fill',
-            'Other': 'ellipsis.circle.fill',
-        };
-        return icons[category] || 'ellipsis.circle.fill';
+    const getCategoryIcon = (categoryName: string) => {
+        const category = categories.find(c => c.name === categoryName);
+        return category?.icon || 'ellipsis.circle.fill';
     };
 
     const sortedBills = [...recurringBills].sort((a, b) => a.dueDay - b.dueDay);

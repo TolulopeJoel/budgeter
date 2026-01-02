@@ -15,6 +15,7 @@ interface InputModalProps {
     cancelText?: string;
     keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad';
     prefix?: string;
+    leftElement?: React.ReactNode;
     children?: React.ReactNode;
     disabled?: boolean;
 }
@@ -31,6 +32,7 @@ export default function InputModal({
     cancelText = 'Cancel',
     keyboardType = 'default',
     prefix,
+    leftElement,
     children,
     disabled = false,
 }: InputModalProps) {
@@ -44,9 +46,10 @@ export default function InputModal({
                 style={styles.overlay}
             >
                 <View style={[styles.content, { backgroundColor: theme.card }]}>
-                    <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
+                    {title && <Text style={[styles.title, { color: theme.text }]}>{title}</Text>}
 
                     <View style={styles.inputContainer}>
+                        {leftElement}
                         {prefix && (
                             <Text style={[styles.prefix, { color: theme.text }]}>{prefix}</Text>
                         )}

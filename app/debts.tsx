@@ -9,7 +9,7 @@ import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from '
 
 export default function Debts() {
     const router = useRouter();
-    const { transactions, getDebts } = useBudget();
+    const { transactions, getDebts, categories } = useBudget();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
     const [showTransactionModal, setShowTransactionModal] = useState(false);
@@ -17,6 +17,11 @@ export default function Debts() {
 
     const debts = transactions.filter(t => t.type === 'debt');
     const totalDebt = getDebts();
+
+    const getCategoryIcon = (categoryName: string) => {
+        const category = categories.find(c => c.name === categoryName);
+        return category?.icon || 'ellipsis.circle.fill';
+    };
 
     const formatCurrency = (amount: number) => {
         return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -64,7 +69,7 @@ export default function Debts() {
                             >
                                 <View style={styles.debtContent}>
                                     <View style={[styles.iconContainer, { backgroundColor: theme.danger + '10' }]}>
-                                        <IconSymbol name="creditcard.fill" size={20} color={theme.danger} />
+                                        <IconSymbol name={getCategoryIcon(debt.category) as any} size={20} color={theme.danger} />
                                     </View>
 
                                     <View style={styles.debtInfo}>

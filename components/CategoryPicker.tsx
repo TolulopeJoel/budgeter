@@ -1,5 +1,6 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
+import { Category } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import React, { useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
@@ -7,7 +8,7 @@ import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithout
 interface CategoryPickerProps {
     value: string;
     onSelect: (category: string) => void;
-    categories: string[];
+    categories: Category[];
     error?: boolean;
     placeholder?: string;
     label?: string;
@@ -62,24 +63,29 @@ export default function CategoryPicker({
                                 <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
                                     {categories.map((c) => (
                                         <TouchableOpacity
-                                            key={c}
+                                            key={c.name}
                                             style={[
                                                 styles.option,
-                                                value === c && { backgroundColor: theme.tint + '15' }
+                                                value === c.name && { backgroundColor: theme.tint + '15' }
                                             ]}
                                             onPress={() => {
-                                                onSelect(c);
+                                                onSelect(c.name);
                                                 setShowPicker(false);
                                             }}
                                         >
-                                            <Text style={[
-                                                styles.optionText,
-                                                { color: theme.text },
-                                                value === c && { color: theme.tint, fontWeight: 'bold' }
-                                            ]}>
-                                                {c}
-                                            </Text>
-                                            {value === c && (
+                                            <View style={styles.optionLeft}>
+                                                <View style={[styles.iconContainer, { backgroundColor: theme.tint + '10' }]}>
+                                                    <IconSymbol name={c.icon as any} size={20} color={theme.tint} />
+                                                </View>
+                                                <Text style={[
+                                                    styles.optionText,
+                                                    { color: theme.text },
+                                                    value === c.name && { color: theme.tint, fontWeight: 'bold' }
+                                                ]}>
+                                                    {c.name}
+                                                </Text>
+                                            </View>
+                                            {value === c.name && (
                                                 <IconSymbol name="checkmark" size={20} color={theme.tint} />
                                             )}
                                         </TouchableOpacity>
@@ -145,10 +151,22 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 16,
+        paddingVertical: 12,
         paddingHorizontal: 12,
         borderRadius: 12,
         marginBottom: 4,
+    },
+    optionLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    iconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
     },
     optionText: {
         fontSize: 16,

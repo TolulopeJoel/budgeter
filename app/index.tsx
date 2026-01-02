@@ -1,5 +1,6 @@
 import MonthConfirmModal from '@/components/MonthConfirmModal';
 import TransactionModal from '@/components/TransactionModal';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
 import { Transaction, useBudget } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -18,6 +19,7 @@ export default function Dashboard() {
     budgets,
     getBudgetStatus,
     currentPeriod,
+    categories,
   } = useBudget();
 
   const colorScheme = useColorScheme();
@@ -55,25 +57,9 @@ export default function Dashboard() {
     return theme.tint;
   };
 
-  const getCategoryIcon = (category: string) => {
-    const icons: Record<string, string> = {
-      'Rent': 'house.fill',
-      'Utilities': 'bolt.fill',
-      'Insurance': 'shield.fill',
-      'Subscriptions': 'play.rectangle.fill',
-      'Loan Payment': 'creditcard.fill',
-      'Food': 'cart.fill',
-      'Transport': 'car.fill',
-      'Entertainment': 'gamecontroller.fill',
-      'Shopping': 'bag.fill',
-      'Health': 'heart.fill',
-      'Education': 'book.fill',
-      'Salary': 'cash.fill',
-      'Income': 'arrow.down.circle.fill',
-      'Debt': 'creditcard.fill',
-      'Others': 'ellipsis.circle.fill',
-    };
-    return icons[category] || 'ellipsis.circle.fill';
+  const getCategoryIcon = (categoryName: string) => {
+    const category = categories.find(c => c.name === categoryName);
+    return category?.icon || 'ellipsis.circle.fill';
   };
 
   // Filter current month transactions
@@ -179,7 +165,7 @@ export default function Dashboard() {
                 >
                   <View style={styles.budgetHeader}>
                     <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
-                      <Ionicons name={getCategoryIcon(budget.category).replace('.fill', '') as any} size={20} color={theme.tint} />
+                      <IconSymbol name={getCategoryIcon(budget.category) as any} size={20} color={theme.tint} />
                     </View>
                     <View style={styles.budgetInfo}>
                       <Text style={[styles.budgetCategory, { color: theme.text }]}>
@@ -230,8 +216,8 @@ export default function Dashboard() {
               >
                 <View style={styles.transactionLeft}>
                   <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.tint) + '10' }]}>
-                    <Ionicons
-                      name={getCategoryIcon(t.category).replace('.fill', '') as any}
+                    <IconSymbol
+                      name={getCategoryIcon(t.category) as any}
                       size={20}
                       color={t.type === 'income' ? theme.success : theme.tint}
                     />

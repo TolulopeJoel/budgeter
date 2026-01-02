@@ -4,6 +4,11 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 // Types
 export type TransactionType = 'income' | 'expense' | 'debt';
 
+export interface Category {
+    name: string;
+    icon: string;
+}
+
 export interface Transaction {
     id: string;
     type: TransactionType;
@@ -45,11 +50,11 @@ export interface BudgetContextType {
     deleteTransaction: (id: string) => Promise<void>;
 
     // Categories & Budgets
-    categories: string[];
+    categories: Category[];
     budgets: Budget[];
-    addCategory: (category: string) => Promise<void>;
-    updateCategory: (oldName: string, newName: string) => Promise<void>;
-    deleteCategory: (category: string) => Promise<void>;
+    addCategory: (name: string, icon: string) => Promise<void>;
+    updateCategory: (oldName: string, newName: string, newIcon: string) => Promise<void>;
+    deleteCategory: (name: string) => Promise<void>;
     setBudgetLimit: (category: string, limit: number, type: BudgetType) => Promise<void>;
     deleteBudget: (category: string) => Promise<void>;
     getBudgetStatus: (category: string) => { spent: number; limit: number; percentage: number; type: BudgetType };
@@ -80,8 +85,17 @@ const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 
 export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [categories, setCategories] = useState<string[]>([
-        'Salary', 'Food', 'Rent', 'Transport', 'Entertainment', 'Utilities', 'Shopping', 'Healthcare', 'Others'
+    const [categories, setCategories] = useState<Category[]>([
+        { name: 'Salary', icon: 'cash.fill' },
+        { name: 'Food', icon: 'cart.fill' },
+        { name: 'Rent', icon: 'house.fill' },
+        { name: 'Transport', icon: 'car.fill' },
+        { name: 'Entertainment', icon: 'gamecontroller.fill' },
+        { name: 'Utilities', icon: 'bolt.fill' },
+        { name: 'Shopping', icon: 'bag.fill' },
+        { name: 'Healthcare', icon: 'heart.fill' },
+        { name: 'Debt', icon: 'creditcard.fill' },
+        { name: 'Others', icon: 'ellipsis.circle.fill' }
     ]);
     const [budgets, setBudgets] = useState<Budget[]>([]);
     const [recurringBills, setRecurringBills] = useState<RecurringBill[]>([]);
@@ -109,7 +123,37 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             ]);
 
             if (storedTransactions) setTransactions(JSON.parse(storedTransactions));
-            if (storedCategories) setCategories(JSON.parse(storedCategories));
+            if (storedCategories) {
+                const parsed = JSON.parse(storedCategories);
+                // Migration: if stored categories are strings, convert to Category objects
+                if (parsed.length > 0 && typeof parsed[0] === 'string') {
+                    const defaultIcons: Record<string, string> = {
+                        'Rent': 'house.fill',
+                        'Utilities': 'bolt.fill',
+                        'Insurance': 'shield.fill',
+                        'Subscriptions': 'play.rectangle.fill',
+                        'Loan Payment': 'creditcard.fill',
+                        'Food': 'cart.fill',
+                        'Transport': 'car.fill',
+                        'Entertainment': 'gamecontroller.fill',
+                        'Shopping': 'bag.fill',
+                        'Health': 'heart.fill',
+                        'Education': 'book.fill',
+                        'Salary': 'cash.fill',
+                        'Income': 'arrow.down.circle.fill',
+                        'Debt': 'creditcard.fill',
+                        'Others': 'ellipsis.circle.fill',
+                    };
+                    const migrated: Category[] = parsed.map((name: string) => ({
+                        name,
+                        icon: defaultIcons[name] || 'ellipsis.circle.fill'
+                    }));
+                    setCategories(migrated);
+                    await saveCategories(migrated);
+                } else {
+                    setCategories(parsed);
+                }
+            }
             if (storedBudgets) setBudgets(JSON.parse(storedBudgets));
             if (storedBills) setRecurringBills(JSON.parse(storedBills));
             if (storedPeriod) setCurrentPeriod(JSON.parse(storedPeriod));
@@ -137,7 +181,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         await AsyncStorage.setItem('@budgeter_transactions', JSON.stringify(newTransactions));
     };
 
-    const saveCategories = async (newCategories: string[]) => {
+    const saveCategories = async (newCategories: Category[]) => {
         await AsyncStorage.setItem('@budgeter_categories', JSON.stringify(newCategories));
     };
 
@@ -184,16 +228,16 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     // Category functions
-    const addCategory = async (category: string) => {
-        if (!categories.includes(category)) {
-            const updated = [...categories, category];
+    const addCategory = async (name: string, icon: string) => {
+        if (!categories.find(c => c.name === name)) {
+            const updated = [...categories, { name, icon }];
             setCategories(updated);
             await saveCategories(updated);
 
             // Restore original category for transactions in "Others"
             const updatedTransactions = transactions.map(t =>
-                (t.category === 'Others' && t.originalCategory === category)
-                    ? { ...t, category, originalCategory: undefined }
+                (t.category === 'Others' && t.originalCategory === name)
+                    ? { ...t, category: name, originalCategory: undefined }
                     : t
             );
             setTransactions(updatedTransactions);
@@ -201,8 +245,8 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
             // Restore original category for recurring bills in "Others"
             const updatedBills = recurringBills.map(b =>
-                (b.category === 'Others' && b.originalCategory === category)
-                    ? { ...b, category, originalCategory: undefined }
+                (b.category === 'Others' && b.originalCategory === name)
+                    ? { ...b, category: name, originalCategory: undefined }
                     : b
             );
             setRecurringBills(updatedBills);
@@ -210,11 +254,14 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     };
 
-    const updateCategory = async (oldName: string, newName: string) => {
-        if (categories.includes(newName)) return; // Prevent duplicates
+    const updateCategory = async (oldName: string, newName: string, newIcon: string) => {
+        const nameExists = categories.some(c => c.name === newName && c.name !== oldName);
+        if (nameExists) return;
 
         // Update category list
-        const updatedCategories = categories.map(c => c === oldName ? newName : c);
+        const updatedCategories = categories.map(c =>
+            c.name === oldName ? { name: newName, icon: newIcon } : c
+        );
         setCategories(updatedCategories);
         await saveCategories(updatedCategories);
 
@@ -240,28 +287,28 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         await saveBills(updatedBills);
     };
 
-    const deleteCategory = async (category: string) => {
+    const deleteCategory = async (name: string) => {
         // Reassign all transactions with this category to "Others" and store original
         const updatedTransactions = transactions.map(t =>
-            t.category === category ? { ...t, category: 'Others', originalCategory: category } : t
+            t.category === name ? { ...t, category: 'Others', originalCategory: name } : t
         );
         setTransactions(updatedTransactions);
         await saveTransactions(updatedTransactions);
 
         // Reassign all recurring bills with this category to "Others" and store original
         const updatedBills = recurringBills.map(b =>
-            b.category === category ? { ...b, category: 'Others', originalCategory: category } : b
+            b.category === name ? { ...b, category: 'Others', originalCategory: name } : b
         );
         setRecurringBills(updatedBills);
         await saveBills(updatedBills);
 
         // Remove the category from the list
-        const updated = categories.filter(c => c !== category);
+        const updated = categories.filter(c => c.name !== name);
         setCategories(updated);
         await saveCategories(updated);
 
         // Remove budgets associated with this category
-        await deleteBudget(category);
+        await deleteBudget(name);
     };
 
     // Budget functions
