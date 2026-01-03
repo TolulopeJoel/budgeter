@@ -268,35 +268,61 @@ export default function Dashboard() {
                   const periodStart = new Date(currentPeriod.startDate);
                   return transDate >= periodStart && t.category === selectedCategory;
                 })
-                .map((t) => (
+                .map((t, index, arr) => (
                   <TouchableOpacity
                     key={t.id}
-                    style={[styles.transactionItem, { backgroundColor: theme.card, borderColor: theme.border }]}
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      paddingVertical: 16,
+                      borderBottomWidth: index < arr.length - 1 ? StyleSheet.hairlineWidth : 0,
+                      borderBottomColor: theme.border,
+                    }}
                     onPress={() => {
                       setEditingTransaction(t);
                       setShowTransactionModal(true);
                     }}
                   >
-                    <View>
-                      <Text style={[styles.transactionCategory, { color: theme.text }]}>
-                        {t.category}
-                      </Text>
-                      <Text style={[styles.transactionDate, { color: theme.icon }]}>
-                        {new Date(t.date).toLocaleDateString('en-NG', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                        {t.note && ` • ${t.note}`}
-                      </Text>
+                    <View style={styles.transactionLeft}>
+                      <View style={{ justifyContent: 'center', flex: 1 }}>
+                        {t.note ? (
+                          <>
+                            <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
+                              {t.note}
+                            </Text>
+                            <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>
+                              {new Date(t.date).toLocaleDateString('en-NG', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </Text>
+                          </>
+                        ) : (
+                          <Text style={[styles.transactionCategory, { color: theme.text, marginBottom: 0, fontSize: 16 }]}>
+                            {new Date(t.date).toLocaleDateString('en-NG', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </Text>
+                        )}
+                      </View>
                     </View>
                     <Text
                       style={[
                         styles.transactionAmount,
-                        { color: t.type === 'income' ? theme.success : theme.danger }
+                        {
+                          color: t.type === 'income'
+                            ? theme.success
+                            : (colorScheme === 'dark' ? '#FF6B6B' : '#E63946'),
+                          fontSize: 18,
+                          fontWeight: '600'
+                        }
                       ]}
                     >
-                      {t.type === 'income' ? '+' : '-'}
+                      {t.type === 'income' ? '+' : ''}
                       {formatCurrency(t.amount)}
                     </Text>
                   </TouchableOpacity>
@@ -331,32 +357,54 @@ export default function Dashboard() {
                   const periodStart = new Date(currentPeriod.startDate);
                   return transDate >= periodStart;
                 })
-                .map((t) => (
+                .map((t, index, arr) => (
                   <TouchableOpacity
                     key={t.id}
-                    style={[styles.transactionItem, { backgroundColor: theme.card, borderColor: theme.border }]}
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      paddingVertical: 16,
+                      borderBottomWidth: index < arr.length - 1 ? StyleSheet.hairlineWidth : 0,
+                      borderBottomColor: theme.border,
+                    }}
                     onPress={() => {
                       setEditingTransaction(t);
                       setShowTransactionModal(true);
                     }}
                   >
-                    <View>
-                      <Text style={[styles.transactionCategory, { color: theme.text }]}>
-                        {t.category}
-                      </Text>
-                      <Text style={[styles.transactionDate, { color: theme.icon }]}>
-                        {new Date(t.date).toLocaleDateString('en-NG', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                        {t.note && ` • ${t.note}`}
-                      </Text>
+                    <View style={styles.transactionLeft}>
+                      <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.tint) + '10' }]}>
+                        <IconSymbol
+                          name={getCategoryIcon(t.category) as any}
+                          size={20}
+                          color={t.type === 'income' ? theme.success : theme.tint}
+                        />
+                      </View>
+                      <View>
+                        <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
+                          {t.category}
+                        </Text>
+                        <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>
+                          {new Date(t.date).toLocaleDateString('en-NG', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                          {t.note && ` • ${t.note}`}
+                        </Text>
+                      </View>
                     </View>
                     <Text
                       style={[
                         styles.transactionAmount,
-                        { color: t.type === 'income' ? theme.success : theme.danger }
+                        {
+                          color: t.type === 'income'
+                            ? theme.success
+                            : (colorScheme === 'dark' ? '#FF6B6B' : '#E63946'),
+                          fontSize: 18,
+                          fontWeight: '600'
+                        }
                       ]}
                     >
                       {t.type === 'income' ? '+' : '-'}

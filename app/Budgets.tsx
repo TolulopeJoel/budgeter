@@ -317,7 +317,7 @@ export default function Budgets() {
                 confirmText="Create"
                 leftElement={
                     <TouchableOpacity
-                        style={[styles.sketchIconPlaceholder, { backgroundColor: theme.card, borderColor: theme.border }]}
+                        style={[styles.sketchIconPlaceholder, { backgroundColor: theme.tint + '10' }]}
                         onPress={() => setShowIconPicker(!showIconPicker)}
                     >
                         <IconSymbol name={newCategoryIcon as any} size={28} color={theme.tint} />
@@ -595,7 +595,6 @@ const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 16,
-        borderWidth: 2,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 16,
