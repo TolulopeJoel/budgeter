@@ -1,31 +1,80 @@
 import { Colors } from '@/constants/Colors';
-import { useBudget } from '@/context/BudgetContext';
+import { Transaction, useBudget } from '@/context/BudgetContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
-import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function MonthConfirmModal() {
-    const { needsMonthConfirmation, confirmNewMonth, setMonthlyIncome, currentPeriod } = useBudget();
+    const { needsMonthConfirmation, confirmNewMonth, getLastMonthIncomeTransactions, transactions, addTransaction, currentPeriod } = useBudget();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
 
     const [visible, setVisible] = useState(false);
-    const [income, setIncome] = useState('');
+    const [lastMonthIncome, setLastMonthIncome] = useState<Transaction[]>([]);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+    // Manual entry state
+    const [showManual, setShowManual] = useState(false);
+    const [manualAmount, setManualAmount] = useState('');
+    const [manualNote, setManualNote] = useState('');
 
     useEffect(() => {
         const shouldShow = needsMonthConfirmation();
         setVisible(shouldShow);
-        if (shouldShow && currentPeriod) {
-            setIncome(currentPeriod.income.toString());
+        if (shouldShow) {
+            const income = getLastMonthIncomeTransactions();
+            setLastMonthIncome(income);
+            // Default select all
+            setSelectedIds(new Set(income.map(t => t.id)));
+
+            // If no income found, show manual entry by default
+            if (income.length === 0) {
+                setShowManual(true);
+            } else {
+                setShowManual(false);
+            }
         }
-    }, [needsMonthConfirmation, currentPeriod]);
+    }, [currentPeriod, transactions]);
+
+    const toggleIncome = (id: string) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        const newSelected = new Set(selectedIds);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedIds(newSelected);
+    };
 
     const handleConfirm = async () => {
-        if (income) {
-            await setMonthlyIncome(parseFloat(income));
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+        // 1. Get selected carry-over transactions
+        const carryOver = lastMonthIncome.filter(t => selectedIds.has(t.id));
+
+        // 2. Add manual income if provided
+        const finalCarryOver = [...carryOver];
+        if (showManual && manualAmount && parseFloat(manualAmount) > 0) {
+            // We'll pass this as a "virtual" transaction to confirmNewMonth
+            // confirmNewMonth will handle creating the actual transaction
+            finalCarryOver.push({
+                id: 'manual-' + Date.now(),
+                type: 'income',
+                category: 'Salary', // Default category
+                amount: parseFloat(manualAmount),
+                date: new Date().toISOString(),
+                note: manualNote || 'Monthly Income'
+            });
         }
-        await confirmNewMonth();
+
+        await confirmNewMonth(finalCarryOver);
         setVisible(false);
+        setShowManual(false);
+        setManualAmount('');
+        setManualNote('');
     };
 
     const getMonthName = () => {
@@ -39,9 +88,12 @@ export default function MonthConfirmModal() {
 
     return (
         <Modal visible={visible} transparent animationType="fade">
-            <View style={styles.overlay}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.overlay}
+            >
                 <View style={[styles.container, { backgroundColor: theme.card }]}>
-                    <View style={styles.iconContainer}>
+                    <View style={[styles.iconContainer, { backgroundColor: theme.tint + '10' }]}>
                         <Text style={styles.icon}>📅</Text>
                     </View>
 
@@ -50,37 +102,96 @@ export default function MonthConfirmModal() {
                     </Text>
 
                     <Text style={[styles.subtitle, { color: theme.icon }]}>
-                        A new month has started. Please confirm your income for this month.
+                        {lastMonthIncome.length > 0
+                            ? "Select which income sources to carry over or add a new one."
+                            : "A new month has started. Please enter your income for this month."}
                     </Text>
 
-                    <View style={styles.incomeSection}>
-                        <Text style={[styles.label, { color: theme.text }]}>Monthly Income</Text>
-                        <View style={styles.inputContainer}>
-                            <Text style={[styles.currencySymbol, { color: theme.text }]}>₦</Text>
-                            <TextInput
-                                style={[styles.input, { color: theme.text, borderColor: theme.border }]}
-                                placeholder="0"
-                                placeholderTextColor={theme.icon}
-                                keyboardType="numeric"
-                                value={income}
-                                onChangeText={setIncome}
-                                autoFocus
-                            />
-                        </View>
-                    </View>
+                    <View style={styles.contentSection}>
+                        <ScrollView
+                            style={styles.scrollArea}
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={styles.scrollContent}
+                        >
+                            {lastMonthIncome.length > 0 && (
+                                <View style={styles.section}>
+                                    <Text style={[styles.label, { color: theme.text }]}>Carry Over</Text>
+                                    {lastMonthIncome.map((t) => (
+                                        <TouchableOpacity
+                                            key={t.id}
+                                            style={[
+                                                styles.incomeItem,
+                                                { borderColor: theme.border },
+                                                selectedIds.has(t.id) && { backgroundColor: theme.tint + '10', borderColor: theme.tint }
+                                            ]}
+                                            onPress={() => toggleIncome(t.id)}
+                                        >
+                                            <View style={styles.incomeInfo}>
+                                                <Text style={[styles.incomeNote, { color: theme.text }]}>
+                                                    {t.note || 'Income'}
+                                                </Text>
+                                                <Text style={[styles.incomeAmount, { color: theme.icon }]}>
+                                                    {formatCurrency(t.amount)}
+                                                </Text>
+                                            </View>
+                                            <View style={[
+                                                styles.checkbox,
+                                                { borderColor: theme.tint },
+                                                selectedIds.has(t.id) && { backgroundColor: theme.tint }
+                                            ]}>
+                                                {selectedIds.has(t.id) && (
+                                                    <Ionicons name="checkmark" size={16} color="#fff" />
+                                                )}
+                                            </View>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
 
-                    {currentPeriod && currentPeriod.income > 0 && (
-                        <View style={[styles.infoCard, { backgroundColor: theme.background }]}>
-                            <Text style={[styles.infoText, { color: theme.icon }]}>
-                                💡 Last month's income: {formatCurrency(currentPeriod.income)}
-                            </Text>
-                        </View>
-                    )}
+                            {showManual ? (
+                                <View style={styles.section}>
+                                    <View style={styles.sectionHeader}>
+                                        <Text style={[styles.label, { color: theme.text }]}>New Income</Text>
+                                        {lastMonthIncome.length > 0 && (
+                                            <TouchableOpacity onPress={() => setShowManual(false)}>
+                                                <Text style={{ color: theme.tint, fontWeight: '600' }}>Cancel</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
+                                    <View style={[styles.manualInput, { borderColor: theme.border }]}>
+                                        <TextInput
+                                            style={[styles.input, { color: theme.text }]}
+                                            placeholder="Amount"
+                                            placeholderTextColor={theme.icon}
+                                            keyboardType="numeric"
+                                            value={manualAmount}
+                                            onChangeText={setManualAmount}
+                                        />
+                                        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+                                        <TextInput
+                                            style={[styles.input, { color: theme.text }]}
+                                            placeholder="Note (e.g. Salary)"
+                                            placeholderTextColor={theme.icon}
+                                            value={manualNote}
+                                            onChangeText={setManualNote}
+                                        />
+                                    </View>
+                                </View>
+                            ) : (
+                                <TouchableOpacity
+                                    style={[styles.addManualBtn, { borderColor: theme.tint }]}
+                                    onPress={() => setShowManual(true)}
+                                >
+                                    <Ionicons name="add-circle-outline" size={20} color={theme.tint} />
+                                    <Text style={[styles.addManualText, { color: theme.tint }]}>Add Other Income</Text>
+                                </TouchableOpacity>
+                            )}
+                        </ScrollView>
+                    </View>
 
                     <TouchableOpacity
                         style={[styles.button, { backgroundColor: theme.tint }]}
                         onPress={handleConfirm}
-                        disabled={!income}
                     >
                         <Text style={styles.buttonText}>Start New Month</Text>
                     </TouchableOpacity>
@@ -89,7 +200,7 @@ export default function MonthConfirmModal() {
                         Your recurring bills will continue automatically
                     </Text>
                 </View>
-            </View>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }
@@ -97,7 +208,7 @@ export default function MonthConfirmModal() {
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
@@ -105,75 +216,134 @@ const styles = StyleSheet.create({
     container: {
         width: '100%',
         maxWidth: 400,
-        borderRadius: 24,
-        padding: 32,
+        maxHeight: '85%',
+        borderRadius: 32,
+        padding: 24,
         alignItems: 'center',
+        overflow: 'hidden',
     },
     iconContainer: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        width: 64,
+        height: 64,
+        borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 20,
-    },
-    icon: {
-        fontSize: 40,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 12,
-    },
-    subtitle: {
-        fontSize: 16,
-        textAlign: 'center',
-        lineHeight: 22,
-        marginBottom: 32,
-    },
-    incomeSection: {
-        width: '100%',
         marginBottom: 16,
     },
-    label: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 12,
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    currencySymbol: {
+    icon: {
         fontSize: 32,
+    },
+    title: {
+        fontSize: 22,
         fontWeight: 'bold',
-        marginRight: 8,
+        textAlign: 'center',
+        marginBottom: 8,
     },
-    input: {
-        flex: 1,
-        fontSize: 32,
-        fontWeight: 'bold',
-        borderBottomWidth: 2,
-        paddingVertical: 8,
-    },
-    infoCard: {
-        width: '100%',
-        padding: 12,
-        borderRadius: 12,
-        marginBottom: 24,
-    },
-    infoText: {
+    subtitle: {
         fontSize: 14,
         textAlign: 'center',
+        lineHeight: 20,
+        marginBottom: 24,
+        paddingHorizontal: 10,
+    },
+    contentSection: {
+        width: '100%',
+        height: 300,
+        marginBottom: 20,
+    },
+    scrollArea: {
+        width: '100%',
+        maxHeight: 400,
+    },
+    scrollContent: {
+        paddingBottom: 10,
+    },
+    section: {
+        width: '100%',
+        marginBottom: 20,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    label: {
+        fontSize: 12,
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+        marginBottom: 12,
+    },
+    incomeItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 16,
+        borderRadius: 16,
+        borderWidth: 1.5,
+        marginBottom: 10,
+    },
+    incomeInfo: {
+        flex: 1,
+    },
+    incomeNote: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 2,
+    },
+    incomeAmount: {
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    checkbox: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        borderWidth: 2,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: 12,
+    },
+    addManualBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16,
+        borderRadius: 16,
+        borderWidth: 1.5,
+        borderStyle: 'dashed',
+    },
+    addManualText: {
+        fontSize: 15,
+        fontWeight: '600',
+        marginLeft: 8,
+    },
+    manualInput: {
+        borderRadius: 16,
+        borderWidth: 1.5,
+        padding: 4,
+    },
+    input: {
+        padding: 12,
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    divider: {
+        height: 1.5,
+        marginHorizontal: 12,
     },
     button: {
         width: '100%',
-        padding: 16,
-        borderRadius: 12,
+        padding: 18,
+        borderRadius: 16,
         alignItems: 'center',
-        marginBottom: 12,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 5,
     },
     buttonText: {
         color: '#fff',
@@ -183,5 +353,6 @@ const styles = StyleSheet.create({
     footer: {
         fontSize: 12,
         textAlign: 'center',
+        opacity: 0.6,
     },
 });

@@ -76,8 +76,9 @@ export interface BudgetContextType {
 
     // Monthly Period
     currentPeriod: MonthlyPeriod | null;
-    confirmNewMonth: () => Promise<void>;
+    confirmNewMonth: (carryOverIncome?: Transaction[]) => Promise<void>;
     needsMonthConfirmation: () => boolean;
+    getLastMonthIncomeTransactions: () => Transaction[];
 
     // Calculations
     getBalance: () => number;
@@ -401,12 +402,25 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const now = new Date();
         const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-        return currentPeriod.month !== currentMonthKey;
+        return currentPeriod.month !== currentMonthKey || !currentPeriod.confirmed;
     };
 
-    const confirmNewMonth = async () => {
+    const confirmNewMonth = async (carryOverIncome: Transaction[] = []) => {
         const now = new Date();
         const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+        // Create new transactions for carried over income
+        const newTransactions: Transaction[] = carryOverIncome.map(t => ({
+            ...t,
+            id: Math.random().toString(36).substr(2, 9),
+            date: now.toISOString(),
+        }));
+
+        if (newTransactions.length > 0) {
+            const updatedTransactions = [...newTransactions, ...transactions];
+            setTransactions(updatedTransactions);
+            await saveTransactions(updatedTransactions);
+        }
 
         const newPeriod: MonthlyPeriod = {
             month: monthKey,
@@ -416,7 +430,54 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         setCurrentPeriod(newPeriod);
         await savePeriod(newPeriod);
-        await savePeriod(newPeriod);
+    };
+
+    const getLastMonthIncomeTransactions = () => {
+        if (!currentPeriod) return [];
+
+        // 1. Try to find income for the month stored in currentPeriod (usually the transition month)
+        const [year, month] = currentPeriod.month.split('-');
+        const monthIncome = transactions.filter(t => {
+            const transDate = new Date(t.date);
+            const tYear = transDate.getFullYear().toString();
+            const tMonth = (transDate.getMonth() + 1).toString().padStart(2, '0');
+            return t.type === 'income' && tYear === year && tMonth === month;
+        });
+
+        if (monthIncome.length > 0) return monthIncome;
+
+        // 2. Fallback: Get all income transactions, sorted by date
+        const allIncome = transactions
+            .filter(t => t.type === 'income')
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        if (allIncome.length === 0) return [];
+
+        // 3. Get the most recent month that has income
+        const mostRecentDate = new Date(allIncome[0].date);
+        const rYear = mostRecentDate.getFullYear().toString();
+        const rMonth = (mostRecentDate.getMonth() + 1).toString().padStart(2, '0');
+
+        const recentMonthIncome = allIncome.filter(t => {
+            const transDate = new Date(t.date);
+            return transDate.getFullYear().toString() === rYear &&
+                (transDate.getMonth() + 1).toString().padStart(2, '0') === rMonth;
+        });
+
+        // 4. Return unique items from that month (limit to 10)
+        const uniqueIncome: Transaction[] = [];
+        const seen = new Set();
+
+        for (const t of recentMonthIncome) {
+            const key = `${t.note}-${t.amount}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                uniqueIncome.push(t);
+            }
+            if (uniqueIncome.length >= 10) break;
+        }
+
+        return uniqueIncome;
     };
 
 
@@ -594,6 +655,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 currentPeriod,
                 confirmNewMonth,
                 needsMonthConfirmation,
+                getLastMonthIncomeTransactions,
 
                 getBalance,
                 getCurrentMonthIncome,
