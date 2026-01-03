@@ -144,24 +144,14 @@ export default function Budgets() {
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
+                <TouchableOpacity onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.back();
+                }}>
                     <IconSymbol name="chevron.left" size={28} color={theme.text} />
                 </TouchableOpacity>
-                <Text style={[styles.title, { color: theme.text }]}>Budget Management</Text>
-                <TouchableOpacity
-                    onPress={() => setShowManageCategories(true)}
-                    style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 18,
-                        backgroundColor: theme.card,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}
-                >
-                    <IconSymbol name="list.bullet" size={20} color={theme.text} />
-                </TouchableOpacity>
-
+                <Text style={[styles.title, { color: theme.text }]}>Budgets</Text>
+                <View style={{ width: 28 }} />
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -178,7 +168,10 @@ export default function Budgets() {
                                 <TouchableOpacity
                                     key={category}
                                     style={[styles.budgetCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-                                    onPress={() => handleEditBudget(category)}
+                                    onPress={() => {
+                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                        handleEditBudget(category);
+                                    }}
                                 >
                                     <View style={styles.budgetHeader}>
                                         <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
@@ -236,7 +229,10 @@ export default function Budgets() {
                         <TouchableOpacity
                             key={category}
                             style={[styles.categoryCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-                            onPress={() => handleEditBudget(category)}
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                handleEditBudget(category);
+                            }}
                         >
                             <Text style={[styles.categoryName, { color: theme.text }]}>{category}</Text>
                             <IconSymbol name="plus.circle" size={24} color={theme.tint} />
@@ -245,9 +241,22 @@ export default function Budgets() {
 
                     <TouchableOpacity
                         style={[styles.categoryCard, { backgroundColor: theme.card, borderColor: theme.border, borderStyle: 'dashed' }]}
-                        onPress={() => setShowNewCategoryModal(true)}
+                        onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            setShowNewCategoryModal(true);
+                        }}
                     >
                         <Text style={[styles.categoryName, { color: theme.tint }]}>+ Create New Category</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.categoryCard, { backgroundColor: theme.card, borderColor: theme.border, borderStyle: 'dashed', marginTop: 12 }]}
+                        onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            setShowManageCategories(true);
+                        }}
+                    >
+                        <Text style={[styles.categoryName, { color: theme.text }]}>Manage Categories</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -434,7 +443,7 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
     },
     title: {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
     },
     content: {
@@ -519,7 +528,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 16,
-        borderRadius: 12,
+        borderRadius: 20,
         borderWidth: 1,
         marginBottom: 8,
     },

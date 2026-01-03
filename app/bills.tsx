@@ -113,23 +113,14 @@ export default function RecurringBills() {
         <View style={[styles.container, { backgroundColor: theme.background }]}>
             {/* ... (Header and Content remain same) ... */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
+                <TouchableOpacity onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.back();
+                }}>
                     <IconSymbol name="chevron.left" size={28} color={theme.text} />
                 </TouchableOpacity>
                 <Text style={[styles.title, { color: theme.text }]}>Recurring Bills</Text>
-                <TouchableOpacity
-                    onPress={handleOpenAdd}
-                    style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 18,
-                        backgroundColor: theme.card,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}
-                >
-                    <IconSymbol name="plus" size={20} color={theme.tint} />
-                </TouchableOpacity>
+                <View style={{ width: 28 }} />
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -149,7 +140,7 @@ export default function RecurringBills() {
                 </View>
 
                 {/* Bills List */}
-                {sortedBills.length > 0 ? (
+                {sortedBills.length > 0 && (
                     <View style={styles.section}>
                         <Text style={[styles.sectionTitle, { color: theme.text }]}>Your Bills</Text>
 
@@ -157,7 +148,10 @@ export default function RecurringBills() {
                             <TouchableOpacity
                                 key={bill.id}
                                 style={[styles.billCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-                                onPress={() => handleOpenEdit(bill.id)}
+                                onPress={() => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                    handleOpenEdit(bill.id);
+                                }}
                             >
                                 <View style={styles.billContent}>
                                     <View
@@ -196,21 +190,17 @@ export default function RecurringBills() {
                             </TouchableOpacity>
                         ))}
                     </View>
-                ) : (
-                    <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
-                        <IconSymbol name="calendar.badge.exclamationmark" size={48} color={theme.icon} />
-                        <Text style={[styles.emptyTitle, { color: theme.text }]}>No recurring bills yet</Text>
-                        <Text style={[styles.emptyText, { color: theme.icon }]}>
-                            Add your monthly bills to track them automatically
-                        </Text>
-                        <TouchableOpacity
-                            style={[styles.emptyButton, { backgroundColor: theme.tint }]}
-                            onPress={handleOpenAdd}
-                        >
-                            <Text style={styles.emptyButtonText}>Add Your First Bill</Text>
-                        </TouchableOpacity>
-                    </View>
                 )}
+
+                <TouchableOpacity
+                    style={[styles.billCard, { backgroundColor: theme.card, borderColor: theme.border, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', paddingVertical: 20 }]}
+                    onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        handleOpenAdd();
+                    }}
+                >
+                    <Text style={[styles.billName, { color: theme.tint }]}>+ Add New Bill</Text>
+                </TouchableOpacity>
             </ScrollView>
 
             {/* Add/Edit Modal */}
@@ -311,7 +301,7 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
     },
     title: {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
     },
     content: {

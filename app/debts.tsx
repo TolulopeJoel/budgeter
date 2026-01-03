@@ -2,6 +2,7 @@ import TransactionModal from '@/components/TransactionModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
 import { Transaction, useBudget } from '@/context/BudgetContext';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
@@ -29,16 +30,14 @@ export default function Debts() {
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
+                <TouchableOpacity onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.back();
+                }}>
                     <IconSymbol name="chevron.left" size={28} color={theme.text} />
                 </TouchableOpacity>
                 <Text style={[styles.title, { color: theme.text }]}>Debts</Text>
-                <TouchableOpacity onPress={() => {
-                    setEditingTransaction(null);
-                    setShowTransactionModal(true);
-                }}>
-                    <IconSymbol name="plus.circle.fill" size={28} color={theme.tint} />
-                </TouchableOpacity>
+                <View style={{ width: 28 }} />
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -53,7 +52,7 @@ export default function Debts() {
                 </View>
 
                 {/* Debts List */}
-                {debts.length > 0 ? (
+                {debts.length > 0 && (
                     <View style={styles.section}>
                         <Text style={[styles.sectionTitle, { color: theme.text }]}>History</Text>
 
@@ -62,6 +61,7 @@ export default function Debts() {
                                 key={debt.id}
                                 style={[styles.debtCard, { backgroundColor: theme.card, borderColor: theme.border }]}
                                 onPress={() => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                                     setEditingTransaction(debt);
                                     setShowTransactionModal(true);
                                 }}
@@ -86,24 +86,18 @@ export default function Debts() {
                             </TouchableOpacity>
                         ))}
                     </View>
-                ) : (
-                    <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
-                        <IconSymbol name="checkmark.circle.fill" size={48} color={theme.success} />
-                        <Text style={[styles.emptyTitle, { color: theme.text }]}>Debt Free!</Text>
-                        <Text style={[styles.emptyText, { color: theme.icon }]}>
-                            You don&apos;t have any recorded debts.
-                        </Text>
-                        <TouchableOpacity
-                            style={[styles.emptyButton, { backgroundColor: theme.tint }]}
-                            onPress={() => {
-                                setEditingTransaction(null);
-                                setShowTransactionModal(true);
-                            }}
-                        >
-                            <Text style={styles.emptyButtonText}>Add Debt Record</Text>
-                        </TouchableOpacity>
-                    </View>
                 )}
+
+                <TouchableOpacity
+                    style={[styles.debtCard, { backgroundColor: theme.card, borderColor: theme.border, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', paddingVertical: 20 }]}
+                    onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setEditingTransaction(null);
+                        setShowTransactionModal(true);
+                    }}
+                >
+                    <Text style={[styles.debtCategory, { color: theme.tint }]}>+ Add New Debt Record</Text>
+                </TouchableOpacity>
             </ScrollView>
             <TransactionModal
                 visible={showTransactionModal}
@@ -127,7 +121,7 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
     },
     title: {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
     },
     content: {

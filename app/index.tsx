@@ -160,7 +160,7 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
-          <Link href="/Budgets" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '10', borderColor: theme.border }]}>
+          <Link href="/budgets" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '10', borderColor: theme.border }]}>
             <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
               <View style={styles.actionIconContainer}>
                 <Ionicons name="pie-chart" size={24} color={theme.tint} />
@@ -203,7 +203,10 @@ export default function Dashboard() {
                 <TouchableOpacity
                   key={budget.category}
                   style={[styles.budgetItem, { backgroundColor: theme.card, borderColor: theme.border }]}
-                  onPress={() => setSelectedCategory(budget.category)}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setSelectedCategory(budget.category);
+                  }}
                 >
                   <View style={styles.budgetHeader}>
                     <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
@@ -241,7 +244,10 @@ export default function Dashboard() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Activity</Text>
-            <TouchableOpacity onPress={() => setShowAllTransactions(true)}>
+            <TouchableOpacity onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setShowAllTransactions(true);
+            }}>
               <Text style={[styles.seeAllText, { color: theme.tint }]}>See All</Text>
             </TouchableOpacity>
           </View>
