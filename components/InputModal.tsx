@@ -2,6 +2,7 @@ import { Colors } from '@/constants/Colors';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface InputModalProps {
     visible: boolean;
@@ -38,6 +39,7 @@ export default function InputModal({
 }: InputModalProps) {
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
+    const insets = useSafeAreaInsets();
 
     return (
         <Modal visible={visible} transparent animationType="fade">
@@ -45,7 +47,7 @@ export default function InputModal({
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.overlay}
             >
-                <View style={[styles.content, { backgroundColor: theme.card }]}>
+                <View style={[styles.content, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
                     {title && <Text style={[styles.title, { color: theme.text }]}>{title}</Text>}
 
                     <View style={styles.inputContainer}>
@@ -100,7 +102,6 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         padding: 24,
-        paddingBottom: Platform.OS === 'ios' ? 40 : 24,
     },
     title: {
         fontSize: 20,

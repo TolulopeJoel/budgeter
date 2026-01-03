@@ -4,11 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function MonthConfirmModal() {
     const { needsMonthConfirmation, confirmNewMonth, getLastMonthIncomeTransactions, transactions, addTransaction, currentPeriod } = useBudget();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
+    const insets = useSafeAreaInsets();
 
     const [visible, setVisible] = useState(false);
     const [lastMonthIncome, setLastMonthIncome] = useState<Transaction[]>([]);
@@ -91,7 +93,7 @@ export default function MonthConfirmModal() {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.overlay}
             >
-                <View style={[styles.container, { backgroundColor: theme.card }]}>
+                <View style={[styles.container, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
                     <View style={[styles.iconContainer, { backgroundColor: theme.tint + '10' }]}>
                         <Text style={styles.icon}>📅</Text>
                     </View>

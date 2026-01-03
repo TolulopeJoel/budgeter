@@ -16,6 +16,7 @@ import {
     TouchableOpacity,
     TouchableWithoutFeedback, useColorScheme, View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface TransactionModalProps {
     visible: boolean;
@@ -27,6 +28,7 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
     const { addTransaction, updateTransaction, deleteTransaction, categories } = useBudget();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
+    const insets = useSafeAreaInsets();
 
     const [type, setType] = useState<TransactionType>('expense');
     const [amount, setAmount] = useState('');
@@ -137,7 +139,7 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                     <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
                         <KeyboardAvoidingView
                             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                            style={[styles.modalContent, { backgroundColor: theme.card }]}
+                            style={[styles.modalContent, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}
                         >
                             <View style={styles.header}>
                                 <Text style={[styles.title, { color: theme.text }]}>

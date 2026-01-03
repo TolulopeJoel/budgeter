@@ -6,7 +6,8 @@ import { useBudget } from '@/context/BudgetContext';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Alert, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Budgets() {
     const router = useRouter();
@@ -22,6 +23,7 @@ export default function Budgets() {
     } = useBudget();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
+    const insets = useSafeAreaInsets();
 
     const [editingCategory, setEditingCategory] = useState<string | null>(null);
     const [editAmount, setEditAmount] = useState('');
@@ -142,7 +144,7 @@ export default function Budgets() {
     }).map(cat => cat.name);
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top + 10 }]}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -150,7 +152,6 @@ export default function Budgets() {
                 }}>
                     <IconSymbol name="chevron.left" size={28} color={theme.text} />
                 </TouchableOpacity>
-                <Text style={[styles.title, { color: theme.text }]}>Budgets</Text>
                 <View style={{ width: 28 }} />
             </View>
 
@@ -384,7 +385,7 @@ export default function Budgets() {
 
             {/* Manage Categories Modal */}
             <Modal visible={showManageCategories} animationType="slide" presentationStyle="pageSheet">
-                <View style={[styles.fullScreenModal, { backgroundColor: theme.background }]}>
+                <View style={[styles.fullScreenModal, { backgroundColor: theme.background, paddingTop: insets.top }]}>
                     <View style={styles.header}>
                         <Text style={[styles.title, { color: theme.text }]}>Manage Categories</Text>
                         <TouchableOpacity onPress={() => setShowManageCategories(false)}>
@@ -439,7 +440,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingTop: Platform.OS === 'ios' ? 60 : 40,
         paddingBottom: 20,
     },
     title: {

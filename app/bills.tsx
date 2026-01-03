@@ -6,6 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function RecurringBills() {
     const router = useRouter();
@@ -20,6 +21,7 @@ export default function RecurringBills() {
     } = useBudget();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
+    const insets = useSafeAreaInsets();
 
     const [isAdding, setIsAdding] = useState(false);
     const [editingBill, setEditingBill] = useState<string | null>(null);
@@ -110,7 +112,7 @@ export default function RecurringBills() {
     const totalBills = getTotalRecurringBills();
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top + 10 }]}>
             {/* ... (Header and Content remain same) ... */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => {
@@ -119,7 +121,6 @@ export default function RecurringBills() {
                 }}>
                     <IconSymbol name="chevron.left" size={28} color={theme.text} />
                 </TouchableOpacity>
-                <Text style={[styles.title, { color: theme.text }]}>Recurring Bills</Text>
                 <View style={{ width: 28 }} />
             </View>
 
@@ -297,7 +298,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingTop: Platform.OS === 'ios' ? 60 : 40,
         paddingBottom: 20,
     },
     title: {

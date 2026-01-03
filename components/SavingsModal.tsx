@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface SavingsModalProps {
     visible: boolean;
@@ -26,6 +27,7 @@ export default function SavingsModal({
 }: SavingsModalProps) {
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
+    const insets = useSafeAreaInsets();
 
     const [amount, setAmount] = useState('');
     const [note, setNote] = useState('');
@@ -58,7 +60,7 @@ export default function SavingsModal({
 
     return (
         <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-            <View style={[styles.container, { backgroundColor: theme.background }]}>
+            <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top, paddingBottom: insets.bottom }]}>
                 <View style={styles.header}>
                     <Text style={[styles.title, { color: theme.text }]}>Savings</Text>
                     <TouchableOpacity onPress={onClose}>
@@ -236,7 +238,6 @@ export default function SavingsModal({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 20,
     },
     header: {
         flexDirection: 'row',

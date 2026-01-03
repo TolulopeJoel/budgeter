@@ -10,6 +10,7 @@ import * as Haptics from 'expo-haptics';
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Dashboard() {
   const {
@@ -31,6 +32,8 @@ export default function Dashboard() {
     userPin,
     updateUserPin,
   } = useBudget();
+
+  const insets = useSafeAreaInsets();
 
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
@@ -89,7 +92,7 @@ export default function Dashboard() {
   return (
     <>
       <MonthConfirmModal />
-      <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      <ScrollView style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top + 20 }]}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.headerTitle, { color: theme.text }]}>Budgeter</Text>
@@ -306,7 +309,7 @@ export default function Dashboard() {
 
       {/* Category Transactions Modal */}
       <Modal visible={selectedCategory !== null} animationType="slide" presentationStyle="pageSheet">
-        <View style={[styles.modalContainer, { backgroundColor: theme.background }]}>
+        <View style={[styles.modalContainer, { backgroundColor: theme.background, paddingTop: insets.top }]}>
           <View style={styles.modalHeader}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>{selectedCategory} Activity</Text>
             <TouchableOpacity onPress={() => setSelectedCategory(null)}>
@@ -401,7 +404,7 @@ export default function Dashboard() {
 
       {/* All Transactions Modal */}
       <Modal visible={showAllTransactions} animationType="slide" presentationStyle="pageSheet">
-        <View style={[styles.modalContainer, { backgroundColor: theme.background }]}>
+        <View style={[styles.modalContainer, { backgroundColor: theme.background, paddingTop: insets.top }]}>
           <View style={styles.modalHeader}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>All Transactions</Text>
             <TouchableOpacity onPress={() => setShowAllTransactions(false)}>
@@ -527,6 +530,7 @@ export default function Dashboard() {
       >
         <Ionicons name="add" size={28} color="#fff" />
       </TouchableOpacity>
+      <View style={{ height: insets.bottom }} />
     </>
   );
 }
@@ -535,7 +539,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    paddingTop: 60,
   },
   header: {
     flexDirection: 'row',
@@ -786,7 +789,6 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    paddingTop: 60,
   },
   modalHeader: {
     flexDirection: 'row',
