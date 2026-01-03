@@ -74,9 +74,11 @@ export default function Dashboard() {
     return theme.tint;
   };
 
-  const getCategoryIcon = (categoryName: string) => {
+  const getCategoryIcon = (categoryName: string, type?: string) => {
+    if (type === 'income' || categoryName === 'Income') return 'arrow.down.circle.fill';
+    if (type === 'debt' || categoryName === 'Debt') return 'arrow.up.circle.fill';
     const category = categories.find(c => c.name === categoryName);
-    return category?.icon || 'ellipsis.circle.fill';
+    return category?.icon || (type === 'expense' ? 'arrow.up.circle.fill' : 'ellipsis.circle.fill');
   };
 
   // Filter current month transactions
@@ -87,12 +89,17 @@ export default function Dashboard() {
       const periodStart = new Date(currentPeriod.startDate);
       return transDate >= periodStart;
     })
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 3);
 
   return (
     <>
       <MonthConfirmModal />
-      <ScrollView style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top + 20 }]}>
+      <ScrollView
+        style={{ backgroundColor: theme.background }}
+        contentContainerStyle={[styles.container, { paddingTop: insets.top + 20 }]}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.headerTitle, { color: theme.text }]}>Budgeter</Text>
@@ -261,16 +268,17 @@ export default function Dashboard() {
                 key={t.id}
                 style={[styles.transactionItem, { backgroundColor: theme.card, borderColor: theme.border }]}
                 onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setEditingTransaction(t);
                   setShowTransactionModal(true);
                 }}
               >
                 <View style={styles.transactionLeft}>
-                  <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.tint) + '10' }]}>
+                  <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
                     <IconSymbol
-                      name={getCategoryIcon(t.category) as any}
+                      name={getCategoryIcon(t.category, t.type) as any}
                       size={20}
-                      color={t.type === 'income' ? theme.success : theme.tint}
+                      color={t.type === 'income' ? theme.success : theme.danger}
                     />
                   </View>
                   <View>
@@ -289,10 +297,10 @@ export default function Dashboard() {
                 <Text
                   style={[
                     styles.transactionAmount,
-                    { color: t.type === 'income' ? theme.success : theme.text }
+                    { color: t.type === 'income' ? theme.success : theme.danger }
                   ]}
                 >
-                  {t.type === 'income' ? '+' : ''}
+                  {t.type === 'income' ? '+' : '-'}
                   {formatCurrency(t.amount)}
                 </Text>
               </TouchableOpacity>
@@ -386,7 +394,7 @@ export default function Dashboard() {
                         }
                       ]}
                     >
-                      {t.type === 'income' ? '+' : ''}
+                      {t.type === 'income' ? '+' : (t.type === 'expense' ? '-' : '')}
                       {formatCurrency(t.amount)}
                     </Text>
                   </TouchableOpacity>
@@ -421,6 +429,7 @@ export default function Dashboard() {
                   const periodStart = new Date(currentPeriod.startDate);
                   return transDate >= periodStart;
                 })
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                 .map((t, index, arr) => (
                   <TouchableOpacity
                     key={t.id}
@@ -433,16 +442,17 @@ export default function Dashboard() {
                       borderBottomColor: theme.border,
                     }}
                     onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                       setEditingTransaction(t);
                       setShowTransactionModal(true);
                     }}
                   >
                     <View style={styles.transactionLeft}>
-                      <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.tint) + '10' }]}>
+                      <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
                         <IconSymbol
-                          name={getCategoryIcon(t.category) as any}
+                          name={getCategoryIcon(t.category, t.type) as any}
                           size={20}
-                          color={t.type === 'income' ? theme.success : theme.tint}
+                          color={theme.tint}
                         />
                       </View>
                       <View>
@@ -462,13 +472,7 @@ export default function Dashboard() {
                     <Text
                       style={[
                         styles.transactionAmount,
-                        {
-                          color: t.type === 'income'
-                            ? theme.success
-                            : (colorScheme === 'dark' ? '#FF6B6B' : '#E63946'),
-                          fontSize: 18,
-                          fontWeight: '600'
-                        }
+                        { color: t.type === 'income' ? theme.success : theme.danger }
                       ]}
                     >
                       {t.type === 'income' ? '+' : '-'}
@@ -537,8 +541,7 @@ export default function Dashboard() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 20,
+    paddingHorizontal: 20,
   },
   header: {
     flexDirection: 'row',

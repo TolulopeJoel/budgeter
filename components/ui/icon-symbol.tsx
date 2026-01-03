@@ -92,6 +92,9 @@ const MAPPING = {
   'football.fill': 'football',
   'tennisball.fill': 'tennisball',
   'ellipsis.circle.fill': 'ellipsis-horizontal-circle',
+  'arrow.down.circle.fill': 'arrow-down-circle',
+  'arrow.up.circle.fill': 'arrow-up-circle',
+  'creditcard.fill': 'card',
 } as IconMapping;
 
 /**
