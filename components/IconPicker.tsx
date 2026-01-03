@@ -9,15 +9,14 @@ interface IconPickerProps {
 }
 
 const ICONS = [
-    'cash', 'cart', 'house', 'car', 'gamecontroller', 'bolt', 'bag', 'heart',
-    'book', 'airplane', 'fitness', 'medical', 'restaurant', 'cafe', 'bus',
-    'train', 'bicycle', 'gift', 'shirt', 'paw', 'construct', 'hammer',
-    'school', 'library', 'briefcase', 'wallet', 'card', 'pie-chart',
-    'trending-up', 'trending-down', 'analytics', 'bar-chart', 'globe',
-    'map', 'location', 'navigate', 'call', 'mail', 'chatbubble', 'notifications',
-    'settings', 'person', 'people', 'star', 'sunny', 'moon', 'cloudy', 'rainy',
-    'snow', 'flash', 'water', 'leaf', 'flower', 'flame', 'ice-cream', 'pizza',
-    'beer', 'wine', 'fast-food', 'barbell', 'basketball', 'football', 'tennisball'
+    'banknote.fill', 'creditcard.fill', 'briefcase.fill',
+    'house.fill', 'lightbulb.fill', 'drop.fill', 'wifi',
+    'cart.fill', 'fork.knife', 'cup.and.saucer.fill',
+    'car.fill', 'bus.fill',
+    'stethoscope', 'pills.fill', 'dumbbell.fill',
+    'scissors', 'bag.fill',
+    'gamecontroller.fill',
+    'gift.fill', 'heart.fill', 'graduationcap.fill'
 ];
 
 export const IconPicker: React.FC<IconPickerProps> = ({ selectedIcon, onSelect }) => {
@@ -31,13 +30,12 @@ export const IconPicker: React.FC<IconPickerProps> = ({ selectedIcon, onSelect }
                 contentContainerStyle={styles.scrollContent}
             >
                 <View style={styles.grid}>
-                    {ICONS.map((icon) => {
-                        const isSelected = selectedIcon === `${icon}.fill` || selectedIcon === icon;
-                        const iconName = `${icon}.fill`;
+                    {ICONS.map((iconName) => {
+                        const isSelected = selectedIcon === iconName;
 
                         return (
                             <TouchableOpacity
-                                key={icon}
+                                key={iconName}
                                 style={[
                                     styles.iconButton,
                                     { backgroundColor: theme.card },

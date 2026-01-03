@@ -14,88 +14,58 @@ type IconSymbolName = keyof typeof MAPPING;
  * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
  */
 const MAPPING = {
+  // Housing
   'house.fill': 'home',
-  'paperplane.fill': 'send',
-  'chevron.left.forwardslash.chevron.right': 'code-slash',
-  'chevron.right': 'chevron-forward',
-  'chevron.down': 'chevron-down',
-  'chevron.left': 'chevron-back',
-  'checkmark': 'checkmark',
-  'plus': 'add',
-  'plus.circle': 'add-circle-outline',
-  'plus.circle.fill': 'add-circle',
+  'lightbulb.fill': 'bulb',
+  'drop.fill': 'water',
+  'wifi': 'wifi',
+
+  // Food & Drink
+  'cart.fill': 'cart',
+  'fork.knife': 'restaurant',
+  'cup.and.saucer.fill': 'cafe',
+
+  // Transport
+  'car.fill': 'car',
+  'bus.fill': 'bus',
+
+  // Health & Wellness
+  'stethoscope': 'medical',
+  'pills.fill': 'medkit',
+  'dumbbell.fill': 'barbell',
+
+  // Personal Care
+  'scissors': 'cut',
+  'bag.fill': 'bag',
+
+  // Entertainment
+  'gamecontroller.fill': 'game-controller',
+
+  // Finance
+  'banknote.fill': 'cash-outline',
+  'creditcard.fill': 'card',
+  'briefcase.fill': 'briefcase',
+  'leaf.fill': 'leaf',
+
+  // Others
+  'gift.fill': 'gift',
+  'heart.fill': 'heart',
+  'graduationcap.fill': 'school',
+
+  // System Icons
   'trash': 'trash',
-  'list.bullet': 'list',
+  'plus.circle.fill': 'add-circle',
   'xmark.circle.fill': 'close-circle',
   'checkmark.circle.fill': 'checkmark-circle',
-  'calendar.badge.exclamationmark': 'calendar',
-  'cash.fill': 'cash',
-  'cart.fill': 'cart',
-  'car.fill': 'car',
-  'gamecontroller.fill': 'game-controller',
-  'bolt.fill': 'flash',
-  'bag.fill': 'bag',
-  'heart.fill': 'heart',
-  'book.fill': 'book',
-  'airplane.fill': 'airplane',
-  'fitness.fill': 'fitness',
-  'medical.fill': 'medical',
-  'restaurant.fill': 'restaurant',
-  'cafe.fill': 'cafe',
-  'bus.fill': 'bus',
-  'train.fill': 'train',
-  'bicycle.fill': 'bicycle',
-  'gift.fill': 'gift',
-  'shirt.fill': 'shirt',
-  'paw.fill': 'paw',
-  'construct.fill': 'construct',
-  'hammer.fill': 'hammer',
-  'school.fill': 'school',
-  'library.fill': 'library',
-  'briefcase.fill': 'briefcase',
-  'wallet.fill': 'wallet',
-  'card.fill': 'card',
-  'pie-chart.fill': 'pie-chart',
-  'trending-up.fill': 'trending-up',
-  'trending-down.fill': 'trending-down',
-  'analytics.fill': 'analytics',
-  'bar-chart.fill': 'bar-chart',
-  'globe.fill': 'globe',
-  'map.fill': 'map',
-  'location.fill': 'location',
-  'navigate.fill': 'navigate',
-  'call.fill': 'call',
-  'mail.fill': 'mail',
-  'chatbubble.fill': 'chatbubble',
-  'notifications.fill': 'notifications',
-  'settings.fill': 'settings',
-  'person.fill': 'person',
-  'people.fill': 'people',
-  'star.fill': 'star',
-  'sunny.fill': 'sunny',
-  'moon.fill': 'moon',
-  'cloudy.fill': 'cloudy',
-  'rainy.fill': 'rainy',
-  'snow.fill': 'snow',
-  'flash.fill': 'flash',
-  'water.fill': 'water',
-  'leaf.fill': 'leaf',
-  'flower.fill': 'flower',
-  'flame.fill': 'flame',
-  'ice-cream.fill': 'ice-cream',
-  'pizza.fill': 'pizza',
-  'beer.fill': 'beer',
-  'wine.fill': 'wine',
-  'fast-food.fill': 'fast-food',
-  'barbell.fill': 'barbell',
-  'basketball.fill': 'basketball',
-  'football.fill': 'football',
-  'tennisball.fill': 'tennisball',
+  'chevron.down': 'chevron-down',
+  'chevron.right': 'chevron-forward',
+  'chevron.left': 'chevron-back',
+  'checkmark': 'checkmark',
+  'calendar': 'calendar',
   'ellipsis.circle.fill': 'ellipsis-horizontal-circle',
   'arrow.down.circle.fill': 'arrow-down-circle',
   'arrow.up.circle.fill': 'arrow-up-circle',
-  'creditcard.fill': 'card',
-} as IconMapping;
+} as any;
 
 /**
  * An icon component that uses native SF Symbols on iOS, and Ionicons on Android and web.
