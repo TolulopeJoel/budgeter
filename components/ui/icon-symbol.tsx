@@ -17,7 +17,6 @@ const MAPPING = {
   // Housing
   'house.fill': 'home',
   'lightbulb.fill': 'bulb',
-  'drop.fill': 'water',
   'wifi': 'wifi',
 
   // Food & Drink
@@ -42,7 +41,7 @@ const MAPPING = {
   'gamecontroller.fill': 'game-controller',
 
   // Finance
-  'banknote.fill': 'cash-outline',
+  'banknote.fill': 'cash',
   'creditcard.fill': 'card',
   'briefcase.fill': 'briefcase',
   'leaf.fill': 'leaf',
