@@ -2,6 +2,7 @@ import CategoryPicker from '@/components/CategoryPicker';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
 import { Transaction, TransactionType, useBudget } from '@/context/BudgetContext';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
 import {
@@ -34,6 +35,9 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('');
     const [note, setNote] = useState('');
+    const [date, setDate] = useState(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
 
     const [amountError, setAmountError] = useState(false);
     const [categoryError, setCategoryError] = useState(false);
@@ -52,12 +56,14 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
             setAmount(editingTransaction.amount.toString());
             setCategory(editingTransaction.category);
             setNote(editingTransaction.note || '');
+            setDate(new Date(editingTransaction.date));
         } else {
             // Reset for new transaction
             setType('expense');
             setAmount('');
             setCategory('');
             setNote('');
+            setDate(new Date());
         }
     }, [editingTransaction, visible]);
 
@@ -93,7 +99,7 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
             amount: parseFloat(amount),
             category: type === 'expense' ? category : (type === 'income' ? 'Income' : 'Debt'),
             note,
-            date: editingTransaction ? editingTransaction.date : new Date().toISOString(),
+            date: date.toISOString(),
         };
 
         if (editingTransaction) {
@@ -239,6 +245,68 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                                     />
                                 </View>
 
+                                {editingTransaction && (
+                                    <View style={styles.inputGroup}>
+                                        <Text style={[styles.label, { color: theme.text }]}>Date & Time</Text>
+                                        <View style={styles.dateTimeRow}>
+                                            <TouchableOpacity
+                                                style={[styles.dateTimeButton, { borderColor: theme.border, backgroundColor: theme.background }]}
+                                                onPress={() => setShowDatePicker(true)}
+                                            >
+                                                <IconSymbol name="calendar" size={20} color={theme.tint} />
+                                                <Text style={[styles.dateTimeText, { color: theme.text }]}>
+                                                    {date.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                </Text>
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity
+                                                style={[styles.dateTimeButton, { borderColor: theme.border, backgroundColor: theme.background }]}
+                                                onPress={() => setShowTimePicker(true)}
+                                            >
+                                                <IconSymbol name="clock" size={20} color={theme.tint} />
+                                                <Text style={[styles.dateTimeText, { color: theme.text }]}>
+                                                    {date.toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' })}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
+
+                                        {showDatePicker && (
+                                            <DateTimePicker
+                                                value={date}
+                                                mode="date"
+                                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+                                                    setShowDatePicker(Platform.OS === 'ios');
+                                                    if (selectedDate) {
+                                                        const newDate = new Date(date);
+                                                        newDate.setFullYear(selectedDate.getFullYear());
+                                                        newDate.setMonth(selectedDate.getMonth());
+                                                        newDate.setDate(selectedDate.getDate());
+                                                        setDate(newDate);
+                                                    }
+                                                }}
+                                            />
+                                        )}
+
+                                        {showTimePicker && (
+                                            <DateTimePicker
+                                                value={date}
+                                                mode="time"
+                                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                onChange={(event: DateTimePickerEvent, selectedTime?: Date) => {
+                                                    setShowTimePicker(Platform.OS === 'ios');
+                                                    if (selectedTime) {
+                                                        const newDate = new Date(date);
+                                                        newDate.setHours(selectedTime.getHours());
+                                                        newDate.setMinutes(selectedTime.getMinutes());
+                                                        setDate(newDate);
+                                                    }
+                                                }}
+                                            />
+                                        )}
+                                    </View>
+                                )}
+
                                 <View style={styles.buttonContainer}>
                                     <TouchableOpacity
                                         style={[styles.saveButton, { backgroundColor: theme.tint }]}
@@ -379,5 +447,22 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 12,
+    },
+    dateTimeRow: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    dateTimeButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        borderRadius: 12,
+        borderWidth: 1,
+        gap: 8,
+    },
+    dateTimeText: {
+        fontSize: 15,
+        fontWeight: '500',
     },
 });
