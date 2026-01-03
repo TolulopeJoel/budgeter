@@ -6,8 +6,10 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
 import { Transaction, useBudget } from '@/context/BudgetContext';
 import { Ionicons } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Haptics from 'expo-haptics';
 import { Link } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import React, { useState } from 'react';
 import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -93,6 +95,42 @@ export default function Dashboard() {
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 3);
+
+  const handleExportCSV = async () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      // Header
+      let csvContent = 'Date,Description,Category,Amount,Type\n';
+
+      // Rows
+      transactions.forEach(t => {
+        const date = new Date(t.date).toLocaleString();
+        const desc = t.note ? t.note.replace(/,/g, ';') : '';
+        const category = t.category;
+        const amount = t.amount;
+        const type = t.type;
+
+        csvContent += `${date},${desc},${category},${amount},${type}\n`;
+      });
+
+      const filename = `transactions_${new Date().getTime()}.csv`;
+      const fileUri = (FileSystem as any).documentDirectory + filename;
+
+      await FileSystem.writeAsStringAsync(fileUri, csvContent, {
+        encoding: 'utf8' as any,
+      });
+
+      await Sharing.shareAsync(fileUri, {
+        mimeType: 'text/csv',
+        dialogTitle: 'Export Transactions',
+        UTI: 'public.comma-separated-values-text',
+      });
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      alert('Failed to export CSV. Please try again.');
+    }
+  };
 
   return (
     <>
@@ -420,6 +458,10 @@ export default function Dashboard() {
       <Modal visible={showAllTransactions} animationType="slide" presentationStyle="pageSheet">
         <View style={[styles.modalContainer, { backgroundColor: theme.background, paddingTop: insets.top }]}>
           <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={handleExportCSV} style={styles.exportButton}>
+              <Ionicons name="share-outline" size={20} color={theme.tint} />
+              <Text style={[styles.exportButtonText, { color: theme.tint }]}>CSV</Text>
+            </TouchableOpacity>
             <Text style={[styles.modalTitle, { color: theme.text }]}>All Transactions</Text>
             <TouchableOpacity onPress={() => setShowAllTransactions(false)}>
               <Text style={[styles.modalCloseButton, { color: theme.tint }]}>Done</Text>
@@ -560,11 +602,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 20,
   },
   logo: {
-    height: 40,
-    width: 40,
+    height: 25,
+    width: 25,
   },
   headerTitle: {
     fontSize: 32,
@@ -828,6 +870,15 @@ const styles = StyleSheet.create({
   modalContent: {
     flex: 1,
     paddingHorizontal: 20,
+  },
+  exportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  exportButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   savingsCard: {
     borderRadius: 24,
