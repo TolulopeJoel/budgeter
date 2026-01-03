@@ -115,7 +115,32 @@ export default function MonthConfirmModal() {
                         >
                             {lastMonthIncome.length > 0 && (
                                 <View style={styles.section}>
-                                    <Text style={[styles.label, { color: theme.text }]}>Carry Over</Text>
+                                    <View style={styles.sectionHeader}>
+                                        <Text style={[styles.label, { color: theme.text }]}>Carry Over</Text>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                                if (selectedIds.size === lastMonthIncome.length) {
+                                                    setSelectedIds(new Set());
+                                                } else {
+                                                    setSelectedIds(new Set(lastMonthIncome.map(t => t.id)));
+                                                }
+                                            }}
+                                            style={[
+                                                styles.checkAllBtn,
+                                                { backgroundColor: theme.tint + '15' }
+                                            ]}
+                                        >
+                                            <Ionicons
+                                                name={selectedIds.size === lastMonthIncome.length ? "checkmark-circle" : "ellipse-outline"}
+                                                size={16}
+                                                color={theme.tint}
+                                            />
+                                            <Text style={[styles.checkAllText, { color: theme.tint }]}>
+                                                {selectedIds.size === lastMonthIncome.length ? "Deselect All" : "Select All"}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
                                     {lastMonthIncome.map((t) => (
                                         <TouchableOpacity
                                             key={t.id}
@@ -273,7 +298,19 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         textTransform: 'uppercase',
         letterSpacing: 1,
-        marginBottom: 12,
+    },
+    checkAllBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 20,
+    },
+    checkAllText: {
+        fontSize: 11,
+        fontWeight: '700',
+        marginLeft: 4,
+        textTransform: 'uppercase',
     },
     incomeItem: {
         flexDirection: 'row',
@@ -309,10 +346,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 16,
+        padding: 14,
         borderRadius: 16,
         borderWidth: 1.5,
         borderStyle: 'dashed',
+        marginTop: 4,
     },
     addManualText: {
         fontSize: 15,

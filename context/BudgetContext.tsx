@@ -444,7 +444,9 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             return t.type === 'income' && tYear === year && tMonth === month;
         });
 
-        if (monthIncome.length > 0) return monthIncome;
+        if (monthIncome.length > 0) {
+            return monthIncome.sort((a, b) => b.amount - a.amount);
+        }
 
         // 2. Fallback: Get all income transactions, sorted by date
         const allIncome = transactions
@@ -464,7 +466,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 (transDate.getMonth() + 1).toString().padStart(2, '0') === rMonth;
         });
 
-        // 4. Return unique items from that month (limit to 10)
+        // 4. Return unique items from that month (limit to 10) and sort by amount
         const uniqueIncome: Transaction[] = [];
         const seen = new Set();
 
@@ -477,7 +479,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             if (uniqueIncome.length >= 10) break;
         }
 
-        return uniqueIncome;
+        return uniqueIncome.sort((a, b) => b.amount - a.amount);
     };
 
 
