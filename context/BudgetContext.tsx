@@ -42,6 +42,14 @@ export interface MonthlyPeriod {
     confirmed: boolean; // User must confirm to start new month
 }
 
+export interface SavingsTransaction {
+    id: string;
+    date: string;
+    amount: number;
+    type: 'deposit' | 'withdrawal';
+    note?: string;
+}
+
 export interface BudgetContextType {
     // Transactions
     transactions: Transaction[];
@@ -76,7 +84,17 @@ export interface BudgetContextType {
     getCurrentMonthIncome: () => number;
     getCurrentMonthExpenses: () => number;
     getSafeToSpend: () => number;
+    getRemainingSavingsGoal: () => number;
     getDebts: () => number;
+
+
+
+    // Savings
+    savingsTransactions: SavingsTransaction[];
+    savingsBalance: number; // Calculated
+    monthlySavingsGoal: number;
+    addSavingsTransaction: (amount: number, type: 'deposit' | 'withdrawal', note?: string, affectBudget?: boolean) => Promise<void>;
+    updateMonthlySavingsGoal: (amount: number) => Promise<void>;
 
     loading: boolean;
 }
@@ -100,6 +118,8 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [budgets, setBudgets] = useState<Budget[]>([]);
     const [recurringBills, setRecurringBills] = useState<RecurringBill[]>([]);
     const [currentPeriod, setCurrentPeriod] = useState<MonthlyPeriod | null>(null);
+    const [savingsTransactions, setSavingsTransactions] = useState<SavingsTransaction[]>([]);
+    const [monthlySavingsGoal, setMonthlySavingsGoal] = useState(0);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -113,13 +133,19 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 storedCategories,
                 storedBudgets,
                 storedBills,
-                storedPeriod
+                storedPeriod,
+                storedSavingsBalance,
+                storedMonthlySavingsGoal
             ] = await Promise.all([
                 AsyncStorage.getItem('@budgeter_transactions'),
                 AsyncStorage.getItem('@budgeter_categories'),
                 AsyncStorage.getItem('@budgeter_budgets'),
                 AsyncStorage.getItem('@budgeter_recurring_bills'),
                 AsyncStorage.getItem('@budgeter_current_period'),
+                AsyncStorage.getItem('@budgeter_recurring_bills'),
+                AsyncStorage.getItem('@budgeter_current_period'),
+                AsyncStorage.getItem('@budgeter_savings_transactions'),
+                AsyncStorage.getItem('@budgeter_monthly_savings_goal'),
             ]);
 
             if (storedTransactions) setTransactions(JSON.parse(storedTransactions));
@@ -142,6 +168,14 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 setCurrentPeriod(initialPeriod);
                 await AsyncStorage.setItem('@budgeter_current_period', JSON.stringify(initialPeriod));
             }
+
+            if (storedSavingsBalance) setSavingsTransactions(JSON.parse(storedSavingsBalance));
+            if (storedMonthlySavingsGoal) {
+                const parsedGoal = Number(storedMonthlySavingsGoal);
+                setMonthlySavingsGoal(isNaN(parsedGoal) ? 0 : parsedGoal);
+            }
+            // Correct logic below
+
         } catch (e) {
             console.error('Failed to load data', e);
         } finally {
@@ -376,6 +410,53 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         setCurrentPeriod(newPeriod);
         await savePeriod(newPeriod);
+        await savePeriod(newPeriod);
+    };
+
+
+
+    // Savings functions
+    // Savings functions
+    const addSavingsTransaction = async (amount: number, type: 'deposit' | 'withdrawal', note?: string, affectBudget: boolean = true) => {
+        const newSavingsTx: SavingsTransaction = {
+            id: Math.random().toString(36).substr(2, 9),
+            date: new Date().toISOString(),
+            amount,
+            type,
+            note
+        };
+
+        const updatedSavings = [newSavingsTx, ...savingsTransactions];
+        setSavingsTransactions(updatedSavings);
+        await AsyncStorage.setItem('@budgeter_savings_transactions', JSON.stringify(updatedSavings));
+
+        // Auto-integrate with main budget ONLY if affectBudget is true
+        if (affectBudget) {
+            if (type === 'deposit') {
+                // Deposit to savings = Expense from budget
+                await addTransaction({
+                    type: 'expense',
+                    category: 'Savings', // Ensure this category exists or is handled
+                    amount: amount,
+                    date: new Date().toISOString(),
+                    note: note ? `Savings Deposit: ${note}` : 'Savings Deposit'
+                });
+            } else {
+                // Withdrawal from savings = Income to budget
+                await addTransaction({
+                    type: 'income',
+                    category: 'Savings',
+                    amount: amount,
+                    date: new Date().toISOString(),
+                    note: note ? `Savings Withdrawal: ${note}` : 'Savings Withdrawal'
+                });
+            }
+        }
+    };
+
+    const updateMonthlySavingsGoal = async (amount: number) => {
+        setMonthlySavingsGoal(amount);
+        await AsyncStorage.setItem('@budgeter_monthly_savings_goal', amount.toString());
     };
 
     // Helper: Get current month transactions
@@ -454,7 +535,20 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             .filter(t => t.type === 'debt')
             .reduce((acc, t) => acc + t.amount, 0);
 
-        return income - budgetDeductions - nonBudgetDeductions - currentMonthDebts;
+        // 4. Subtract Remaining Savings Goal
+        // We subtract what's left to save this month.
+        // This prevents double-counting if the user has already saved some money.
+
+        return income - budgetDeductions - nonBudgetDeductions - currentMonthDebts - getRemainingSavingsGoal();
+    };
+
+    const getRemainingSavingsGoal = () => {
+        const currentMonthTransactions = getCurrentMonthTransactions();
+        const currentMonthSavings = currentMonthTransactions
+            .filter(t => t.type === 'expense' && t.category === 'Savings')
+            .reduce((acc, t) => acc + t.amount, 0);
+
+        return Math.max(0, monthlySavingsGoal - currentMonthSavings);
     };
 
     const getDebts = () => {
@@ -494,9 +588,16 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 getCurrentMonthIncome,
                 getCurrentMonthExpenses,
                 getSafeToSpend,
+                getRemainingSavingsGoal,
                 getDebts,
 
                 loading,
+
+                savingsTransactions,
+                savingsBalance: savingsTransactions.reduce((acc, t) => t.type === 'deposit' ? acc + t.amount : acc - t.amount, 0),
+                monthlySavingsGoal,
+                addSavingsTransaction,
+                updateMonthlySavingsGoal,
             }}
         >
             {children}

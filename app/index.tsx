@@ -1,4 +1,5 @@
 import MonthConfirmModal from '@/components/MonthConfirmModal';
+import SavingsModal from '@/components/SavingsModal';
 import TransactionModal from '@/components/TransactionModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
@@ -16,11 +17,17 @@ export default function Dashboard() {
     getCurrentMonthIncome,
     getCurrentMonthExpenses,
     getTotalRecurringBills,
+    getRemainingSavingsGoal,
     transactions,
     budgets,
     getBudgetStatus,
     currentPeriod,
     categories,
+    savingsTransactions,
+    savingsBalance,
+    monthlySavingsGoal,
+    addSavingsTransaction,
+    updateMonthlySavingsGoal,
   } = useBudget();
 
   const colorScheme = useColorScheme();
@@ -30,6 +37,7 @@ export default function Dashboard() {
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showSavingsModal, setShowSavingsModal] = useState(false);
 
   // Real calculations from context
   const safeToSpend = getSafeToSpend();
@@ -91,9 +99,8 @@ export default function Dashboard() {
           <Text style={styles.mainCardAmount}>{formatCurrency(safeToSpend)}</Text>
           <View style={styles.mainCardFooter}>
             <View style={styles.mainCardStat}>
-              <Text style={styles.statLabel}>Income</Text>
-              {/* <Text style={styles.statValue}>{formatCurrency(getCurrentMonthIncome())}</Text> */}
-              <Text style={styles.statValue}>****</Text>
+              <Text style={styles.statLabel}>Saved</Text>
+              <Text style={styles.statValue}>{formatCurrency(savingsBalance)}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.mainCardStat}>
@@ -102,6 +109,30 @@ export default function Dashboard() {
             </View>
           </View>
         </View>
+
+        {/* Savings Card */}
+        <TouchableOpacity
+          style={[styles.savingsCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+          onPress={() => setShowSavingsModal(true)}
+        >
+          <View style={styles.savingsHeader}>
+            <View style={[styles.savingsIconContainer, { backgroundColor: theme.primary + '15' }]}>
+              <Ionicons name="wallet" size={24} color={theme.primary} />
+            </View>
+            <View>
+              <Text style={[styles.savingsLabel, { color: theme.icon }]}>Need To Save</Text>
+              <Text style={[styles.savingsAmount, { color: theme.text }]}>{formatCurrency(getRemainingSavingsGoal())}</Text>
+            </View>
+          </View>
+          <View style={styles.savingsFooter}>
+            <Text style={[styles.savingsDeduction, { color: theme.icon }]}>
+              {monthlySavingsGoal > 0
+                ? `Deducting ${formatCurrency(monthlySavingsGoal)}/mo`
+                : 'No monthly deduction set'}
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color={theme.icon} />
+          </View>
+        </TouchableOpacity>
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
@@ -428,6 +459,20 @@ export default function Dashboard() {
         editingTransaction={editingTransaction}
       />
 
+      <SavingsModal
+        visible={showSavingsModal}
+        onClose={() => setShowSavingsModal(false)}
+        currentBalance={savingsBalance}
+        currentGoal={monthlySavingsGoal}
+        transactions={savingsTransactions}
+        onAddTransaction={(amount, type, note, affectBudget) => {
+          addSavingsTransaction(amount, type, note, affectBudget);
+        }}
+        onUpdateGoal={(amount) => {
+          updateMonthlySavingsGoal(amount);
+        }}
+      />
+
       <TouchableOpacity
         style={[styles.floatingButton, { backgroundColor: theme.tint }]}
         onPress={() => {
@@ -717,5 +762,47 @@ const styles = StyleSheet.create({
   modalContent: {
     flex: 1,
     paddingHorizontal: 20,
+  },
+  savingsCard: {
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 32,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  savingsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  savingsIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  savingsLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  savingsAmount: {
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  savingsFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  savingsDeduction: {
+    fontSize: 12,
+    fontWeight: '500',
+    display: 'none', // Hide on small screens or if layout is tight, actually let's just show the arrow or make it simpler
   },
 });
