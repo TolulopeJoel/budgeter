@@ -1,10 +1,9 @@
 import { Colors } from '@/constants/Colors';
 import { Transaction, useBudget } from '@/context/BudgetContext';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
 
 export default function MonthConfirmModal() {
     const { needsMonthConfirmation, confirmNewMonth, getLastMonthIncomeTransactions, transactions, addTransaction, currentPeriod } = useBudget();

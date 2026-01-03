@@ -2,10 +2,9 @@ import TransactionModal from '@/components/TransactionModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
 import { Transaction, useBudget } from '@/context/BudgetContext';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 
 export default function Debts() {
     const router = useRouter();
@@ -92,7 +91,7 @@ export default function Debts() {
                         <IconSymbol name="checkmark.circle.fill" size={48} color={theme.success} />
                         <Text style={[styles.emptyTitle, { color: theme.text }]}>Debt Free!</Text>
                         <Text style={[styles.emptyText, { color: theme.icon }]}>
-                            You don't have any recorded debts.
+                            You don&apos;t have any recorded debts.
                         </Text>
                         <TouchableOpacity
                             style={[styles.emptyButton, { backgroundColor: theme.tint }]}

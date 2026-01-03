@@ -1,10 +1,9 @@
 import { Colors } from '@/constants/Colors';
 import { SavingsTransaction } from '@/context/BudgetContext';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
 
 interface SavingsModalProps {
     visible: boolean;
@@ -186,7 +185,7 @@ export default function SavingsModal({
                                         {isInitialBalance && <Ionicons name="checkmark" size={14} color="#fff" />}
                                     </View>
                                     <Text style={[styles.checkboxLabel, { color: theme.text }]}>
-                                        Initial Balance (Don't affect budget)
+                                        Initial Balance (Don&apos;t affect budget)
                                     </Text>
                                 </TouchableOpacity>
                             )}
@@ -207,7 +206,7 @@ export default function SavingsModal({
                             <View style={styles.inputGroup}>
                                 <Text style={[styles.label, { color: theme.icon }]}>Monthly Deduction Goal</Text>
                                 <Text style={[styles.helperText, { color: theme.icon }]}>
-                                    This amount is deducted from your "Safe to Spend" each month.
+                                    This amount is deducted from your &quot;Safe to Spend&quot; each month.
                                 </Text>
                                 <TextInput
                                     style={[styles.input, { color: theme.text, borderColor: theme.border }]}

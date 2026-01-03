@@ -2,7 +2,6 @@ import CategoryPicker from '@/components/CategoryPicker';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
 import { Transaction, TransactionType, useBudget } from '@/context/BudgetContext';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
 import {
@@ -15,8 +14,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    TouchableWithoutFeedback,
-    View
+    TouchableWithoutFeedback, useColorScheme, View
 } from 'react-native';
 
 interface TransactionModalProps {
