@@ -193,7 +193,7 @@ export default function Dashboard() {
               <View style={styles.actionIconContainer}>
                 <Ionicons name="cash" size={24} color={theme.tint} />
               </View>
-              <Text style={[styles.actionText, { color: theme.text }]}>Debts</Text>
+              <Text style={[styles.actionText, { color: theme.text }]}>Lent Out</Text>
             </TouchableOpacity>
           </Link>
         </View>
