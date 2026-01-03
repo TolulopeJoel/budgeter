@@ -24,7 +24,12 @@ export default function Dashboard() {
     transactions,
     budgets,
     getBudgetStatus,
+    getDebts,
+    getCurrentMonthTransactions,
     currentPeriod,
+    selectedPeriod,
+    setSelectedPeriod,
+    getAllPeriods,
     categories,
     savingsTransactions,
     savingsBalance,
@@ -48,6 +53,7 @@ export default function Dashboard() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showSavingsModal, setShowSavingsModal] = useState(false);
   const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const [showPeriodModal, setShowPeriodModal] = useState(false);
   const [isTotalSavingsVisible, setIsTotalSavingsVisible] = useState(false);
   const [securityAction, setSecurityAction] = useState<'reveal_balance' | 'manage_savings'>('manage_savings');
 
@@ -57,9 +63,9 @@ export default function Dashboard() {
   const currentSpent = getCurrentMonthExpenses();
 
   // Get month name
-  const getMonthName = () => {
-    if (!currentPeriod) return 'This Month';
-    const [year, month] = currentPeriod.month.split('-');
+  const getMonthName = (period = selectedPeriod || currentPeriod) => {
+    if (!period) return 'This Month';
+    const [year, month] = period.month.split('-');
     const date = new Date(parseInt(year), parseInt(month) - 1);
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
@@ -86,13 +92,7 @@ export default function Dashboard() {
   };
 
   // Filter current month transactions
-  const recentTransactions = transactions
-    .filter(t => {
-      if (!currentPeriod) return false;
-      const transDate = new Date(t.date);
-      const periodStart = new Date(currentPeriod.startDate);
-      return transDate >= periodStart;
-    })
+  const recentTransactions = getCurrentMonthTransactions()
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 3);
 
@@ -153,7 +153,16 @@ export default function Dashboard() {
         <View style={[styles.mainCard, { backgroundColor: theme.tint }]}>
           <View style={styles.mainCardHeader}>
             <Text style={styles.mainCardLabel}>Safe to Spend</Text>
-            <Text style={styles.mainCardMonth}>{getMonthName()}</Text>
+            <TouchableOpacity
+              style={styles.periodSelector}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowPeriodModal(true);
+              }}
+            >
+              <Text style={styles.mainCardMonth}>{getMonthName()}</Text>
+              <Ionicons name="chevron-down" size={12} color="rgba(255,255,255,0.7)" />
+            </TouchableOpacity>
           </View>
           <Text style={styles.mainCardAmount}>{formatCurrency(safeToSpend)}</Text>
           <View style={styles.mainCardFooter}>
@@ -370,86 +379,72 @@ export default function Dashboard() {
           </View>
 
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-            {transactions
-              .filter(t => {
-                if (!currentPeriod) return false;
-                const transDate = new Date(t.date);
-                const periodStart = new Date(currentPeriod.startDate);
-                return transDate >= periodStart && t.category === selectedCategory;
-              }).length > 0 ? (
-              transactions
-                .filter(t => {
-                  if (!currentPeriod) return false;
-                  const transDate = new Date(t.date);
-                  const periodStart = new Date(currentPeriod.startDate);
-                  return transDate >= periodStart && t.category === selectedCategory;
-                })
-                .map((t, index, arr) => (
-                  <TouchableOpacity
-                    key={t.id}
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      paddingVertical: 16,
-                      borderBottomWidth: index < arr.length - 1 ? StyleSheet.hairlineWidth : 0,
-                      borderBottomColor: theme.border,
-                    }}
-                    onPress={() => {
-                      setEditingTransaction(t);
-                      setShowTransactionModal(true);
-                    }}
-                  >
-                    <View style={styles.transactionLeft}>
-                      <View style={{ justifyContent: 'center', flex: 1 }}>
-                        {t.note ? (
-                          <>
-                            <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
-                              {t.note}
-                            </Text>
-                            <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>
-                              {new Date(t.date).toLocaleDateString('en-NG', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric'
-                              })}
-                            </Text>
-                          </>
-                        ) : (
-                          <Text style={[styles.transactionCategory, { color: theme.text, marginBottom: 0, fontSize: 16 }]}>
-                            {new Date(t.date).toLocaleDateString('en-NG', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric'
-                            })}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-                    <Text
-                      style={[
-                        styles.transactionAmount,
-                        {
-                          color: t.type === 'income'
-                            ? theme.success
-                            : (colorScheme === 'dark' ? '#FF6B6B' : '#E63946'),
-                          fontSize: 18,
-                          fontWeight: '600'
-                        }
-                      ]}
-                    >
-                      {t.type === 'income' ? '+' : (t.type === 'expense' ? '-' : '')}
-                      {formatCurrency(t.amount)}
+            {(() => {
+              const filtered = getCurrentMonthTransactions()
+                .filter(t => t.category === selectedCategory)
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+              if (filtered.length === 0) {
+                return (
+                  <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
+                    <Text style={[styles.emptyStateText, { color: theme.icon }]}>
+                      No transactions for this category yet.
                     </Text>
-                  </TouchableOpacity>
-                ))
-            ) : (
-              <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
-                <Text style={[styles.emptyStateText, { color: theme.icon }]}>
-                  No transactions for this category yet.
-                </Text>
-              </View>
-            )}
+                  </View>
+                );
+              }
+
+              return filtered.map((t, index, arr) => (
+                <TouchableOpacity
+                  key={t.id}
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingVertical: 16,
+                    borderBottomWidth: index === arr.length - 1 ? 0 : 1,
+                    borderBottomColor: theme.border + '40',
+                  }}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setEditingTransaction(t);
+                    setShowTransactionModal(true);
+                  }}
+                >
+                  <View style={styles.transactionLeft}>
+                    <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
+                      <IconSymbol
+                        name={getCategoryIcon(t.category, t.type) as any}
+                        size={20}
+                        color={theme.tint}
+                      />
+                    </View>
+                    <View>
+                      <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
+                        {t.category}
+                      </Text>
+                      <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>
+                        {new Date(t.date).toLocaleDateString('en-NG', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                        {t.note && ` • ${t.note}`}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text
+                    style={[
+                      styles.transactionAmount,
+                      { color: t.type === 'income' ? theme.success : theme.danger }
+                    ]}
+                  >
+                    {t.type === 'income' ? '+' : '-'}
+                    {formatCurrency(t.amount)}
+                  </Text>
+                </TouchableOpacity>
+              ));
+            })()}
           </ScrollView>
         </View>
       </Modal>
@@ -469,72 +464,71 @@ export default function Dashboard() {
           </View>
 
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-            {recentTransactions.length > 0 ? (
-              transactions
-                .filter(t => {
-                  if (!currentPeriod) return false;
-                  const transDate = new Date(t.date);
-                  const periodStart = new Date(currentPeriod.startDate);
-                  return transDate >= periodStart;
-                })
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                .map((t, index, arr) => (
-                  <TouchableOpacity
-                    key={t.id}
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      paddingVertical: 16,
-                      borderBottomWidth: index < arr.length - 1 ? StyleSheet.hairlineWidth : 0,
-                      borderBottomColor: theme.border,
-                    }}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setEditingTransaction(t);
-                      setShowTransactionModal(true);
-                    }}
-                  >
-                    <View style={styles.transactionLeft}>
-                      <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
-                        <IconSymbol
-                          name={getCategoryIcon(t.category, t.type) as any}
-                          size={20}
-                          color={theme.tint}
-                        />
-                      </View>
-                      <View>
-                        <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
-                          {t.category}
-                        </Text>
-                        <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>
-                          {new Date(t.date).toLocaleDateString('en-NG', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
-                          {t.note && ` • ${t.note}`}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text
-                      style={[
-                        styles.transactionAmount,
-                        { color: t.type === 'income' ? theme.success : theme.danger }
-                      ]}
-                    >
-                      {t.type === 'income' ? '+' : '-'}
-                      {formatCurrency(t.amount)}
+            {(() => {
+              const filtered = getCurrentMonthTransactions()
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+              if (filtered.length === 0) {
+                return (
+                  <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
+                    <Text style={[styles.emptyStateText, { color: theme.icon }]}>
+                      No transactions yet. Tap + to add one!
                     </Text>
-                  </TouchableOpacity>
-                ))
-            ) : (
-              <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
-                <Text style={[styles.emptyStateText, { color: theme.icon }]}>
-                  No transactions yet. Tap + to add one!
-                </Text>
-              </View>
-            )}
+                  </View>
+                );
+              }
+
+              return filtered.map((t, index, arr) => (
+                <TouchableOpacity
+                  key={t.id}
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingVertical: 16,
+                    borderBottomWidth: index === arr.length - 1 ? 0 : 1,
+                    borderBottomColor: theme.border + '40',
+                  }}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setEditingTransaction(t);
+                    setShowTransactionModal(true);
+                  }}
+                >
+                  <View style={styles.transactionLeft}>
+                    <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
+                      <IconSymbol
+                        name={getCategoryIcon(t.category, t.type) as any}
+                        size={20}
+                        color={theme.tint}
+                      />
+                    </View>
+                    <View>
+                      <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
+                        {t.category}
+                      </Text>
+                      <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>
+                        {new Date(t.date).toLocaleDateString('en-NG', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                        {t.note && ` • ${t.note}`}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text
+                    style={[
+                      styles.transactionAmount,
+                      { color: t.type === 'income' ? theme.success : theme.danger }
+                    ]}
+                  >
+                    {t.type === 'income' ? '+' : '-'}
+                    {formatCurrency(t.amount)}
+                  </Text>
+                </TouchableOpacity>
+              ));
+            })()}
           </ScrollView>
         </View>
       </Modal>
@@ -560,10 +554,48 @@ export default function Dashboard() {
         onDeleteTransaction={(id) => {
           deleteSavingsTransaction(id);
         }}
-        onUpdateGoal={(amount) => {
-          updateMonthlySavingsGoal(amount);
-        }}
+        onUpdateGoal={(amount) => updateMonthlySavingsGoal(amount)}
       />
+
+      {/* Period Selection Modal */}
+      <Modal visible={showPeriodModal} animationType="fade" transparent={true}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowPeriodModal(false)}
+        >
+          <View style={[styles.periodModalContent, { backgroundColor: theme.card }]}>
+            <Text style={[styles.periodModalTitle, { color: theme.text }]}>Select Month</Text>
+            <ScrollView style={styles.periodList}>
+              {getAllPeriods().map((period) => (
+                <TouchableOpacity
+                  key={period.month}
+                  style={[
+                    styles.periodItem,
+                    selectedPeriod?.month === period.month && { backgroundColor: theme.tint + '20' }
+                  ]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    setSelectedPeriod(period);
+                    setShowPeriodModal(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.periodItemText,
+                    { color: theme.text },
+                    selectedPeriod?.month === period.month && { color: theme.tint, fontWeight: 'bold' }
+                  ]}>
+                    {getMonthName(period)}
+                  </Text>
+                  {selectedPeriod?.month === period.month && (
+                    <Ionicons name="checkmark-circle" size={20} color={theme.tint} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       <SecurityModal
         visible={showSecurityModal}
@@ -654,7 +686,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
+  },
+  periodSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
   },
   mainCardLabel: {
     color: 'rgba(255, 255, 255, 0.8)',
@@ -879,6 +920,40 @@ const styles = StyleSheet.create({
   exportButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  periodModalContent: {
+    width: '100%',
+    maxHeight: '60%',
+    borderRadius: 24,
+    padding: 20,
+  },
+  periodModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  periodList: {
+    width: '100%',
+  },
+  periodItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    marginBottom: 4,
+  },
+  periodItemText: {
+    fontSize: 18,
   },
   savingsCard: {
     borderRadius: 24,

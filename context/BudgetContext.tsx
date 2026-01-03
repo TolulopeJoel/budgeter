@@ -77,6 +77,9 @@ export interface BudgetContextType {
 
     // Monthly Period
     currentPeriod: MonthlyPeriod | null;
+    selectedPeriod: MonthlyPeriod | null;
+    setSelectedPeriod: (period: MonthlyPeriod | null) => void;
+    getAllPeriods: () => MonthlyPeriod[];
     confirmNewMonth: (carryOverIncome?: Transaction[]) => Promise<void>;
     needsMonthConfirmation: () => boolean;
     getLastMonthIncomeTransactions: () => Transaction[];
@@ -88,6 +91,7 @@ export interface BudgetContextType {
     getSafeToSpend: () => number;
     getRemainingSavingsGoal: () => number;
     getDebts: () => number;
+    getCurrentMonthTransactions: () => Transaction[];
 
 
 
@@ -126,6 +130,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [budgets, setBudgets] = useState<Budget[]>([]);
     const [recurringBills, setRecurringBills] = useState<RecurringBill[]>([]);
     const [currentPeriod, setCurrentPeriod] = useState<MonthlyPeriod | null>(null);
+    const [selectedPeriod, setSelectedPeriod] = useState<MonthlyPeriod | null>(null);
     const [savingsTransactions, setSavingsTransactions] = useState<SavingsTransaction[]>([]);
     const [monthlySavingsGoal, setMonthlySavingsGoal] = useState(0);
     const [userPin, setUserPin] = useState<string | null>(null);
@@ -164,7 +169,11 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             }
             if (storedBudgets) setBudgets(JSON.parse(storedBudgets));
             if (storedBills) setRecurringBills(JSON.parse(storedBills));
-            if (storedPeriod) setCurrentPeriod(JSON.parse(storedPeriod));
+            if (storedPeriod) {
+                const parsedPeriod = JSON.parse(storedPeriod);
+                setCurrentPeriod(parsedPeriod);
+                setSelectedPeriod(parsedPeriod);
+            }
             else {
                 // Initialize first period
                 const now = new Date();
@@ -432,7 +441,39 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         };
 
         setCurrentPeriod(newPeriod);
+        setSelectedPeriod(newPeriod);
         await savePeriod(newPeriod);
+    };
+
+    const getAllPeriods = () => {
+        const periods: MonthlyPeriod[] = [];
+        const seenMonths = new Set<string>();
+
+        // Add current period if it exists
+        if (currentPeriod) {
+            periods.push(currentPeriod);
+            seenMonths.add(currentPeriod.month);
+        }
+
+        // Find all other months from transactions
+        transactions.forEach(t => {
+            const date = new Date(t.date);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+            if (!seenMonths.has(monthKey)) {
+                seenMonths.add(monthKey);
+                // For historical months, we don't have a specific start date, 
+                // so we use the first of the month
+                periods.push({
+                    month: monthKey,
+                    startDate: new Date(date.getFullYear(), date.getMonth(), 1).toISOString(),
+                    confirmed: true
+                });
+            }
+        });
+
+        // Sort periods by month descending (newest first)
+        return periods.sort((a, b) => b.month.localeCompare(a.month));
     };
 
     const getLastMonthIncomeTransactions = () => {
@@ -591,13 +632,21 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Helper: Get current month transactions
     const getCurrentMonthTransactions = () => {
-        if (!currentPeriod) return [];
+        const period = selectedPeriod || currentPeriod;
+        if (!period) return [];
 
-        const periodStart = new Date(currentPeriod.startDate);
+        // If it's the current period, we use the specific startDate
+        if (currentPeriod && period.month === currentPeriod.month) {
+            const periodStart = new Date(currentPeriod.startDate);
+            return transactions.filter(t => new Date(t.date) >= periodStart);
+        }
 
+        // For historical periods, we filter by the month key
+        const [year, month] = period.month.split('-');
         return transactions.filter(t => {
             const transDate = new Date(t.date);
-            return transDate >= periodStart;
+            return transDate.getFullYear().toString() === year &&
+                (transDate.getMonth() + 1).toString().padStart(2, '0') === month;
         });
     };
 
@@ -711,6 +760,9 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 getTotalRecurringBills,
 
                 currentPeriod,
+                selectedPeriod,
+                setSelectedPeriod,
+                getAllPeriods,
                 confirmNewMonth,
                 needsMonthConfirmation,
                 getLastMonthIncomeTransactions,
@@ -721,6 +773,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 getSafeToSpend,
                 getRemainingSavingsGoal,
                 getDebts,
+                getCurrentMonthTransactions,
 
                 loading,
 
