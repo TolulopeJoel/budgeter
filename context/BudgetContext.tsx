@@ -96,6 +96,10 @@ export interface BudgetContextType {
     addSavingsTransaction: (amount: number, type: 'deposit' | 'withdrawal', note?: string, affectBudget?: boolean) => Promise<void>;
     updateMonthlySavingsGoal: (amount: number) => Promise<void>;
 
+    // Security
+    userPin: string | null;
+    updateUserPin: (pin: string) => Promise<void>;
+
     loading: boolean;
 }
 
@@ -120,6 +124,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [currentPeriod, setCurrentPeriod] = useState<MonthlyPeriod | null>(null);
     const [savingsTransactions, setSavingsTransactions] = useState<SavingsTransaction[]>([]);
     const [monthlySavingsGoal, setMonthlySavingsGoal] = useState(0);
+    const [userPin, setUserPin] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -134,18 +139,18 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 storedBudgets,
                 storedBills,
                 storedPeriod,
-                storedSavingsBalance,
-                storedMonthlySavingsGoal
+                storedSavingsTransactions,
+                storedMonthlySavingsGoal,
+                storedUserPin
             ] = await Promise.all([
                 AsyncStorage.getItem('@budgeter_transactions'),
                 AsyncStorage.getItem('@budgeter_categories'),
                 AsyncStorage.getItem('@budgeter_budgets'),
                 AsyncStorage.getItem('@budgeter_recurring_bills'),
                 AsyncStorage.getItem('@budgeter_current_period'),
-                AsyncStorage.getItem('@budgeter_recurring_bills'),
-                AsyncStorage.getItem('@budgeter_current_period'),
                 AsyncStorage.getItem('@budgeter_savings_transactions'),
                 AsyncStorage.getItem('@budgeter_monthly_savings_goal'),
+                AsyncStorage.getItem('@budgeter_user_pin'),
             ]);
 
             if (storedTransactions) setTransactions(JSON.parse(storedTransactions));
@@ -169,11 +174,12 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 await AsyncStorage.setItem('@budgeter_current_period', JSON.stringify(initialPeriod));
             }
 
-            if (storedSavingsBalance) setSavingsTransactions(JSON.parse(storedSavingsBalance));
+            if (storedSavingsTransactions) setSavingsTransactions(JSON.parse(storedSavingsTransactions));
             if (storedMonthlySavingsGoal) {
                 const parsedGoal = Number(storedMonthlySavingsGoal);
                 setMonthlySavingsGoal(isNaN(parsedGoal) ? 0 : parsedGoal);
             }
+            if (storedUserPin) setUserPin(storedUserPin);
             // Correct logic below
 
         } catch (e) {
@@ -459,6 +465,11 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         await AsyncStorage.setItem('@budgeter_monthly_savings_goal', amount.toString());
     };
 
+    const updateUserPin = async (pin: string) => {
+        setUserPin(pin);
+        await AsyncStorage.setItem('@budgeter_user_pin', pin);
+    };
+
     // Helper: Get current month transactions
     const getCurrentMonthTransactions = () => {
         if (!currentPeriod) return [];
@@ -598,6 +609,9 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 monthlySavingsGoal,
                 addSavingsTransaction,
                 updateMonthlySavingsGoal,
+
+                userPin,
+                updateUserPin,
             }}
         >
             {children}

@@ -1,5 +1,6 @@
 import MonthConfirmModal from '@/components/MonthConfirmModal';
 import SavingsModal from '@/components/SavingsModal';
+import SecurityModal from '@/components/SecurityModal';
 import TransactionModal from '@/components/TransactionModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/Colors';
@@ -28,6 +29,8 @@ export default function Dashboard() {
     monthlySavingsGoal,
     addSavingsTransaction,
     updateMonthlySavingsGoal,
+    userPin,
+    updateUserPin,
   } = useBudget();
 
   const colorScheme = useColorScheme();
@@ -38,6 +41,9 @@ export default function Dashboard() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showSavingsModal, setShowSavingsModal] = useState(false);
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const [isTotalSavingsVisible, setIsTotalSavingsVisible] = useState(false);
+  const [securityAction, setSecurityAction] = useState<'reveal_balance' | 'manage_savings'>('manage_savings');
 
   // Real calculations from context
   const safeToSpend = getSafeToSpend();
@@ -98,10 +104,22 @@ export default function Dashboard() {
           </View>
           <Text style={styles.mainCardAmount}>{formatCurrency(safeToSpend)}</Text>
           <View style={styles.mainCardFooter}>
-            <View style={styles.mainCardStat}>
+            <TouchableOpacity
+              style={styles.mainCardStat}
+              onPress={() => {
+                if (isTotalSavingsVisible) {
+                  setIsTotalSavingsVisible(false);
+                } else {
+                  setSecurityAction('reveal_balance');
+                  setShowSecurityModal(true);
+                }
+              }}
+            >
               <Text style={styles.statLabel}>Saved</Text>
-              <Text style={styles.statValue}>{formatCurrency(savingsBalance)}</Text>
-            </View>
+              <Text style={styles.statValue}>
+                {isTotalSavingsVisible ? formatCurrency(savingsBalance) : '••••••'}
+              </Text>
+            </TouchableOpacity>
             <View style={styles.statDivider} />
             <View style={styles.mainCardStat}>
               <Text style={styles.statLabel}>Spent</Text>
@@ -113,7 +131,11 @@ export default function Dashboard() {
         {/* Savings Card */}
         <TouchableOpacity
           style={[styles.savingsCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-          onPress={() => setShowSavingsModal(true)}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            setSecurityAction('manage_savings');
+            setShowSecurityModal(true);
+          }}
         >
           <View style={styles.savingsHeader}>
             <View style={[styles.savingsIconContainer, { backgroundColor: theme.primary + '15' }]}>
@@ -121,7 +143,9 @@ export default function Dashboard() {
             </View>
             <View>
               <Text style={[styles.savingsLabel, { color: theme.icon }]}>Need To Save</Text>
-              <Text style={[styles.savingsAmount, { color: theme.text }]}>{formatCurrency(getRemainingSavingsGoal())}</Text>
+              <Text style={[styles.savingsAmount, { color: theme.text }]}>
+                {formatCurrency(getRemainingSavingsGoal())}
+              </Text>
             </View>
           </View>
           <View style={styles.savingsFooter}>
@@ -130,6 +154,7 @@ export default function Dashboard() {
                 ? `Deducting ${formatCurrency(monthlySavingsGoal)}/mo`
                 : 'No monthly deduction set'}
             </Text>
+            <Ionicons name="lock-closed" size={18} color={theme.icon} style={{ marginLeft: 8 }} />
             <Ionicons name="chevron-forward" size={20} color={theme.icon} />
           </View>
         </TouchableOpacity>
@@ -471,6 +496,20 @@ export default function Dashboard() {
         onUpdateGoal={(amount) => {
           updateMonthlySavingsGoal(amount);
         }}
+      />
+
+      <SecurityModal
+        visible={showSecurityModal}
+        onClose={() => setShowSecurityModal(false)}
+        onSuccess={() => {
+          if (securityAction === 'reveal_balance') {
+            setIsTotalSavingsVisible(true);
+          } else {
+            setShowSavingsModal(true);
+          }
+        }}
+        storedPin={userPin}
+        onSetPin={(pin) => updateUserPin(pin)}
       />
 
       <TouchableOpacity
