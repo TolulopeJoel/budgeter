@@ -17,6 +17,7 @@ export interface Transaction {
     date: string;
     note?: string;
     originalCategory?: string;
+    savingsId?: string;
 }
 
 export type BudgetType = 'flexible' | 'fixed';
@@ -95,6 +96,8 @@ export interface BudgetContextType {
     savingsBalance: number; // Calculated
     monthlySavingsGoal: number;
     addSavingsTransaction: (amount: number, type: 'deposit' | 'withdrawal', note?: string, affectBudget?: boolean) => Promise<void>;
+    updateSavingsTransaction: (transaction: SavingsTransaction, affectBudget?: boolean) => Promise<void>;
+    deleteSavingsTransaction: (id: string) => Promise<void>;
     updateMonthlySavingsGoal: (amount: number) => Promise<void>;
 
     // Security
@@ -487,8 +490,9 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Savings functions
     // Savings functions
     const addSavingsTransaction = async (amount: number, type: 'deposit' | 'withdrawal', note?: string, affectBudget: boolean = true) => {
+        const savingsId = Math.random().toString(36).substr(2, 9);
         const newSavingsTx: SavingsTransaction = {
-            id: Math.random().toString(36).substr(2, 9),
+            id: savingsId,
             date: new Date().toISOString(),
             amount,
             type,
@@ -505,10 +509,11 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 // Deposit to savings = Expense from budget
                 await addTransaction({
                     type: 'expense',
-                    category: 'Savings', // Ensure this category exists or is handled
+                    category: 'Savings',
                     amount: amount,
                     date: new Date().toISOString(),
-                    note: note ? `Savings Deposit: ${note}` : 'Savings Deposit'
+                    note: note ? `Savings Deposit: ${note}` : 'Savings Deposit',
+                    savingsId: savingsId
                 });
             } else {
                 // Withdrawal from savings = Income to budget
@@ -517,9 +522,60 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     category: 'Savings',
                     amount: amount,
                     date: new Date().toISOString(),
-                    note: note ? `Savings Withdrawal: ${note}` : 'Savings Withdrawal'
+                    note: note ? `Savings Withdrawal: ${note}` : 'Savings Withdrawal',
+                    savingsId: savingsId
                 });
             }
+        }
+    };
+
+    const updateSavingsTransaction = async (transaction: SavingsTransaction, affectBudget: boolean = true) => {
+        const updatedSavings = savingsTransactions.map(t => t.id === transaction.id ? transaction : t);
+        setSavingsTransactions(updatedSavings);
+        await AsyncStorage.setItem('@budgeter_savings_transactions', JSON.stringify(updatedSavings));
+
+        // Update linked budget transaction if it exists
+        const linkedTx = transactions.find(t => t.savingsId === transaction.id);
+        if (linkedTx) {
+            await updateTransaction({
+                ...linkedTx,
+                amount: transaction.amount,
+                type: transaction.type === 'deposit' ? 'expense' : 'income',
+                note: transaction.note ? `Savings ${transaction.type === 'deposit' ? 'Deposit' : 'Withdrawal'}: ${transaction.note}` : `Savings ${transaction.type === 'deposit' ? 'Deposit' : 'Withdrawal'}`
+            });
+        } else if (affectBudget) {
+            // If it didn't have a linked transaction but now should
+            if (transaction.type === 'deposit') {
+                await addTransaction({
+                    type: 'expense',
+                    category: 'Savings',
+                    amount: transaction.amount,
+                    date: transaction.date,
+                    note: transaction.note ? `Savings Deposit: ${transaction.note}` : 'Savings Deposit',
+                    savingsId: transaction.id
+                });
+            } else {
+                await addTransaction({
+                    type: 'income',
+                    category: 'Savings',
+                    amount: transaction.amount,
+                    date: transaction.date,
+                    note: transaction.note ? `Savings Withdrawal: ${transaction.note}` : 'Savings Withdrawal',
+                    savingsId: transaction.id
+                });
+            }
+        }
+    };
+
+    const deleteSavingsTransaction = async (id: string) => {
+        const updatedSavings = savingsTransactions.filter(t => t.id !== id);
+        setSavingsTransactions(updatedSavings);
+        await AsyncStorage.setItem('@budgeter_savings_transactions', JSON.stringify(updatedSavings));
+
+        // Delete linked budget transaction if it exists
+        const linkedTx = transactions.find(t => t.savingsId === id);
+        if (linkedTx) {
+            await deleteTransaction(linkedTx.id);
         }
     };
 
@@ -672,6 +728,8 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 savingsBalance: savingsTransactions.reduce((acc, t) => t.type === 'deposit' ? acc + t.amount : acc - t.amount, 0),
                 monthlySavingsGoal,
                 addSavingsTransaction,
+                updateSavingsTransaction,
+                deleteSavingsTransaction,
                 updateMonthlySavingsGoal,
 
                 userPin,

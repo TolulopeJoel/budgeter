@@ -1,5 +1,5 @@
 import { Colors } from '@/constants/Colors';
-import { SavingsTransaction } from '@/context/BudgetContext';
+import { SavingsTransaction, Transaction } from '@/context/BudgetContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
@@ -12,7 +12,10 @@ interface SavingsModalProps {
     currentBalance: number;
     currentGoal: number;
     transactions: SavingsTransaction[];
+    budgetTransactions: Transaction[];
     onAddTransaction: (amount: number, type: 'deposit' | 'withdrawal', note?: string, affectBudget?: boolean) => void;
+    onUpdateTransaction: (transaction: SavingsTransaction, affectBudget?: boolean) => void;
+    onDeleteTransaction: (id: string) => void;
     onUpdateGoal: (amount: number) => void;
 }
 
@@ -22,7 +25,10 @@ export default function SavingsModal({
     currentBalance,
     currentGoal,
     transactions,
+    budgetTransactions,
     onAddTransaction,
+    onUpdateTransaction,
+    onDeleteTransaction,
     onUpdateGoal,
 }: SavingsModalProps) {
     const colorScheme = useColorScheme();
@@ -35,6 +41,7 @@ export default function SavingsModal({
     const [isInitialBalance, setIsInitialBalance] = useState(false);
     const [goal, setGoal] = useState(currentGoal.toString());
     const [view, setView] = useState<'history' | 'add' | 'settings'>('history');
+    const [editingTransaction, setEditingTransaction] = useState<SavingsTransaction | null>(null);
 
     const formatCurrency = (amount: number) => {
         const value = isNaN(amount) ? 0 : amount;
@@ -44,12 +51,48 @@ export default function SavingsModal({
     const handleAddTransaction = () => {
         if (!amount) return;
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        // If it's initial balance, we don't affect the budget
-        onAddTransaction(Number(amount), type, note, !isInitialBalance);
+
+        if (editingTransaction) {
+            onUpdateTransaction({
+                ...editingTransaction,
+                amount: Number(amount),
+                type,
+                note,
+            }, !isInitialBalance);
+            setEditingTransaction(null);
+        } else {
+            onAddTransaction(Number(amount), type, note, !isInitialBalance);
+        }
+
         setAmount('');
         setNote('');
         setIsInitialBalance(false);
         setView('history');
+    };
+
+    const handleDeleteTransaction = () => {
+        if (!editingTransaction) return;
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        onDeleteTransaction(editingTransaction.id);
+        setEditingTransaction(null);
+        setAmount('');
+        setNote('');
+        setIsInitialBalance(false);
+        setView('history');
+    };
+
+    const startEditing = (t: SavingsTransaction) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setEditingTransaction(t);
+        setAmount(t.amount.toString());
+        setNote(t.note || '');
+        setType(t.type);
+
+        // Check if there's a linked budget transaction
+        const isLinked = budgetTransactions.some(bt => bt.savingsId === t.id);
+        setIsInitialBalance(!isLinked);
+
+        setView('add');
     };
 
     const handleUpdateGoal = () => {
@@ -104,7 +147,11 @@ export default function SavingsModal({
                         <View>
                             {transactions.length > 0 ? (
                                 transactions.map((t) => (
-                                    <View key={t.id} style={[styles.transactionItem, { borderBottomColor: theme.border }]}>
+                                    <TouchableOpacity
+                                        key={t.id}
+                                        style={[styles.transactionItem, { borderBottomColor: theme.border }]}
+                                        onPress={() => startEditing(t)}
+                                    >
                                         <View>
                                             <Text style={[styles.transactionNote, { color: theme.text }]}>
                                                 {t.note || (t.type === 'deposit' ? 'Deposit' : 'Withdrawal')}
@@ -121,7 +168,7 @@ export default function SavingsModal({
                                         >
                                             {t.type === 'deposit' ? '+' : '-'}{formatCurrency(t.amount)}
                                         </Text>
-                                    </View>
+                                    </TouchableOpacity>
                                 ))
                             ) : (
                                 <Text style={[styles.emptyText, { color: theme.icon }]}>No savings history yet.</Text>
@@ -197,8 +244,29 @@ export default function SavingsModal({
                                 onPress={handleAddTransaction}
                             >
                                 <Text style={styles.actionButtonText}>
-                                    {type === 'deposit' ? 'Add to Savings' : 'Withdraw from Savings'}
+                                    {editingTransaction ? 'Update Entry' : (type === 'deposit' ? 'Add to Savings' : 'Withdraw from Savings')}
                                 </Text>
+                            </TouchableOpacity>
+
+                            {editingTransaction && (
+                                <TouchableOpacity
+                                    style={[styles.deleteButton, { marginTop: 12 }]}
+                                    onPress={handleDeleteTransaction}
+                                >
+                                    <Text style={[styles.deleteButtonText, { color: theme.danger }]}>Delete Entry</Text>
+                                </TouchableOpacity>
+                            )}
+
+                            <TouchableOpacity
+                                style={[styles.cancelButton, { marginTop: editingTransaction ? 8 : 12 }]}
+                                onPress={() => {
+                                    setEditingTransaction(null);
+                                    setAmount('');
+                                    setNote('');
+                                    setView('history');
+                                }}
+                            >
+                                <Text style={[styles.cancelButtonText, { color: theme.icon }]}>Cancel</Text>
                             </TouchableOpacity>
                         </KeyboardAvoidingView>
                     )}
@@ -395,5 +463,24 @@ const styles = StyleSheet.create({
     checkboxLabel: {
         fontSize: 14,
         fontWeight: '500',
+    },
+    cancelButton: {
+        padding: 16,
+        alignItems: 'center',
+    },
+    cancelButtonText: {
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    deleteButton: {
+        padding: 16,
+        alignItems: 'center',
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 59, 48, 0.2)',
+    },
+    deleteButtonText: {
+        fontSize: 15,
+        fontWeight: '700',
     },
 });

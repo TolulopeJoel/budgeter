@@ -28,6 +28,8 @@ export default function Dashboard() {
     savingsBalance,
     monthlySavingsGoal,
     addSavingsTransaction,
+    updateSavingsTransaction,
+    deleteSavingsTransaction,
     updateMonthlySavingsGoal,
     userPin,
     updateUserPin,
@@ -502,8 +504,15 @@ export default function Dashboard() {
         currentBalance={savingsBalance}
         currentGoal={monthlySavingsGoal}
         transactions={savingsTransactions}
+        budgetTransactions={transactions}
         onAddTransaction={(amount, type, note, affectBudget) => {
           addSavingsTransaction(amount, type, note, affectBudget);
+        }}
+        onUpdateTransaction={(transaction, affectBudget) => {
+          updateSavingsTransaction(transaction, affectBudget);
+        }}
+        onDeleteTransaction={(id) => {
+          deleteSavingsTransaction(id);
         }}
         onUpdateGoal={(amount) => {
           updateMonthlySavingsGoal(amount);
