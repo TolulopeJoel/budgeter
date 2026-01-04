@@ -45,9 +45,9 @@ export default function Debts() {
                 {/* Total Summary */}
                 <View style={[styles.summaryCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
                     <View style={styles.summaryHeader}>
-                        <Text style={[styles.summaryLabel, { color: theme.icon }]}>Total Debt</Text>
+                        <Text style={[styles.summaryLabel, { color: theme.icon }]}>To Collect</Text>
                     </View>
-                    <Text style={[styles.summaryAmount, { color: theme.danger }]}>
+                    <Text style={[styles.summaryAmount, { color: theme.success }]}>
                         {formatCurrency(totalDebt)}
                     </Text>
                 </View>
@@ -73,10 +73,12 @@ export default function Debts() {
                                     </View>
 
                                     <View style={styles.debtInfo}>
-                                        <Text style={[styles.debtCategory, { color: theme.text }]}>{debt.category}</Text>
+                                        <Text style={[styles.debtCategory, { color: theme.text }]}>{debt.note}</Text>
                                         <Text style={[styles.debtDate, { color: theme.icon }]}>
-                                            {new Date(debt.date).toLocaleDateString()}
-                                            {debt.note && ` • ${debt.note}`}
+                                            {new Date(debt.date).toLocaleDateString('en-NG', {
+                                                month: 'short',
+                                                day: 'numeric'
+                                            })}
                                         </Text>
                                     </View>
 
