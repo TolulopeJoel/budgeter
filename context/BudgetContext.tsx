@@ -635,13 +635,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const period = selectedPeriod || currentPeriod;
         if (!period) return [];
 
-        // If it's the current period, we use the specific startDate
-        if (currentPeriod && period.month === currentPeriod.month) {
-            const periodStart = new Date(currentPeriod.startDate);
-            return transactions.filter(t => new Date(t.date) >= periodStart);
-        }
-
-        // For historical periods, we filter by the month key
+        // Filter by the month key (YYYY-MM) for all periods
         const [year, month] = period.month.split('-');
         return transactions.filter(t => {
             const transDate = new Date(t.date);
