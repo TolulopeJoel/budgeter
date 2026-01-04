@@ -18,6 +18,9 @@ export default function RecurringBills() {
         getTotalRecurringBills,
         categories,
         addCategory,
+        isBillPaid,
+        markBillAsPaid,
+        unmarkBillAsPaid,
     } = useBudget();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
@@ -99,6 +102,25 @@ export default function RecurringBills() {
         );
     };
 
+    const handleUnmarkPaid = (billId: string) => {
+        const bill = recurringBills.find(b => b.id === billId);
+        Alert.alert(
+            'Unmark as Paid',
+            `Are you sure you want to mark "${bill?.name}" as unpaid? This will delete the associated transaction.`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Unmark',
+                    style: 'destructive',
+                    onPress: async () => {
+                        await unmarkBillAsPaid(billId);
+                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    },
+                },
+            ]
+        );
+    };
+
     const formatCurrency = (amount: number) => {
         return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
     };
@@ -110,6 +132,9 @@ export default function RecurringBills() {
 
     const sortedBills = [...recurringBills].sort((a, b) => a.dueDay - b.dueDay);
     const totalBills = getTotalRecurringBills();
+
+    const now = new Date();
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top + 10 }]}>
@@ -180,12 +205,40 @@ export default function RecurringBills() {
                                         <Text style={[styles.billAmount, { color: theme.danger }]}>
                                             {formatCurrency(bill.amount)}
                                         </Text>
-                                        <TouchableOpacity
-                                            style={[styles.actionButton, { backgroundColor: theme.danger + '10' }]}
-                                            onPress={() => handleDelete(bill.id)}
-                                        >
-                                            <IconSymbol name="trash" size={16} color={theme.danger} />
-                                        </TouchableOpacity>
+                                        <View style={styles.billActions}>
+                                            {isBillPaid(bill.id, currentMonthKey) ? (
+                                                <TouchableOpacity
+                                                    style={[styles.paidBadge, { backgroundColor: theme.success + '20' }]}
+                                                    onPress={(e) => {
+                                                        e.stopPropagation();
+                                                        handleUnmarkPaid(bill.id);
+                                                    }}
+                                                >
+                                                    <IconSymbol name="checkmark.circle.fill" size={14} color={theme.success} />
+                                                    <Text style={[styles.paidText, { color: theme.success }]}>Paid</Text>
+                                                </TouchableOpacity>
+                                            ) : (
+                                                <TouchableOpacity
+                                                    style={[styles.actionButton, { backgroundColor: theme.success + '10' }]}
+                                                    onPress={(e) => {
+                                                        e.stopPropagation();
+                                                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                                                        markBillAsPaid(bill.id);
+                                                    }}
+                                                >
+                                                    <IconSymbol name="checkmark" size={16} color={theme.success} />
+                                                </TouchableOpacity>
+                                            )}
+                                            <TouchableOpacity
+                                                style={[styles.actionButton, { backgroundColor: theme.danger + '10' }]}
+                                                onPress={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDelete(bill.id);
+                                                }}
+                                            >
+                                                <IconSymbol name="trash" size={16} color={theme.danger} />
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
                                 </View>
                             </TouchableOpacity>
@@ -397,6 +450,23 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    billActions: {
+        flexDirection: 'row',
+        gap: 8,
+        alignItems: 'center',
+    },
+    paidBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+    },
+    paidText: {
+        fontSize: 12,
+        fontWeight: '700',
     },
     emptyState: {
         padding: 40,

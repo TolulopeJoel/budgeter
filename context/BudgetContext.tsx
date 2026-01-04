@@ -18,6 +18,7 @@ export interface Transaction {
     note?: string;
     originalCategory?: string;
     savingsId?: string;
+    billId?: string;
 }
 
 export type BudgetType = 'flexible' | 'fixed';
@@ -74,6 +75,9 @@ export interface BudgetContextType {
     updateRecurringBill: (bill: RecurringBill) => Promise<void>;
     deleteRecurringBill: (id: string) => Promise<void>;
     getTotalRecurringBills: () => number;
+    isBillPaid: (billId: string, monthKey: string) => boolean;
+    markBillAsPaid: (billId: string) => Promise<void>;
+    unmarkBillAsPaid: (billId: string) => Promise<void>;
 
     // Monthly Period
     currentPeriod: MonthlyPeriod | null;
@@ -193,7 +197,13 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 setMonthlySavingsGoal(isNaN(parsedGoal) ? 0 : parsedGoal);
             }
             if (storedUserPin) setUserPin(storedUserPin);
-            // Correct logic below
+
+            // Check for auto-pay bills after loading all data
+            if (storedTransactions && storedBills) {
+                const txs = JSON.parse(storedTransactions);
+                const bills = JSON.parse(storedBills);
+                await checkAutoPayBills(txs, bills);
+            }
 
         } catch (e) {
             console.error('Failed to load data', e);
@@ -405,6 +415,93 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const getTotalRecurringBills = () => {
         return recurringBills.reduce((acc, bill) => acc + bill.amount, 0);
+    };
+
+    const isBillPaid = (billId: string, monthKey: string) => {
+        return transactions.some(t => {
+            if (!t.billId || t.billId !== billId) return false;
+            const date = new Date(t.date);
+            const tMonthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            return tMonthKey === monthKey;
+        });
+    };
+
+    const markBillAsPaid = async (billId: string) => {
+        const bill = recurringBills.find(b => b.id === billId);
+        if (!bill) return;
+
+        const now = new Date();
+        const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+        if (isBillPaid(billId, monthKey)) return;
+
+        await addTransaction({
+            type: 'expense',
+            category: bill.category,
+            amount: bill.amount,
+            date: now.toISOString(),
+            note: `Bill Paid: ${bill.name}`,
+            billId: bill.id
+        });
+    };
+
+    const unmarkBillAsPaid = async (billId: string) => {
+        const now = new Date();
+        const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+        const transactionToDelete = transactions.find(t => {
+            if (!t.billId || t.billId !== billId) return false;
+            const date = new Date(t.date);
+            const tMonthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            return tMonthKey === monthKey;
+        });
+
+        if (transactionToDelete) {
+            await deleteTransaction(transactionToDelete.id);
+        }
+    };
+
+    const checkAutoPayBills = async (currentTxs: Transaction[], currentBills: RecurringBill[]) => {
+        const now = new Date();
+        const today = now.getDate();
+        const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+        let updatedTxs = [...currentTxs];
+        let changed = false;
+
+        for (const bill of currentBills) {
+            // If today is past the due day
+            if (today > bill.dueDay) {
+                // Check if already paid this month
+                const alreadyPaid = updatedTxs.some(t => {
+                    if (!t.billId || t.billId !== bill.id) return false;
+                    const date = new Date(t.date);
+                    const tMonthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    return tMonthKey === monthKey;
+                });
+
+                if (!alreadyPaid) {
+                    // Auto-pay: Create transaction for the due day
+                    const payDate = new Date(now.getFullYear(), now.getMonth(), bill.dueDay);
+                    const newTx: Transaction = {
+                        id: Math.random().toString(36).substr(2, 9),
+                        type: 'expense',
+                        category: bill.category,
+                        amount: bill.amount,
+                        date: payDate.toISOString(),
+                        note: `Auto-Paid: ${bill.name}`,
+                        billId: bill.id
+                    };
+                    updatedTxs = [newTx, ...updatedTxs];
+                    changed = true;
+                }
+            }
+        }
+
+        if (changed) {
+            setTransactions(updatedTxs);
+            await saveTransactions(updatedTxs);
+        }
     };
 
     // Monthly Period functions
@@ -752,6 +849,9 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 updateRecurringBill,
                 deleteRecurringBill,
                 getTotalRecurringBills,
+                isBillPaid,
+                markBillAsPaid,
+                unmarkBillAsPaid,
 
                 currentPeriod,
                 selectedPeriod,
