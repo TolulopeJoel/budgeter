@@ -44,7 +44,7 @@ const MAPPING = {
   'banknote.fill': 'cash',
   'creditcard.fill': 'card',
   'briefcase.fill': 'briefcase',
-  'leaf.fill': 'leaf',
+  'building.2.fill': 'business',
 
   // Others
   'gift.fill': 'gift',
@@ -54,6 +54,7 @@ const MAPPING = {
   // System Icons
   'trash': 'trash',
   'plus.circle.fill': 'add-circle',
+  'plus.circle': 'add-circle-outline',
   'xmark.circle.fill': 'close-circle',
   'checkmark.circle.fill': 'checkmark-circle',
   'chevron.down': 'chevron-down',

@@ -9,7 +9,7 @@ interface IconPickerProps {
 }
 
 const ICONS = [
-    'banknote.fill', 'creditcard.fill', 'briefcase.fill',
+    'banknote.fill', 'creditcard.fill', 'briefcase.fill', 'building.2.fill',
     'house.fill', 'lightbulb.fill', 'wifi',
     'cart.fill', 'fork.knife', 'cup.and.saucer.fill',
     'car.fill', 'bus.fill',

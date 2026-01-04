@@ -341,7 +341,7 @@ export default function Dashboard() {
                       <View style={[styles.billsBreakdown, { borderTopColor: theme.border }]}>
                         <View style={styles.billsHeader}>
                           <Text style={[styles.billsTitle, { color: theme.icon }]}>Unpaid bills:</Text>
-                          <Text style={[styles.billsTotal, { color: theme.danger }]}>
+                          <Text style={[styles.billsTotal, { color: theme.danger + '80' }]}>
                             {formatCurrency(totalUnpaidBills)}
                           </Text>
                         </View>

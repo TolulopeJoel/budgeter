@@ -141,7 +141,10 @@ export default function Budgets() {
     const categoriesWithoutBudgets = categories.filter(cat => {
         const budget = budgets.find(b => b.category === cat.name);
         return (!budget || budget.limit === 0) && cat.name !== 'Salary';
-    }).map(cat => cat.name);
+    }).map(cat => ({
+        name: cat.name,
+        spent: getBudgetStatus(cat.name).spent
+    })).sort((a, b) => b.spent - a.spent);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top + 10 }]}>
@@ -226,16 +229,23 @@ export default function Budgets() {
                 <View style={styles.section}>
                     <Text style={[styles.sectionTitle, { color: theme.text }]}>Add Budget Limit</Text>
 
-                    {categoriesWithoutBudgets.map(category => (
+                    {categoriesWithoutBudgets.map(item => (
                         <TouchableOpacity
-                            key={category}
+                            key={item.name}
                             style={[styles.categoryCard, { backgroundColor: theme.card, borderColor: theme.border }]}
                             onPress={() => {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                handleEditBudget(category);
+                                handleEditBudget(item.name);
                             }}
                         >
-                            <Text style={[styles.categoryName, { color: theme.text }]}>{category}</Text>
+                            <View style={styles.categoryInfo}>
+                                <Text style={[styles.categoryName, { color: theme.text }]}>{item.name}</Text>
+                                {item.spent > 0 && (
+                                    <Text style={[styles.categorySpent, { color: theme.icon }]}>
+                                        {formatCurrency(item.spent)} spent
+                                    </Text>
+                                )}
+                            </View>
                             <IconSymbol name="plus.circle" size={24} color={theme.tint} />
                         </TouchableOpacity>
                     ))}
@@ -532,9 +542,17 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         marginBottom: 8,
     },
+    categoryInfo: {
+        flex: 1,
+    },
     categoryName: {
         fontSize: 16,
         fontWeight: '500',
+    },
+    categorySpent: {
+        fontSize: 12,
+        fontWeight: '600',
+        marginTop: 2,
     },
     helperText: {
         fontSize: 14,
