@@ -40,6 +40,8 @@ export default function Dashboard() {
     updateMonthlySavingsGoal,
     userPin,
     updateUserPin,
+    recurringBills,
+    isBillPaid,
   } = useBudget();
 
   const insets = useSafeAreaInsets();
@@ -59,7 +61,7 @@ export default function Dashboard() {
 
   // Real calculations from context
   const safeToSpend = getSafeToSpend();
-  const recurringBills = getTotalRecurringBills();
+  const totalRecurringBills = getTotalRecurringBills();
   const currentSpent = getCurrentMonthExpenses();
 
   // Get month name
@@ -95,6 +97,10 @@ export default function Dashboard() {
   const recentTransactions = getCurrentMonthTransactions()
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 3);
+
+  // Get current month key for bill status checks
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
   const handleExportCSV = async () => {
     try {
@@ -290,13 +296,66 @@ export default function Dashboard() {
                     </View>
                   </View>
                   <View style={styles.progressBarContainer}>
-                    <View
-                      style={[
-                        styles.progressBar,
-                        { width: `${status.percentage}%`, backgroundColor: budgetColor }
-                      ]}
-                    />
+                    {(() => {
+                      // Calculate what spending would be if unpaid bills were paid
+                      const categoryBills = recurringBills.filter(b => b.category === budget.category);
+                      const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
+                      const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
+                      const projectedSpent = status.spent + totalUnpaidBills;
+                      const projectedPercentage = Math.min((projectedSpent / status.limit) * 100, 100);
+
+                      return (
+                        <>
+                          {/* Projected spending bar (if bills were paid) */}
+                          {totalUnpaidBills > 0 && (
+                            <View
+                              style={[
+                                styles.progressBar,
+                                styles.projectedProgressBar,
+                                { width: `${projectedPercentage}%`, backgroundColor: budgetColor + '40' }
+                              ]}
+                            />
+                          )}
+                          {/* Current actual spending bar */}
+                          <View
+                            style={[
+                              styles.progressBar,
+                              { width: `${status.percentage}%`, backgroundColor: budgetColor }
+                            ]}
+                          />
+                        </>
+                      );
+                    })()}
                   </View>
+
+                  {/* Bills Breakdown */}
+                  {(() => {
+                    const categoryBills = recurringBills.filter(b => b.category === budget.category);
+                    const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
+
+                    if (unpaidBills.length === 0) return null;
+
+                    const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
+
+                    return (
+                      <View style={[styles.billsBreakdown, { borderTopColor: theme.border }]}>
+                        <View style={styles.billsHeader}>
+                          <Text style={[styles.billsTitle, { color: theme.icon }]}>Unpaid bills:</Text>
+                          <Text style={[styles.billsTotal, { color: theme.danger }]}>
+                            {formatCurrency(totalUnpaidBills)}
+                          </Text>
+                        </View>
+                        {unpaidBills.map(bill => (
+                          <View key={bill.id} style={styles.billRow}>
+                            <Text style={[styles.billName, { color: theme.text }]}>• {bill.name}</Text>
+                            <Text style={[styles.billAmount, { color: theme.icon }]}>
+                              {formatCurrency(bill.amount)}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    );
+                  })()}
                 </TouchableOpacity>
               );
             })}
@@ -842,6 +901,11 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 3,
   },
+  projectedProgressBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+  },
   budgetPercentage: {
     fontSize: 14,
     fontWeight: '700',
@@ -996,5 +1060,68 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     display: 'none', // Hide on small screens or if layout is tight, actually let's just show the arrow or make it simpler
+  },
+  billsBreakdown: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+  },
+  billsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  billsTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  billsTotal: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  billRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  billRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  billName: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  billAmount: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  paidBadgeSmall: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  paidBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  unpaidBadgeSmall: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  unpaidBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });
