@@ -131,20 +131,28 @@ export default function Budgets() {
         return category?.icon || 'ellipsis.circle.fill';
     };
 
-    // Categories with budgets
-    const categoriesWithBudgets = categories.filter(cat => {
-        const budget = budgets.find(b => b.category === cat.name);
-        return budget && budget.limit > 0;
-    }).map(cat => cat.name);
-
-    // Categories without budgets (excluding income categories)
-    const categoriesWithoutBudgets = categories.filter(cat => {
-        const budget = budgets.find(b => b.category === cat.name);
-        return (!budget || budget.limit === 0) && cat.name !== 'Salary';
-    }).map(cat => ({
-        name: cat.name,
-        spent: getBudgetStatus(cat.name).spent
-    })).sort((a, b) => b.spent - a.spent);
+    // Unified categories list for management
+    const allCategories = categories
+        .filter(cat => cat.name !== 'Salary')
+        .map(cat => {
+            const budget = budgets.find(b => b.category === cat.name);
+            const status = getBudgetStatus(cat.name);
+            return {
+                name: cat.name,
+                icon: cat.icon,
+                limit: budget?.limit || 0,
+                type: budget?.type || 'flexible',
+                spent: status.spent,
+                hasBudget: !!budget && budget.limit > 0
+            };
+        })
+        .sort((a, b) => {
+            // Active budgets first
+            if (a.hasBudget && !b.hasBudget) return -1;
+            if (!a.hasBudget && b.hasBudget) return 1;
+            // Then by spent amount
+            return b.spent - a.spent;
+        });
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top + 10 }]}>
@@ -159,77 +167,11 @@ export default function Budgets() {
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                {/* Active Budgets */}
-                {categoriesWithBudgets.length > 0 && (
-                    <View style={styles.section}>
-                        <Text style={[styles.sectionTitle, { color: theme.text }]}>Active Budgets</Text>
-
-                        {categoriesWithBudgets.map(category => {
-                            const status = getBudgetStatus(category);
-                            const budgetColor = getBudgetColor(status.percentage);
-
-                            return (
-                                <TouchableOpacity
-                                    key={category}
-                                    style={[styles.budgetCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-                                    onPress={() => {
-                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                        handleEditBudget(category);
-                                    }}
-                                >
-                                    <View style={styles.budgetHeader}>
-                                        <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
-                                            <IconSymbol name={getCategoryIcon(category) as any} size={20} color={theme.tint} />
-                                        </View>
-                                        <View style={styles.budgetInfo}>
-                                            <Text style={[styles.budgetCategory, { color: theme.text }]}>
-                                                {category}
-                                                <Text style={[styles.typeTag, { color: theme.icon }]}>
-                                                    {status.type === 'fixed' ? ' • Fixed' : ' • Flexible'}
-                                                </Text>
-                                            </Text>
-                                            <Text style={[styles.budgetAmount, { color: theme.icon }]}>
-                                                {formatCurrency(status.spent)} of {formatCurrency(status.limit)}
-                                            </Text>
-                                        </View>
-                                        <View style={styles.budgetRight}>
-                                            <Text style={[styles.budgetPercentage, { color: budgetColor }]}>
-                                                {status.percentage.toFixed(0)}%
-                                            </Text>
-                                        </View>
-                                    </View>
-
-                                    <View style={styles.progressBarContainer}>
-                                        <View
-                                            style={[
-                                                styles.progressBar,
-                                                { width: `${Math.min(status.percentage, 100)}%`, backgroundColor: budgetColor }
-                                            ]}
-                                        />
-                                    </View>
-
-                                    <View style={styles.budgetFooter}>
-                                        <Text style={[styles.budgetRemaining, { color: theme.icon }]}>
-                                            {formatCurrency(Math.max(0, status.limit - status.spent))} remaining
-                                        </Text>
-                                        <TouchableOpacity
-                                            style={[styles.iconButton, { backgroundColor: theme.danger + '10' }]}
-                                            onPress={() => handleRemoveBudget(category)}
-                                        >
-                                            <IconSymbol name="trash" size={16} color={theme.danger} />
-                                        </TouchableOpacity>
-                                    </View>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </View>
-                )}
-
-                {/* Available Categories */}
+                {/* Budget Limits */}
                 <View style={styles.section}>
-                    <Text style={[styles.sectionTitle, { color: theme.text }]}>Add Budget Limit</Text>
+                    <Text style={[styles.sectionTitle, { color: theme.text }]}>Budget Limits</Text>
 
-                    {categoriesWithoutBudgets.map(item => (
+                    {allCategories.map(item => (
                         <TouchableOpacity
                             key={item.name}
                             style={[styles.categoryCard, { backgroundColor: theme.card, borderColor: theme.border }]}
@@ -238,15 +180,29 @@ export default function Budgets() {
                                 handleEditBudget(item.name);
                             }}
                         >
+                            <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
+                                <IconSymbol name={item.icon as any} size={20} color={theme.tint} />
+                            </View>
                             <View style={styles.categoryInfo}>
                                 <Text style={[styles.categoryName, { color: theme.text }]}>{item.name}</Text>
-                                {item.spent > 0 && (
-                                    <Text style={[styles.categorySpent, { color: theme.icon }]}>
-                                        {formatCurrency(item.spent)} spent
-                                    </Text>
-                                )}
+                                <Text style={[styles.categorySubtext, { color: theme.icon }]}>
+                                    {item.hasBudget
+                                        ? `${formatCurrency(Math.max(0, item.limit - item.spent))} left`
+                                        : (item.spent > 0 ? `${formatCurrency(item.spent)} spent` : 'No spending')
+                                    }
+                                    {item.hasBudget && ` • Limit: ${formatCurrency(item.limit)}`}
+                                </Text>
                             </View>
-                            <IconSymbol name="plus.circle" size={24} color={theme.tint} />
+                            {item.hasBudget ? (
+                                <TouchableOpacity
+                                    style={[styles.iconButton, { backgroundColor: theme.danger + '10' }]}
+                                    onPress={() => handleRemoveBudget(item.name)}
+                                >
+                                    <IconSymbol name="trash" size={16} color={theme.danger} />
+                                </TouchableOpacity>
+                            ) : (
+                                <IconSymbol name="plus.circle" size={24} color={theme.tint} />
+                            )}
                         </TouchableOpacity>
                     ))}
 
@@ -468,17 +424,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 16,
     },
-    budgetCard: {
-        padding: 16,
-        borderRadius: 24,
-        borderWidth: 1,
-        marginBottom: 12,
-    },
-    budgetHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
     categoryIconContainer: {
         width: 40,
         height: 40,
@@ -487,51 +432,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 12,
     },
-    budgetInfo: {
-        flex: 1,
-    },
-    budgetCategory: {
-        fontSize: 16,
-        fontWeight: '700',
-        marginBottom: 2,
-    },
-    budgetAmount: {
-        fontSize: 13,
-        fontWeight: '500',
-    },
-    budgetRight: {
-        alignItems: 'flex-end',
-    },
     iconButton: {
         width: 32,
         height: 32,
         borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    progressBarContainer: {
-        height: 6,
-        backgroundColor: 'rgba(150, 150, 150, 0.1)',
-        borderRadius: 3,
-        overflow: 'hidden',
-        marginBottom: 12,
-    },
-    progressBar: {
-        height: '100%',
-        borderRadius: 3,
-    },
-    budgetFooter: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    budgetPercentage: {
-        fontSize: 14,
-        fontWeight: '700',
-    },
-    budgetRemaining: {
-        fontSize: 12,
-        fontWeight: '600',
     },
     categoryCard: {
         flexDirection: 'row',
@@ -552,6 +458,11 @@ const styles = StyleSheet.create({
     categorySpent: {
         fontSize: 12,
         fontWeight: '600',
+        marginTop: 2,
+    },
+    categorySubtext: {
+        fontSize: 12,
+        fontWeight: '500',
         marginTop: 2,
     },
     helperText: {
