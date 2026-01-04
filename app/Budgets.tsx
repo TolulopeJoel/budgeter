@@ -184,7 +184,16 @@ export default function Budgets() {
                                 <IconSymbol name={item.icon as any} size={20} color={theme.tint} />
                             </View>
                             <View style={styles.categoryInfo}>
-                                <Text style={[styles.categoryName, { color: theme.text }]}>{item.name}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                                    <Text style={[styles.categoryName, { color: theme.text }]}>{item.name}</Text>
+                                    {(item.hasBudget && item.type === 'fixed') && (
+                                        <View style={{ backgroundColor: theme.tint + '15', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                                            <Text style={{ fontSize: 10, color: theme.tint, fontWeight: '600' }}>
+                                                {item.type.toUpperCase()}
+                                            </Text>
+                                        </View>
+                                    )}
+                                </View>
                                 <Text style={[styles.categorySubtext, { color: theme.icon }]}>
                                     {item.hasBudget
                                         ? `${formatCurrency(Math.max(0, item.limit - item.spent))} left`

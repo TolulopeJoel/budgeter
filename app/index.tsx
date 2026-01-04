@@ -264,101 +264,136 @@ export default function Dashboard() {
               <Text style={[styles.sectionTitle, { color: theme.text }]}>Budget Status</Text>
             </View>
 
-            {budgets.map((budget) => {
-              const status = getBudgetStatus(budget.category);
-              const budgetColor = getBudgetColor(status.percentage);
+            {budgets
+              .map(b => {
+                const status = getBudgetStatus(b.category);
+                const categoryBills = recurringBills.filter(bill => bill.category === b.category);
+                const unpaidBills = categoryBills.filter(bill => !isBillPaid(bill.id, currentMonthKey));
+                const totalUnpaidBills = unpaidBills.reduce((sum, bill) => sum + bill.amount, 0);
+                const projectedTotal = status.spent + totalUnpaidBills;
 
-              return (
-                <TouchableOpacity
-                  key={budget.category}
-                  style={[styles.budgetItem, { backgroundColor: theme.card, borderColor: theme.border }]}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setSelectedCategory(budget.category);
-                  }}
-                >
-                  <View style={styles.budgetHeader}>
-                    <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
-                      <IconSymbol name={getCategoryIcon(budget.category) as any} size={20} color={theme.tint} />
-                    </View>
-                    <View style={styles.budgetInfo}>
-                      <Text style={[styles.budgetCategory, { color: theme.text }]}>
-                        {budget.category}
-                      </Text>
-                      <Text style={[styles.budgetAmount, { color: theme.icon }]}>
-                        {formatCurrency(status.spent)} of {formatCurrency(status.limit)}
-                      </Text>
-                    </View>
-                    <View style={styles.budgetRight}>
-                      <Text style={[styles.budgetPercentage, { color: budgetColor }]}>
-                        {status.percentage.toFixed(0)}%
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.progressBarContainer}>
-                    {(() => {
-                      // Calculate what spending would be if unpaid bills were paid
-                      const categoryBills = recurringBills.filter(b => b.category === budget.category);
-                      const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
-                      const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
-                      const projectedSpent = status.spent + totalUnpaidBills;
-                      const projectedPercentage = Math.min((projectedSpent / status.limit) * 100, 100);
+                return {
+                  ...b,
+                  status,
+                  projectedTotal
+                };
+              })
+              .sort((a, b) => {
+                const aUrgent = a.status.percentage >= 50;
+                const bUrgent = b.status.percentage >= 50;
 
-                      return (
-                        <>
-                          {/* Projected spending bar (if bills were paid) */}
-                          {totalUnpaidBills > 0 && (
+                // 1. Urgent categories come first
+                if (aUrgent && !bUrgent) return -1;
+                if (!aUrgent && bUrgent) return 1;
+
+                // 2. If both are Urgent (>50%), sort by Projected Total (Highest Bills/Spend first)
+                if (aUrgent && bUrgent) {
+                  return b.projectedTotal - a.projectedTotal;
+                }
+
+                // 3. If both are Safe (<50%), sort by Percentage (Highest % first)
+                // This ensures that a category with 40% spent comes before one with 10% spent (even if 10% has huge bills)
+                const percentDiff = b.status.percentage - a.status.percentage;
+                if (percentDiff !== 0) return percentDiff;
+
+                // 4. Tie-breaker for Safe categories: Projected Total
+                return b.projectedTotal - a.projectedTotal;
+              })
+              .map((budget) => {
+                const { status } = budget;
+                const budgetColor = getBudgetColor(status.percentage);
+
+                return (
+                  <TouchableOpacity
+                    key={budget.category}
+                    style={[styles.budgetItem, { backgroundColor: theme.card, borderColor: theme.border }]}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setSelectedCategory(budget.category);
+                    }}
+                  >
+                    <View style={styles.budgetHeader}>
+                      <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
+                        <IconSymbol name={getCategoryIcon(budget.category) as any} size={20} color={theme.tint} />
+                      </View>
+                      <View style={styles.budgetInfo}>
+                        <Text style={[styles.budgetCategory, { color: theme.text }]}>
+                          {budget.category}
+                        </Text>
+                        <Text style={[styles.budgetAmount, { color: theme.icon }]}>
+                          {formatCurrency(status.spent)} of {formatCurrency(status.limit)}
+                        </Text>
+                      </View>
+                      <View style={styles.budgetRight}>
+                        <Text style={[styles.budgetPercentage, { color: budgetColor }]}>
+                          {status.percentage.toFixed(0)}%
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.progressBarContainer}>
+                      {(() => {
+                        // Calculate what spending would be if unpaid bills were paid
+                        const categoryBills = recurringBills.filter(b => b.category === budget.category);
+                        const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
+                        const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
+                        const projectedSpent = status.spent + totalUnpaidBills;
+                        const projectedPercentage = Math.min((projectedSpent / status.limit) * 100, 100);
+
+                        return (
+                          <>
+                            {/* Projected spending bar (if bills were paid) */}
+                            {totalUnpaidBills > 0 && (
+                              <View
+                                style={[
+                                  styles.progressBar,
+                                  styles.projectedProgressBar,
+                                  { width: `${projectedPercentage}%`, backgroundColor: budgetColor + '40' }
+                                ]}
+                              />
+                            )}
+                            {/* Current actual spending bar */}
                             <View
                               style={[
                                 styles.progressBar,
-                                styles.projectedProgressBar,
-                                { width: `${projectedPercentage}%`, backgroundColor: budgetColor + '40' }
+                                { width: `${status.percentage}%`, backgroundColor: budgetColor }
                               ]}
                             />
-                          )}
-                          {/* Current actual spending bar */}
-                          <View
-                            style={[
-                              styles.progressBar,
-                              { width: `${status.percentage}%`, backgroundColor: budgetColor }
-                            ]}
-                          />
-                        </>
-                      );
-                    })()}
-                  </View>
+                          </>
+                        );
+                      })()}
+                    </View>
 
-                  {/* Bills Breakdown */}
-                  {(() => {
-                    const categoryBills = recurringBills.filter(b => b.category === budget.category);
-                    const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
+                    {/* Bills Breakdown */}
+                    {(() => {
+                      const categoryBills = recurringBills.filter(b => b.category === budget.category);
+                      const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
 
-                    if (unpaidBills.length === 0) return null;
+                      if (unpaidBills.length === 0) return null;
 
-                    const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
+                      const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
 
-                    return (
-                      <View style={[styles.billsBreakdown, { borderTopColor: theme.border }]}>
-                        <View style={styles.billsHeader}>
-                          <Text style={[styles.billsTitle, { color: theme.icon }]}>Unpaid bills:</Text>
-                          <Text style={[styles.billsTotal, { color: theme.danger + '80' }]}>
-                            {formatCurrency(totalUnpaidBills)}
-                          </Text>
-                        </View>
-                        {unpaidBills.map(bill => (
-                          <View key={bill.id} style={styles.billRow}>
-                            <Text style={[styles.billName, { color: theme.text }]}>• {bill.name}</Text>
-                            <Text style={[styles.billAmount, { color: theme.icon }]}>
-                              {formatCurrency(bill.amount)}
+                      return (
+                        <View style={[styles.billsBreakdown, { borderTopColor: theme.border }]}>
+                          <View style={styles.billsHeader}>
+                            <Text style={[styles.billsTitle, { color: theme.icon }]}>Unpaid bills:</Text>
+                            <Text style={[styles.billsTotal, { color: theme.danger + '80' }]}>
+                              {formatCurrency(totalUnpaidBills)}
                             </Text>
                           </View>
-                        ))}
-                      </View>
-                    );
-                  })()}
-                </TouchableOpacity>
-              );
-            })}
+                          {unpaidBills.map(bill => (
+                            <View key={bill.id} style={styles.billRow}>
+                              <Text style={[styles.billName, { color: theme.text }]}>• {bill.name}</Text>
+                              <Text style={[styles.billAmount, { color: theme.icon }]}>
+                                {formatCurrency(bill.amount)}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      );
+                    })()}
+                  </TouchableOpacity>
+                );
+              })}
           </View>
         )}
 
