@@ -440,7 +440,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             category: bill.category,
             amount: bill.amount,
             date: now.toISOString(),
-            note: `Bill Paid: ${bill.name}`,
+            note: bill.name,
             billId: bill.id
         });
     };
