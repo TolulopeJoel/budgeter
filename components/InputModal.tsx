@@ -46,6 +46,7 @@ export default function InputModal({
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.overlay}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
                 <View style={[styles.content, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
                     {title && <Text style={[styles.title, { color: theme.text }]}>{title}</Text>}

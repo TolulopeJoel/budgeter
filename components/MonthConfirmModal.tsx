@@ -92,6 +92,7 @@ export default function MonthConfirmModal() {
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.overlay}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
                 <View style={[styles.container, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
                     <View style={[styles.iconContainer, { backgroundColor: theme.tint + '10' }]}>
@@ -113,6 +114,7 @@ export default function MonthConfirmModal() {
                             style={styles.scrollArea}
                             showsVerticalScrollIndicator={false}
                             contentContainerStyle={styles.scrollContent}
+                            keyboardShouldPersistTaps="handled"
                         >
                             {lastMonthIncome.length > 0 && (
                                 <View style={styles.section}>

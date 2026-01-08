@@ -142,162 +142,171 @@ export default function SavingsModal({
                     </TouchableOpacity>
                 </View>
 
-                <ScrollView style={styles.content}>
-                    {view === 'history' && (
-                        <View>
-                            {transactions.length > 0 ? (
-                                transactions.map((t) => (
-                                    <TouchableOpacity
-                                        key={t.id}
-                                        style={[styles.transactionItem, { borderBottomColor: theme.border }]}
-                                        onPress={() => startEditing(t)}
-                                    >
-                                        <View>
-                                            <Text style={[styles.transactionNote, { color: theme.text }]}>
-                                                {t.note || (t.type === 'deposit' ? 'Deposit' : 'Withdrawal')}
-                                            </Text>
-                                            <Text style={[styles.transactionDate, { color: theme.icon }]}>
-                                                {new Date(t.date).toLocaleDateString()}
-                                            </Text>
-                                        </View>
-                                        <Text
-                                            style={[
-                                                styles.transactionAmount,
-                                                { color: t.type === 'deposit' ? theme.success : theme.danger }
-                                            ]}
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={{ flex: 1 }}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+                >
+                    <ScrollView
+                        style={styles.content}
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        {view === 'history' && (
+                            <View>
+                                {transactions.length > 0 ? (
+                                    transactions.map((t) => (
+                                        <TouchableOpacity
+                                            key={t.id}
+                                            style={[styles.transactionItem, { borderBottomColor: theme.border }]}
+                                            onPress={() => startEditing(t)}
                                         >
-                                            {t.type === 'deposit' ? '+' : '-'}{formatCurrency(t.amount)}
+                                            <View>
+                                                <Text style={[styles.transactionNote, { color: theme.text }]}>
+                                                    {t.note || (t.type === 'deposit' ? 'Deposit' : 'Withdrawal')}
+                                                </Text>
+                                                <Text style={[styles.transactionDate, { color: theme.icon }]}>
+                                                    {new Date(t.date).toLocaleDateString()}
+                                                </Text>
+                                            </View>
+                                            <Text
+                                                style={[
+                                                    styles.transactionAmount,
+                                                    { color: t.type === 'deposit' ? theme.success : theme.danger }
+                                                ]}
+                                            >
+                                                {t.type === 'deposit' ? '+' : '-'}{formatCurrency(t.amount)}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))
+                                ) : (
+                                    <Text style={[styles.emptyText, { color: theme.icon }]}>No savings history yet.</Text>
+                                )}
+                            </View>
+                        )}
+
+                        {view === 'add' && (
+                            <View>
+                                <View style={styles.typeSelector}>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.typeButton,
+                                            type === 'deposit' && { backgroundColor: theme.success + '20', borderColor: theme.success },
+                                            { borderColor: theme.border }
+                                        ]}
+                                        onPress={() => setType('deposit')}
+                                    >
+                                        <Text style={[styles.typeText, { color: type === 'deposit' ? theme.success : theme.icon }]}>Deposit</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.typeButton,
+                                            type === 'withdrawal' && { backgroundColor: theme.danger + '20', borderColor: theme.danger },
+                                            { borderColor: theme.border }
+                                        ]}
+                                        onPress={() => setType('withdrawal')}
+                                    >
+                                        <Text style={[styles.typeText, { color: type === 'withdrawal' ? theme.danger : theme.icon }]}>Withdraw</Text>
+                                    </TouchableOpacity>
+                                </View>
+
+                                <View style={styles.inputGroup}>
+                                    <Text style={[styles.label, { color: theme.icon }]}>Amount</Text>
+                                    <TextInput
+                                        style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+                                        placeholder="0"
+                                        placeholderTextColor={theme.icon}
+                                        keyboardType="numeric"
+                                        value={amount}
+                                        onChangeText={setAmount}
+                                        autoFocus
+                                    />
+                                </View>
+
+                                <View style={styles.inputGroup}>
+                                    <Text style={[styles.label, { color: theme.icon }]}>Note (Optional)</Text>
+                                    <TextInput
+                                        style={[styles.input, { color: theme.text, borderColor: theme.border, fontSize: 16 }]}
+                                        placeholder="e.g. Monthly Savings"
+                                        placeholderTextColor={theme.icon}
+                                        value={note}
+                                        onChangeText={setNote}
+                                    />
+                                </View>
+
+                                {type === 'deposit' && (
+                                    <TouchableOpacity
+                                        style={styles.checkboxContainer}
+                                        onPress={() => setIsInitialBalance(!isInitialBalance)}
+                                    >
+                                        <View style={[styles.checkbox, { borderColor: theme.tint, backgroundColor: isInitialBalance ? theme.tint : 'transparent' }]}>
+                                            {isInitialBalance && <Ionicons name="checkmark" size={14} color="#fff" />}
+                                        </View>
+                                        <Text style={[styles.checkboxLabel, { color: theme.text }]}>
+                                            Initial Balance (Don&apos;t affect budget)
                                         </Text>
                                     </TouchableOpacity>
-                                ))
-                            ) : (
-                                <Text style={[styles.emptyText, { color: theme.icon }]}>No savings history yet.</Text>
-                            )}
-                        </View>
-                    )}
+                                )}
 
-                    {view === 'add' && (
-                        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-                            <View style={styles.typeSelector}>
                                 <TouchableOpacity
-                                    style={[
-                                        styles.typeButton,
-                                        type === 'deposit' && { backgroundColor: theme.success + '20', borderColor: theme.success },
-                                        { borderColor: theme.border }
-                                    ]}
-                                    onPress={() => setType('deposit')}
+                                    style={[styles.actionButton, { backgroundColor: theme.tint }]}
+                                    onPress={handleAddTransaction}
                                 >
-                                    <Text style={[styles.typeText, { color: type === 'deposit' ? theme.success : theme.icon }]}>Deposit</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={[
-                                        styles.typeButton,
-                                        type === 'withdrawal' && { backgroundColor: theme.danger + '20', borderColor: theme.danger },
-                                        { borderColor: theme.border }
-                                    ]}
-                                    onPress={() => setType('withdrawal')}
-                                >
-                                    <Text style={[styles.typeText, { color: type === 'withdrawal' ? theme.danger : theme.icon }]}>Withdraw</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: theme.icon }]}>Amount</Text>
-                                <TextInput
-                                    style={[styles.input, { color: theme.text, borderColor: theme.border }]}
-                                    placeholder="0"
-                                    placeholderTextColor={theme.icon}
-                                    keyboardType="numeric"
-                                    value={amount}
-                                    onChangeText={setAmount}
-                                    autoFocus
-                                />
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: theme.icon }]}>Note (Optional)</Text>
-                                <TextInput
-                                    style={[styles.input, { color: theme.text, borderColor: theme.border, fontSize: 16 }]}
-                                    placeholder="e.g. Monthly Savings"
-                                    placeholderTextColor={theme.icon}
-                                    value={note}
-                                    onChangeText={setNote}
-                                />
-                            </View>
-
-                            {type === 'deposit' && (
-                                <TouchableOpacity
-                                    style={styles.checkboxContainer}
-                                    onPress={() => setIsInitialBalance(!isInitialBalance)}
-                                >
-                                    <View style={[styles.checkbox, { borderColor: theme.tint, backgroundColor: isInitialBalance ? theme.tint : 'transparent' }]}>
-                                        {isInitialBalance && <Ionicons name="checkmark" size={14} color="#fff" />}
-                                    </View>
-                                    <Text style={[styles.checkboxLabel, { color: theme.text }]}>
-                                        Initial Balance (Don&apos;t affect budget)
+                                    <Text style={styles.actionButtonText}>
+                                        {editingTransaction ? 'Update Entry' : (type === 'deposit' ? 'Add to Savings' : 'Withdraw from Savings')}
                                     </Text>
                                 </TouchableOpacity>
-                            )}
 
-                            <TouchableOpacity
-                                style={[styles.actionButton, { backgroundColor: theme.tint }]}
-                                onPress={handleAddTransaction}
-                            >
-                                <Text style={styles.actionButtonText}>
-                                    {editingTransaction ? 'Update Entry' : (type === 'deposit' ? 'Add to Savings' : 'Withdraw from Savings')}
-                                </Text>
-                            </TouchableOpacity>
+                                {editingTransaction && (
+                                    <TouchableOpacity
+                                        style={[styles.deleteButton, { marginTop: 12 }]}
+                                        onPress={handleDeleteTransaction}
+                                    >
+                                        <Text style={[styles.deleteButtonText, { color: theme.danger }]}>Delete Entry</Text>
+                                    </TouchableOpacity>
+                                )}
 
-                            {editingTransaction && (
                                 <TouchableOpacity
-                                    style={[styles.deleteButton, { marginTop: 12 }]}
-                                    onPress={handleDeleteTransaction}
+                                    style={[styles.cancelButton, { marginTop: editingTransaction ? 8 : 12 }]}
+                                    onPress={() => {
+                                        setEditingTransaction(null);
+                                        setAmount('');
+                                        setNote('');
+                                        setView('history');
+                                    }}
                                 >
-                                    <Text style={[styles.deleteButtonText, { color: theme.danger }]}>Delete Entry</Text>
+                                    <Text style={[styles.cancelButtonText, { color: theme.icon }]}>Cancel</Text>
                                 </TouchableOpacity>
-                            )}
-
-                            <TouchableOpacity
-                                style={[styles.cancelButton, { marginTop: editingTransaction ? 8 : 12 }]}
-                                onPress={() => {
-                                    setEditingTransaction(null);
-                                    setAmount('');
-                                    setNote('');
-                                    setView('history');
-                                }}
-                            >
-                                <Text style={[styles.cancelButtonText, { color: theme.icon }]}>Cancel</Text>
-                            </TouchableOpacity>
-                        </KeyboardAvoidingView>
-                    )}
-
-                    {view === 'settings' && (
-                        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: theme.icon }]}>Monthly Deduction Goal</Text>
-                                <Text style={[styles.helperText, { color: theme.icon }]}>
-                                    This amount is deducted from your &quot;Safe to Spend&quot; each month.
-                                </Text>
-                                <TextInput
-                                    style={[styles.input, { color: theme.text, borderColor: theme.border }]}
-                                    placeholder="0"
-                                    placeholderTextColor={theme.icon}
-                                    keyboardType="numeric"
-                                    value={goal}
-                                    onChangeText={setGoal}
-                                    autoFocus
-                                />
                             </View>
+                        )}
 
-                            <TouchableOpacity
-                                style={[styles.actionButton, { backgroundColor: theme.tint }]}
-                                onPress={handleUpdateGoal}
-                            >
-                                <Text style={styles.actionButtonText}>Update Goal</Text>
-                            </TouchableOpacity>
-                        </KeyboardAvoidingView>
-                    )}
-                </ScrollView>
+                        {view === 'settings' && (
+                            <View>
+                                <View style={styles.inputGroup}>
+                                    <Text style={[styles.label, { color: theme.icon }]}>Monthly Deduction Goal</Text>
+                                    <Text style={[styles.helperText, { color: theme.icon }]}>
+                                        This amount is deducted from your &quot;Safe to Spend&quot; each month.
+                                    </Text>
+                                    <TextInput
+                                        style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+                                        placeholder="0"
+                                        placeholderTextColor={theme.icon}
+                                        keyboardType="numeric"
+                                        value={goal}
+                                        onChangeText={setGoal}
+                                        autoFocus
+                                    />
+                                </View>
+
+                                <TouchableOpacity
+                                    style={[styles.actionButton, { backgroundColor: theme.tint }]}
+                                    onPress={handleUpdateGoal}
+                                >
+                                    <Text style={styles.actionButtonText}>Update Goal</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </ScrollView>
+                </KeyboardAvoidingView>
             </View>
         </Modal>
     );

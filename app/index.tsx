@@ -515,15 +515,19 @@ export default function Dashboard() {
                     </View>
                     <View>
                       <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
-                        {t.category}
+                        {t.note ? t.note : t.category}
                       </Text>
                       <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>
                         {new Date(t.date).toLocaleDateString('en-NG', {
                           month: 'short',
                           day: 'numeric',
-                          year: 'numeric'
+                          year: 'numeric',
                         })}
-                        {t.note && ` • ${t.note}`}
+                        {' • '}
+                        {new Date(t.date).toLocaleTimeString('en-NG', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </Text>
                     </View>
                   </View>
