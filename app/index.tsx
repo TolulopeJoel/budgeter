@@ -46,6 +46,7 @@ export default function Dashboard() {
     isBillPaid,
     initialBalance,
     updateInitialBalance,
+    reconcileBalance,
     getAccountBalance,
   } = useBudget();
 
@@ -182,7 +183,8 @@ export default function Dashboard() {
           </View>
           <TouchableOpacity
             onPress={() => {
-              setTempInitialBalance(initialBalance.toString());
+              // Show current calculated balance as starting point, but user enters target
+              setTempInitialBalance(getAccountBalance().toString());
               setShowInitialBalanceModal(true);
             }}
           >
@@ -726,17 +728,21 @@ export default function Dashboard() {
 
       <InputModal
         visible={showInitialBalanceModal}
-        title="Set Starting Balance"
+        title="Adjust Total Balance"
         value={tempInitialBalance}
         onChangeText={setTempInitialBalance}
         onConfirm={async () => {
-          await updateInitialBalance(Number(tempInitialBalance) || 0);
+          await reconcileBalance(Number(tempInitialBalance) || 0);
           setShowInitialBalanceModal(false);
         }}
         onCancel={() => setShowInitialBalanceModal(false)}
         keyboardType="numeric"
         prefix="₦"
-      />
+      >
+        <Text style={{ fontSize: 12, color: theme.icon, marginTop: -8, marginBottom: 16 }}>
+          Enter your current actual bank balance. The app will calibrate itself to match.
+        </Text>
+      </InputModal>
 
       <TouchableOpacity
         style={[styles.floatingButton, { backgroundColor: theme.tint }]}

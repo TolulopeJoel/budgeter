@@ -19,6 +19,7 @@ export interface Transaction {
     originalCategory?: string;
     savingsId?: string;
     billId?: string;
+    isCarryOver?: boolean;
 }
 
 export type BudgetType = 'flexible' | 'fixed';
@@ -101,6 +102,7 @@ export interface BudgetContextType {
     // Account Balance
     initialBalance: number;
     updateInitialBalance: (amount: number) => Promise<void>;
+    reconcileBalance: (targetAmount: number) => Promise<void>;
 
     // Savings
     savingsTransactions: SavingsTransaction[];
@@ -607,12 +609,15 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             ...t,
             id: Math.random().toString(36).substr(2, 9),
             date: now.toISOString(),
+            isCarryOver: true,
         }));
 
         if (newTransactions.length > 0) {
-            const updatedTransactions = [...newTransactions, ...transactions];
-            setTransactions(updatedTransactions);
-            await saveTransactions(updatedTransactions);
+            setTransactions(prev => {
+                const updated = [...newTransactions, ...prev];
+                saveTransactions(updated);
+                return updated;
+            });
         }
 
         const newPeriod: MonthlyPeriod = {
@@ -832,6 +837,14 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         await AsyncStorage.setItem('@budgeter_initial_balance', amount.toString());
     };
 
+    const reconcileBalance = async (targetAmount: number) => {
+        // target = initial + currentNet
+        // initial = target - currentNet
+        const currentNet = getBalance();
+        const newInitial = targetAmount - currentNet;
+        await updateInitialBalance(newInitial);
+    };
+
     const updateUserPin = async (pin: string) => {
         setUserPin(pin);
         await AsyncStorage.setItem('@budgeter_user_pin', pin);
@@ -854,8 +867,10 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Calculation functions
     const getBalance = () => {
         return transactions.reduce((acc, t) => {
-            if (t.type === 'income') return acc + t.amount;
-            if (t.type === 'expense') return acc - t.amount;
+            if (t.isCarryOver === true) return acc; // Strictly skip carry-overs
+            const amount = Number(t.amount) || 0;
+            if (t.type === 'income') return acc + amount;
+            if (t.type === 'expense' || t.type === 'debt') return acc - amount;
             return acc;
         }, 0);
     };
@@ -869,9 +884,11 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const endOfMonth = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59);
 
         const periodNet = transactions.reduce((acc, t) => {
+            if (t.isCarryOver === true) return acc; // Strictly skip carry-overs
             if (new Date(t.date) <= endOfMonth) {
-                if (t.type === 'income') return acc + t.amount;
-                if (t.type === 'expense') return acc - t.amount;
+                const amount = Number(t.amount) || 0;
+                if (t.type === 'income') return acc + amount;
+                if (t.type === 'expense' || t.type === 'debt') return acc - amount;
             }
             return acc;
         }, 0);
@@ -1003,6 +1020,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
                 initialBalance,
                 updateInitialBalance,
+                reconcileBalance,
 
                 savingsTransactions,
                 savingsBalance: savingsTransactions.reduce((acc, t) => t.type === 'deposit' ? acc + t.amount : acc - t.amount, 0),
