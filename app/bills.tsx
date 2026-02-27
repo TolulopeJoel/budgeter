@@ -267,7 +267,7 @@ export default function RecurringBills() {
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     style={styles.modalOverlay}
                 >
-                    <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+                    <NeoCard style={[styles.modalContent, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
                         <View style={styles.modalHeader}>
                             <Text style={[styles.modalTitle, { color: theme.text }]}>
                                 {editingBill ? 'Edit Bill' : 'Add Recurring Bill'}
@@ -278,7 +278,7 @@ export default function RecurringBills() {
                                     setEditingBill(null);
                                 }}
                             >
-                                <IconSymbol name="xmark.circle.fill" size={28} color={theme.icon} />
+                                <Text style={{ fontSize: 24, fontWeight: '900' }}>✕</Text>
                             </TouchableOpacity>
                         </View>
 
@@ -286,9 +286,9 @@ export default function RecurringBills() {
                             <View style={styles.inputGroup}>
                                 <Text style={[styles.label, { color: theme.text }]}>Bill Name</Text>
                                 <TextInput
-                                    style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]}
+                                    style={[styles.input, SharedStyles.neoBorder, { color: '#000', backgroundColor: '#fff' }]}
                                     placeholder="e.g., Rent, Netflix, Insurance"
-                                    placeholderTextColor={theme.icon}
+                                    placeholderTextColor="#999"
                                     value={formData.name}
                                     onChangeText={(value) => setFormData({ ...formData, name: value })}
                                 />
@@ -298,9 +298,9 @@ export default function RecurringBills() {
                                 <View style={styles.halfInput}>
                                     <Text style={[styles.label, { color: theme.text }]}>Amount</Text>
                                     <TextInput
-                                        style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]}
+                                        style={[styles.input, SharedStyles.neoBorder, { color: '#000', backgroundColor: '#fff' }]}
                                         placeholder="0"
-                                        placeholderTextColor={theme.icon}
+                                        placeholderTextColor="#999"
                                         keyboardType="numeric"
                                         value={formData.amount}
                                         onChangeText={(value) => setFormData({ ...formData, amount: value })}
@@ -310,9 +310,9 @@ export default function RecurringBills() {
                                 <View style={styles.halfInput}>
                                     <Text style={[styles.label, { color: theme.text }]}>Due Day</Text>
                                     <TextInput
-                                        style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]}
+                                        style={[styles.input, SharedStyles.neoBorder, { color: '#000', backgroundColor: '#fff' }]}
                                         placeholder="1-31"
-                                        placeholderTextColor={theme.icon}
+                                        placeholderTextColor="#999"
                                         keyboardType="numeric"
                                         value={formData.dueDay}
                                         onChangeText={(value) => setFormData({ ...formData, dueDay: value })}
@@ -332,14 +332,18 @@ export default function RecurringBills() {
                         </ScrollView>
 
                         <TouchableOpacity
-                            style={[styles.saveButton, { backgroundColor: theme.tint }]}
                             onPress={handleSave}
                         >
-                            <Text style={styles.saveButtonText}>
-                                {editingBill ? 'Update Bill' : 'Add Bill'}
-                            </Text>
+                            <NeoCard
+                                backgroundColor={theme.tint}
+                                style={styles.saveButton}
+                            >
+                                <Text style={styles.saveButtonText}>
+                                    {editingBill ? 'Update Bill' : 'Add Bill'}
+                                </Text>
+                            </NeoCard>
                         </TouchableOpacity>
-                    </View>
+                    </NeoCard>
                 </KeyboardAvoidingView>
             </Modal>
         </View>
@@ -501,10 +505,9 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     modalContent: {
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
         padding: 24,
-        paddingBottom: 40,
         maxHeight: '90%',
     },
     modalHeader: {
@@ -514,22 +517,23 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontSize: 24,
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
     inputGroup: {
         marginBottom: 20,
     },
     label: {
-        fontSize: 16,
+        fontSize: 14,
         marginBottom: 8,
-        fontWeight: '500',
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
     input: {
-        borderWidth: 1,
-        borderRadius: 8,
         padding: 12,
         fontSize: 16,
+        fontWeight: '900',
     },
     row: {
         flexDirection: 'row',
@@ -551,13 +555,13 @@ const styles = StyleSheet.create({
     },
     saveButton: {
         padding: 16,
-        borderRadius: 12,
         alignItems: 'center',
         marginTop: 24,
     },
     saveButtonText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
 });

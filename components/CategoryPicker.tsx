@@ -1,5 +1,6 @@
+import { NeoCard } from '@/components/ui/NeobrutalistComponents';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/Colors';
+import { Colors, SharedStyles } from '@/constants/Colors';
 import { Category } from '@/context/BudgetContext';
 import React, { useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View } from 'react-native';
@@ -32,65 +33,69 @@ export default function CategoryPicker({
             <TouchableOpacity
                 style={[
                     styles.dropdownTrigger,
+                    SharedStyles.neoBorder,
                     {
-                        borderColor: error ? theme.danger : theme.border,
-                        backgroundColor: error ? theme.danger + '10' : theme.background,
+                        backgroundColor: error ? theme.danger + '10' : '#fff',
+                        borderColor: error ? theme.danger : '#000',
                     },
                 ]}
                 onPress={() => setShowPicker(true)}
             >
                 <Text style={[
                     styles.dropdownText,
-                    { color: value ? theme.text : theme.icon }
+                    { color: value ? '#000' : '#999' }
                 ]}>
                     {value || placeholder}
                 </Text>
-                <IconSymbol name="chevron.down" size={20} color={theme.icon} />
+                <IconSymbol name="chevron.down" size={20} color="#000" />
             </TouchableOpacity>
 
             <Modal visible={showPicker} transparent animationType="slide">
                 <TouchableWithoutFeedback onPress={() => setShowPicker(false)}>
                     <View style={styles.modalOverlay}>
                         <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
-                            <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+                            <NeoCard style={[styles.modalContent, { backgroundColor: theme.card }]}>
                                 <View style={styles.modalHeader}>
                                     <Text style={[styles.modalTitle, { color: theme.text }]}>Select Category</Text>
                                     <TouchableOpacity onPress={() => setShowPicker(false)}>
-                                        <IconSymbol name="xmark.circle.fill" size={24} color={theme.icon} />
+                                        <Text style={{ fontSize: 24 }}>✕</Text>
                                     </TouchableOpacity>
                                 </View>
                                 <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
                                     {categories.map((c) => (
                                         <TouchableOpacity
                                             key={c.name}
-                                            style={[
-                                                styles.option,
-                                                value === c.name && { backgroundColor: theme.tint + '15' }
-                                            ]}
                                             onPress={() => {
                                                 onSelect(c.name);
                                                 setShowPicker(false);
                                             }}
                                         >
-                                            <View style={styles.optionLeft}>
-                                                <View style={[styles.iconContainer, { backgroundColor: theme.tint + '10' }]}>
-                                                    <IconSymbol name={c.icon as any} size={20} color={theme.tint} />
+                                            <NeoCard
+                                                style={[
+                                                    styles.option,
+                                                ]}
+                                                backgroundColor={value === c.name ? theme.tint : '#fff'}
+                                            >
+                                                <View style={styles.optionLeft}>
+                                                    <View style={[styles.iconContainer, SharedStyles.neoBorder, { backgroundColor: '#fff' }]}>
+                                                        <IconSymbol name={c.icon as any} size={20} color="#000" />
+                                                    </View>
+                                                    <Text style={[
+                                                        styles.optionText,
+                                                        { color: '#000' },
+                                                        value === c.name && { fontWeight: '900' }
+                                                    ]}>
+                                                        {c.name}
+                                                    </Text>
                                                 </View>
-                                                <Text style={[
-                                                    styles.optionText,
-                                                    { color: theme.text },
-                                                    value === c.name && { color: theme.tint, fontWeight: 'bold' }
-                                                ]}>
-                                                    {c.name}
-                                                </Text>
-                                            </View>
-                                            {value === c.name && (
-                                                <IconSymbol name="checkmark" size={20} color={theme.tint} />
-                                            )}
+                                                {value === c.name && (
+                                                    <IconSymbol name="checkmark" size={20} color="#000" />
+                                                )}
+                                            </NeoCard>
                                         </TouchableOpacity>
                                     ))}
                                 </ScrollView>
-                            </View>
+                            </NeoCard>
                         </TouchableWithoutFeedback>
                     </View>
                 </TouchableWithoutFeedback>
@@ -105,20 +110,19 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '900',
         marginBottom: 8,
-        opacity: 0.7,
+        textTransform: 'uppercase',
     },
     dropdownTrigger: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        borderWidth: 1,
-        borderRadius: 12,
         padding: 14,
     },
     dropdownText: {
         fontSize: 16,
+        fontWeight: '700',
     },
     modalOverlay: {
         flex: 1,
@@ -131,7 +135,6 @@ const styles = StyleSheet.create({
         width: '100%',
         maxHeight: '80%',
         padding: 24,
-        borderRadius: 24,
     },
     modalHeader: {
         flexDirection: 'row',
@@ -140,8 +143,9 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 20,
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
     list: {
         maxHeight: 400,
@@ -152,8 +156,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 12,
         paddingHorizontal: 12,
-        borderRadius: 12,
-        marginBottom: 4,
+        marginBottom: 12,
     },
     optionLeft: {
         flexDirection: 'row',
@@ -169,5 +172,6 @@ const styles = StyleSheet.create({
     },
     optionText: {
         fontSize: 16,
+        fontWeight: '800',
     },
 });

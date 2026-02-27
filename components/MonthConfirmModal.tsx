@@ -1,4 +1,5 @@
-import { Colors } from '@/constants/Colors';
+import { NeoButton, NeoCard } from '@/components/ui/NeobrutalistComponents';
+import { Colors, SharedStyles } from '@/constants/Colors';
 import { Transaction, useBudget } from '@/context/BudgetContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -94,8 +95,8 @@ export default function MonthConfirmModal() {
                 style={styles.overlay}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
-                <View style={[styles.container, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
-                    <View style={[styles.iconContainer, { backgroundColor: theme.tint + '10' }]}>
+                <NeoCard style={[styles.container, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
+                    <View style={[styles.iconContainer, SharedStyles.neoBorder, { backgroundColor: theme.tint }]}>
                         <Text style={styles.icon}>📅</Text>
                     </View>
 
@@ -147,30 +148,32 @@ export default function MonthConfirmModal() {
                                     {lastMonthIncome.map((t) => (
                                         <TouchableOpacity
                                             key={t.id}
-                                            style={[
-                                                styles.incomeItem,
-                                                { borderColor: theme.border },
-                                                selectedIds.has(t.id) && { backgroundColor: theme.tint + '10', borderColor: theme.tint }
-                                            ]}
                                             onPress={() => toggleIncome(t.id)}
                                         >
-                                            <View style={styles.incomeInfo}>
-                                                <Text style={[styles.incomeNote, { color: theme.text }]}>
-                                                    {t.note || 'Income'}
-                                                </Text>
-                                                <Text style={[styles.incomeAmount, { color: theme.icon }]}>
-                                                    {formatCurrency(t.amount)}
-                                                </Text>
-                                            </View>
-                                            <View style={[
-                                                styles.checkbox,
-                                                { borderColor: theme.tint },
-                                                selectedIds.has(t.id) && { backgroundColor: theme.tint }
-                                            ]}>
-                                                {selectedIds.has(t.id) && (
-                                                    <Ionicons name="checkmark" size={16} color="#fff" />
-                                                )}
-                                            </View>
+                                            <NeoCard
+                                                style={[
+                                                    styles.incomeItem,
+                                                ]}
+                                                backgroundColor={selectedIds.has(t.id) ? theme.tint : '#fff'}
+                                            >
+                                                <View style={styles.incomeInfo}>
+                                                    <Text style={[styles.incomeNote, { color: '#000' }]}>
+                                                        {t.note || 'Income'}
+                                                    </Text>
+                                                    <Text style={[styles.incomeAmount, { color: '#000' }]}>
+                                                        {formatCurrency(t.amount)}
+                                                    </Text>
+                                                </View>
+                                                <View style={[
+                                                    styles.checkbox,
+                                                    { borderColor: '#000' },
+                                                    selectedIds.has(t.id) && { backgroundColor: '#000' }
+                                                ]}>
+                                                    {selectedIds.has(t.id) && (
+                                                        <Ionicons name="checkmark" size={16} color="#fff" />
+                                                    )}
+                                                </View>
+                                            </NeoCard>
                                         </TouchableOpacity>
                                     ))}
                                 </View>
@@ -186,20 +189,20 @@ export default function MonthConfirmModal() {
                                             </TouchableOpacity>
                                         )}
                                     </View>
-                                    <View style={[styles.manualInput, { borderColor: theme.border }]}>
+                                    <View style={[styles.manualInput, SharedStyles.neoBorder, { backgroundColor: '#fff', padding: 4 }]}>
                                         <TextInput
-                                            style={[styles.input, { color: theme.text }]}
+                                            style={[styles.input, { color: '#000' }]}
                                             placeholder="Amount"
-                                            placeholderTextColor={theme.icon}
+                                            placeholderTextColor="#999"
                                             keyboardType="numeric"
                                             value={manualAmount}
                                             onChangeText={setManualAmount}
                                         />
-                                        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+                                        <View style={[styles.divider, { backgroundColor: '#000' }]} />
                                         <TextInput
-                                            style={[styles.input, { color: theme.text }]}
+                                            style={[styles.input, { color: '#000' }]}
                                             placeholder="Note (e.g. Salary)"
-                                            placeholderTextColor={theme.icon}
+                                            placeholderTextColor="#999"
                                             value={manualNote}
                                             onChangeText={setManualNote}
                                         />
@@ -217,17 +220,16 @@ export default function MonthConfirmModal() {
                         </ScrollView>
                     </View>
 
-                    <TouchableOpacity
-                        style={[styles.button, { backgroundColor: theme.tint }]}
+                    <NeoButton
+                        title="Start New Month"
                         onPress={handleConfirm}
-                    >
-                        <Text style={styles.buttonText}>Start New Month</Text>
-                    </TouchableOpacity>
+                        backgroundColor={theme.tint}
+                    />
 
                     <Text style={[styles.footer, { color: theme.icon }]}>
                         Your recurring bills will continue automatically
                     </Text>
-                </View>
+                </NeoCard>
             </KeyboardAvoidingView>
         </Modal>
     );
@@ -244,8 +246,7 @@ const styles = StyleSheet.create({
     container: {
         width: '100%',
         maxWidth: 400,
-        maxHeight: '85%',
-        borderRadius: 32,
+        maxHeight: '90%',
         padding: 24,
         alignItems: 'center',
         overflow: 'hidden',
@@ -262,10 +263,11 @@ const styles = StyleSheet.create({
         fontSize: 32,
     },
     title: {
-        fontSize: 22,
-        fontWeight: 'bold',
+        fontSize: 24,
+        fontWeight: '900',
         textAlign: 'center',
         marginBottom: 8,
+        textTransform: 'uppercase',
     },
     subtitle: {
         fontSize: 14,
@@ -298,7 +300,7 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 12,
-        fontWeight: '700',
+        fontWeight: '900',
         textTransform: 'uppercase',
         letterSpacing: 1,
     },
@@ -311,7 +313,7 @@ const styles = StyleSheet.create({
     },
     checkAllText: {
         fontSize: 11,
-        fontWeight: '700',
+        fontWeight: '900',
         marginLeft: 4,
         textTransform: 'uppercase',
     },
@@ -320,16 +322,14 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 16,
-        borderRadius: 16,
-        borderWidth: 1.5,
-        marginBottom: 10,
+        marginBottom: 12,
     },
     incomeInfo: {
         flex: 1,
     },
     incomeNote: {
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '900',
         marginBottom: 2,
     },
     incomeAmount: {
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     checkbox: {
         width: 24,
         height: 24,
-        borderRadius: 12,
+        borderRadius: 0,
         borderWidth: 2,
         justifyContent: 'center',
         alignItems: 'center',

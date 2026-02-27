@@ -1,4 +1,5 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { NeoCard } from '@/components/ui/NeobrutalistComponents';
 import { Colors } from '@/constants/Colors';
 import React from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
@@ -36,18 +37,20 @@ export const IconPicker: React.FC<IconPickerProps> = ({ selectedIcon, onSelect }
                         return (
                             <TouchableOpacity
                                 key={iconName}
-                                style={[
-                                    styles.iconButton,
-                                    { backgroundColor: theme.card },
-                                    isSelected && { borderColor: theme.tint, borderWidth: 2 }
-                                ]}
                                 onPress={() => onSelect(iconName)}
                             >
-                                <IconSymbol
-                                    name={iconName as any}
-                                    size={24}
-                                    color={isSelected ? theme.tint : theme.icon}
-                                />
+                                <NeoCard
+                                    style={[
+                                        styles.iconButton,
+                                    ]}
+                                    backgroundColor={isSelected ? theme.tint : '#fff'}
+                                >
+                                    <IconSymbol
+                                        name={iconName as any}
+                                        size={24}
+                                        color={isSelected ? '#fff' : '#000'}
+                                    />
+                                </NeoCard>
                             </TouchableOpacity>
                         );
                     })}
@@ -71,12 +74,9 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     iconButton: {
-        width: 48,
-        height: 48,
-        borderRadius: 12,
+        width: 54,
+        height: 54,
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 2,
-        borderColor: 'transparent',
     },
 });

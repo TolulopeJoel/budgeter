@@ -1,4 +1,5 @@
-import { Colors } from '@/constants/Colors';
+import { NeoButton, NeoCard } from '@/components/ui/NeobrutalistComponents';
+import { Colors, SharedStyles } from '@/constants/Colors';
 import { SavingsTransaction, Transaction } from '@/context/BudgetContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -111,21 +112,21 @@ export default function SavingsModal({
                     </TouchableOpacity>
                 </View>
 
-                <View style={[styles.balanceCard, { backgroundColor: theme.tint }]}>
+                <NeoCard backgroundColor={theme.tint} style={styles.balanceCard}>
                     <Text style={styles.balanceLabel}>Total Savings</Text>
                     <Text style={styles.balanceAmount}>{formatCurrency(currentBalance)}</Text>
-                    <View style={styles.goalContainer}>
-                        <Text style={styles.goalText}>
+                    <View style={[styles.goalContainer, SharedStyles.neoBorder, { backgroundColor: '#fff' }]}>
+                        <Text style={[styles.goalText, { color: '#000' }]}>
                             Monthly Deduction: {formatCurrency(currentGoal)}
                         </Text>
                         <TouchableOpacity
                             style={styles.editGoalButton}
                             onPress={() => setView('settings')}
                         >
-                            <Ionicons name="pencil" size={16} color="#fff" />
+                            <Ionicons name="pencil" size={16} color="#000" />
                         </TouchableOpacity>
                     </View>
-                </View>
+                </NeoCard>
 
                 <View style={styles.tabContainer}>
                     <TouchableOpacity
@@ -157,25 +158,26 @@ export default function SavingsModal({
                                     transactions.map((t) => (
                                         <TouchableOpacity
                                             key={t.id}
-                                            style={[styles.transactionItem, { borderBottomColor: theme.border }]}
                                             onPress={() => startEditing(t)}
                                         >
-                                            <View>
-                                                <Text style={[styles.transactionNote, { color: theme.text }]}>
-                                                    {t.note || (t.type === 'deposit' ? 'Deposit' : 'Withdrawal')}
+                                            <NeoCard style={[styles.transactionItem]}>
+                                                <View>
+                                                    <Text style={[styles.transactionNote, { color: theme.text }]}>
+                                                        {t.note || (t.type === 'deposit' ? 'Deposit' : 'Withdrawal')}
+                                                    </Text>
+                                                    <Text style={[styles.transactionDate, { color: theme.icon }]}>
+                                                        {new Date(t.date).toLocaleDateString()}
+                                                    </Text>
+                                                </View>
+                                                <Text
+                                                    style={[
+                                                        styles.transactionAmount,
+                                                        { color: t.type === 'deposit' ? theme.success : theme.danger }
+                                                    ]}
+                                                >
+                                                    {t.type === 'deposit' ? '+' : '-'}{formatCurrency(t.amount)}
                                                 </Text>
-                                                <Text style={[styles.transactionDate, { color: theme.icon }]}>
-                                                    {new Date(t.date).toLocaleDateString()}
-                                                </Text>
-                                            </View>
-                                            <Text
-                                                style={[
-                                                    styles.transactionAmount,
-                                                    { color: t.type === 'deposit' ? theme.success : theme.danger }
-                                                ]}
-                                            >
-                                                {t.type === 'deposit' ? '+' : '-'}{formatCurrency(t.amount)}
-                                            </Text>
+                                            </NeoCard>
                                         </TouchableOpacity>
                                     ))
                                 ) : (
@@ -188,33 +190,35 @@ export default function SavingsModal({
                             <View>
                                 <View style={styles.typeSelector}>
                                     <TouchableOpacity
-                                        style={[
-                                            styles.typeButton,
-                                            type === 'deposit' && { backgroundColor: theme.success + '20', borderColor: theme.success },
-                                            { borderColor: theme.border }
-                                        ]}
+                                        style={{ flex: 1 }}
                                         onPress={() => setType('deposit')}
                                     >
-                                        <Text style={[styles.typeText, { color: type === 'deposit' ? theme.success : theme.icon }]}>Deposit</Text>
+                                        <NeoCard
+                                            style={styles.typeButton}
+                                            backgroundColor={type === 'deposit' ? theme.success : '#fff'}
+                                        >
+                                            <Text style={[styles.typeText, { color: '#000' }]}>Deposit</Text>
+                                        </NeoCard>
                                     </TouchableOpacity>
                                     <TouchableOpacity
-                                        style={[
-                                            styles.typeButton,
-                                            type === 'withdrawal' && { backgroundColor: theme.danger + '20', borderColor: theme.danger },
-                                            { borderColor: theme.border }
-                                        ]}
+                                        style={{ flex: 1 }}
                                         onPress={() => setType('withdrawal')}
                                     >
-                                        <Text style={[styles.typeText, { color: type === 'withdrawal' ? theme.danger : theme.icon }]}>Withdraw</Text>
+                                        <NeoCard
+                                            style={styles.typeButton}
+                                            backgroundColor={type === 'withdrawal' ? theme.danger : '#fff'}
+                                        >
+                                            <Text style={[styles.typeText, { color: '#000' }]}>Withdraw</Text>
+                                        </NeoCard>
                                     </TouchableOpacity>
                                 </View>
 
                                 <View style={styles.inputGroup}>
-                                    <Text style={[styles.label, { color: theme.icon }]}>Amount</Text>
+                                    <Text style={[styles.label, { color: theme.text }]}>Amount</Text>
                                     <TextInput
-                                        style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+                                        style={[styles.input, SharedStyles.neoBorder, { color: '#000', backgroundColor: '#fff' }]}
                                         placeholder="0"
-                                        placeholderTextColor={theme.icon}
+                                        placeholderTextColor="#999"
                                         keyboardType="numeric"
                                         value={amount}
                                         onChangeText={setAmount}
@@ -223,11 +227,11 @@ export default function SavingsModal({
                                 </View>
 
                                 <View style={styles.inputGroup}>
-                                    <Text style={[styles.label, { color: theme.icon }]}>Note (Optional)</Text>
+                                    <Text style={[styles.label, { color: theme.text }]}>Note (Optional)</Text>
                                     <TextInput
-                                        style={[styles.input, { color: theme.text, borderColor: theme.border, fontSize: 16 }]}
+                                        style={[styles.input, SharedStyles.neoBorder, { color: '#000', backgroundColor: '#fff', fontSize: 16 }]}
                                         placeholder="e.g. Monthly Savings"
-                                        placeholderTextColor={theme.icon}
+                                        placeholderTextColor="#999"
                                         value={note}
                                         onChangeText={setNote}
                                     />
@@ -247,14 +251,11 @@ export default function SavingsModal({
                                     </TouchableOpacity>
                                 )}
 
-                                <TouchableOpacity
-                                    style={[styles.actionButton, { backgroundColor: theme.tint }]}
+                                <NeoButton
+                                    title={editingTransaction ? 'Update Entry' : (type === 'deposit' ? 'Add to Savings' : 'Withdraw from Savings')}
                                     onPress={handleAddTransaction}
-                                >
-                                    <Text style={styles.actionButtonText}>
-                                        {editingTransaction ? 'Update Entry' : (type === 'deposit' ? 'Add to Savings' : 'Withdraw from Savings')}
-                                    </Text>
-                                </TouchableOpacity>
+                                    backgroundColor={theme.tint}
+                                />
 
                                 {editingTransaction && (
                                     <TouchableOpacity
@@ -297,12 +298,11 @@ export default function SavingsModal({
                                     />
                                 </View>
 
-                                <TouchableOpacity
-                                    style={[styles.actionButton, { backgroundColor: theme.tint }]}
+                                <NeoButton
+                                    title="Update Goal"
                                     onPress={handleUpdateGoal}
-                                >
-                                    <Text style={styles.actionButtonText}>Update Goal</Text>
-                                </TouchableOpacity>
+                                    backgroundColor={theme.tint}
+                                />
                             </View>
                         )}
                     </ScrollView>
@@ -325,7 +325,8 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 24,
-        fontWeight: 'bold',
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
     closeButton: {
         fontSize: 16,
@@ -347,7 +348,7 @@ const styles = StyleSheet.create({
     balanceAmount: {
         color: '#fff',
         fontSize: 36,
-        fontWeight: '800',
+        fontWeight: '900',
         marginBottom: 16,
     },
     goalContainer: {
@@ -378,7 +379,8 @@ const styles = StyleSheet.create({
     },
     tabText: {
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
     content: {
         flex: 1,
@@ -388,12 +390,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 16,
-        borderBottomWidth: StyleSheet.hairlineWidth,
+        padding: 16,
+        marginBottom: 12,
     },
     transactionNote: {
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '900',
         marginBottom: 4,
     },
     transactionDate: {
@@ -401,7 +403,7 @@ const styles = StyleSheet.create({
     },
     transactionAmount: {
         fontSize: 16,
-        fontWeight: '700',
+        fontWeight: '900',
     },
     emptyText: {
         textAlign: 'center',
@@ -429,7 +431,7 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '900',
         marginBottom: 8,
         textTransform: 'uppercase',
     },
@@ -439,10 +441,10 @@ const styles = StyleSheet.create({
         opacity: 0.7,
     },
     input: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        borderBottomWidth: 2,
-        paddingVertical: 8,
+        fontSize: 18,
+        fontWeight: '900',
+        padding: 12,
+        borderRadius: 0,
     },
     actionButton: {
         padding: 16,
@@ -490,6 +492,7 @@ const styles = StyleSheet.create({
     },
     deleteButtonText: {
         fontSize: 15,
-        fontWeight: '700',
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
 });

@@ -481,7 +481,7 @@ export default function Dashboard() {
           <View style={styles.modalHeader}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>{selectedCategory} Activity</Text>
             <TouchableOpacity onPress={() => setSelectedCategory(null)}>
-              <Text style={[styles.modalCloseButton, { color: theme.tint }]}>Done</Text>
+              <Text style={[styles.modalCloseButton, { color: theme.tint }]}>DONE</Text>
             </TouchableOpacity>
           </View>
 
@@ -501,58 +501,47 @@ export default function Dashboard() {
                 );
               }
 
-              return filtered.map((t, index, arr) => (
+              return filtered.map((t) => (
                 <TouchableOpacity
                   key={t.id}
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    paddingVertical: 16,
-                    borderBottomWidth: index === arr.length - 1 ? 0 : 1,
-                    borderBottomColor: theme.border + '40',
-                  }}
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     setEditingTransaction(t);
                     setShowTransactionModal(true);
                   }}
                 >
-                  <View style={styles.transactionLeft}>
-                    <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
-                      <IconSymbol
-                        name={getCategoryIcon(t.category, t.type) as any}
-                        size={20}
-                        color={theme.tint}
-                      />
+                  <NeoCard style={styles.transactionItem}>
+                    <View style={styles.transactionLeft}>
+                      <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
+                        <IconSymbol
+                          name={getCategoryIcon(t.category, t.type) as any}
+                          size={20}
+                          color={theme.tint}
+                        />
+                      </View>
+                      <View>
+                        <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
+                          {t.note ? t.note : t.category}
+                        </Text>
+                        <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>
+                          {new Date(t.date).toLocaleDateString('en-NG', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </Text>
+                      </View>
                     </View>
-                    <View>
-                      <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
-                        {t.note ? t.note : t.category}
-                      </Text>
-                      <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>
-                        {new Date(t.date).toLocaleDateString('en-NG', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                        {' • '}
-                        {new Date(t.date).toLocaleTimeString('en-NG', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text
-                    style={[
-                      styles.transactionAmount,
-                      { color: t.type === 'income' ? theme.success : theme.danger }
-                    ]}
-                  >
-                    {t.type === 'income' ? '+' : '-'}
-                    {formatCurrency(t.amount)}
-                  </Text>
+                    <Text
+                      style={[
+                        styles.transactionAmount,
+                        { color: t.type === 'income' ? theme.success : theme.danger }
+                      ]}
+                    >
+                      {t.type === 'income' ? '+' : '-'}
+                      {formatCurrency(t.amount)}
+                    </Text>
+                  </NeoCard>
                 </TouchableOpacity>
               ));
             })()}
@@ -564,13 +553,13 @@ export default function Dashboard() {
       <Modal visible={showAllTransactions} animationType="slide" presentationStyle="pageSheet">
         <View style={[styles.modalContainer, { backgroundColor: theme.background, paddingTop: insets.top }]}>
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={handleExportCSV} style={styles.exportButton}>
-              <Ionicons name="share-outline" size={20} color={theme.tint} />
+            <TouchableOpacity onPress={handleExportCSV} style={[styles.exportButton, SharedStyles.neoBorder, { backgroundColor: theme.card, padding: 8 }]}>
+              <Ionicons name="share-outline" size={18} color={theme.tint} />
               <Text style={[styles.exportButtonText, { color: theme.tint }]}>CSV</Text>
             </TouchableOpacity>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>All Transactions</Text>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>All History</Text>
             <TouchableOpacity onPress={() => setShowAllTransactions(false)}>
-              <Text style={[styles.modalCloseButton, { color: theme.tint }]}>Done</Text>
+              <Text style={[styles.modalCloseButton, { color: theme.tint }]}>DONE</Text>
             </TouchableOpacity>
           </View>
 
@@ -675,8 +664,13 @@ export default function Dashboard() {
           activeOpacity={1}
           onPress={() => setShowPeriodModal(false)}
         >
-          <View style={[styles.periodModalContent, { backgroundColor: theme.card }]}>
-            <Text style={[styles.periodModalTitle, { color: theme.text }]}>Select Month</Text>
+          <NeoCard style={[styles.periodModalContent, { backgroundColor: theme.card }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.periodModalTitle, { color: theme.text }]}>Select Month</Text>
+              <TouchableOpacity onPress={() => setShowPeriodModal(false)}>
+                <Text style={{ fontSize: 24, fontWeight: '900' }}>✕</Text>
+              </TouchableOpacity>
+            </View>
             <ScrollView style={styles.periodList}>
               {getAllPeriods().map((period) => (
                 <TouchableOpacity
@@ -704,7 +698,7 @@ export default function Dashboard() {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-          </View>
+          </NeoCard>
         </TouchableOpacity>
       </Modal>
 
@@ -1000,11 +994,12 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
   modalCloseButton: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '900',
   },
   modalContent: {
     flex: 1,
@@ -1016,8 +1011,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   exportButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '900',
   },
   modalOverlay: {
     flex: 1,
@@ -1028,17 +1023,13 @@ const styles = StyleSheet.create({
   },
   periodModalContent: {
     width: '100%',
-    maxHeight: '60%',
-    padding: 20,
-    ...SharedStyles.neoBorder,
-    ...SharedStyles.neoShadow,
+    maxHeight: '80%',
+    padding: 24,
   },
   periodModalTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '900',
     textTransform: 'uppercase',
-    marginBottom: 16,
-    textAlign: 'center',
   },
   periodList: {
     width: '100%',

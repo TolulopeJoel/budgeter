@@ -1,4 +1,5 @@
-import { Colors } from '@/constants/Colors';
+import { NeoCard } from '@/components/ui/NeobrutalistComponents';
+import { Colors, SharedStyles } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
@@ -103,8 +104,8 @@ export default function SecurityModal({
 
     return (
         <Modal visible={visible} animationType="fade" transparent>
-            <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.8)' }]}>
-                <View style={[styles.container, { backgroundColor: theme.background }]}>
+            <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.9)' }]}>
+                <NeoCard style={[styles.container, { backgroundColor: theme.background }]}>
                     <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                         <Ionicons name="close" size={24} color={theme.text} />
                     </TouchableOpacity>
@@ -152,7 +153,7 @@ export default function SecurityModal({
                             <Ionicons name="backspace-outline" size={24} color={theme.text} />
                         </TouchableOpacity>
                     </View>
-                </View>
+                </NeoCard>
             </View>
         </Modal>
     );
@@ -165,9 +166,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     container: {
-        width: '85%',
+        width: '90%',
         padding: 32,
-        borderRadius: 32,
         alignItems: 'center',
     },
     closeButton: {
@@ -177,16 +177,19 @@ const styles = StyleSheet.create({
         padding: 8,
     },
     title: {
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontSize: 24,
+        fontWeight: '900',
+        textTransform: 'uppercase',
         marginBottom: 8,
         marginTop: 20,
     },
     subtitle: {
         fontSize: 14,
+        fontWeight: '700',
         textAlign: 'center',
         marginBottom: 32,
         paddingHorizontal: 20,
+        textTransform: 'uppercase',
     },
     dotsContainer: {
         flexDirection: 'row',
@@ -196,7 +199,7 @@ const styles = StyleSheet.create({
     dot: {
         width: 16,
         height: 16,
-        borderRadius: 8,
+        borderRadius: 0,
         borderWidth: 2,
     },
     keypad: {
@@ -207,18 +210,19 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     key: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
+        width: 72,
+        height: 72,
+        borderRadius: 0,
         justifyContent: 'center',
         alignItems: 'center',
+        ...SharedStyles.neoBorder,
     },
     keyPlaceholder: {
         width: 64,
         height: 64,
     },
     keyText: {
-        fontSize: 24,
-        fontWeight: '600',
+        fontSize: 28,
+        fontWeight: '900',
     },
 });

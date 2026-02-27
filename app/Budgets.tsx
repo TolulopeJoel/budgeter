@@ -365,10 +365,10 @@ export default function Budgets() {
             {/* Manage Categories Modal */}
             <Modal visible={showManageCategories} animationType="slide" presentationStyle="pageSheet">
                 <View style={[styles.fullScreenModal, { backgroundColor: theme.background, paddingTop: insets.top }]}>
-                    <View style={styles.header}>
-                        <Text style={[styles.title, { color: theme.text }]}>Manage Categories</Text>
+                    <View style={styles.modalHeader}>
+                        <Text style={[styles.modalTitle, { color: theme.text }]}>Manage Categories</Text>
                         <TouchableOpacity onPress={() => setShowManageCategories(false)}>
-                            <IconSymbol name="xmark.circle.fill" size={28} color={theme.icon} />
+                            <Text style={{ fontSize: 24 }}>✕</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -376,7 +376,6 @@ export default function Budgets() {
                         {categories.map(category => (
                             <TouchableOpacity
                                 key={category.name}
-                                style={[styles.categoryRow, { borderBottomColor: theme.border }]}
                                 onPress={() => {
                                     setRenamingCategory(category.name);
                                     setRenameInput(category.name);
@@ -384,23 +383,26 @@ export default function Budgets() {
                                     setShowRenameModal(true);
                                 }}
                             >
-                                <View style={styles.categoryRowLeft}>
-                                    <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10', marginRight: 12 }]}>
-                                        <IconSymbol name={category.icon as any} size={20} color={theme.tint} />
+                                <NeoCard style={[styles.categoryRow]}>
+                                    <View style={styles.categoryRowLeft}>
+                                        <View style={[styles.categoryIconContainer, { marginRight: 12 }]}>
+                                            <IconSymbol name={category.icon as any} size={20} color={theme.tint} />
+                                        </View>
+                                        <Text style={[styles.categoryRowText, { color: theme.text }]}>{category.name}</Text>
                                     </View>
-                                    <Text style={[styles.categoryRowText, { color: theme.text }]}>{category.name}</Text>
-                                </View>
-                                <View style={styles.categoryActions}>
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.iconButton,
-                                            { backgroundColor: theme.card }
-                                        ]}
-                                        onPress={() => handleDeleteCategory(category.name)}
-                                    >
-                                        <IconSymbol name="trash" size={18} color={theme.danger} />
-                                    </TouchableOpacity>
-                                </View>
+                                    <View style={styles.categoryActions}>
+                                        <TouchableOpacity
+                                            style={[
+                                                styles.iconButton,
+                                                SharedStyles.neoBorder,
+                                                { backgroundColor: theme.danger }
+                                            ]}
+                                            onPress={() => handleDeleteCategory(category.name)}
+                                        >
+                                            <IconSymbol name="trash" size={16} color="#000" />
+                                        </TouchableOpacity>
+                                    </View>
+                                </NeoCard>
                             </TouchableOpacity>
                         ))}
                     </ScrollView>
@@ -423,7 +425,20 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 24,
-        fontWeight: 'bold',
+        fontWeight: '900',
+        textTransform: 'uppercase',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingBottom: 24,
+    },
+    modalTitle: {
+        fontSize: 24,
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
     content: {
         flex: 1,
@@ -492,12 +507,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 16,
-        borderBottomWidth: 1,
+        padding: 16,
+        marginBottom: 12,
     },
     categoryRowText: {
         fontSize: 16,
-        fontWeight: '500',
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
     categoryRowLeft: {
         flexDirection: 'row',
@@ -541,15 +557,17 @@ const styles = StyleSheet.create({
     },
     typeToggleText: {
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
     sketchIconPlaceholder: {
         width: 64,
         height: 64,
-        borderRadius: 16,
+        borderRadius: 0,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 16,
+        ...SharedStyles.neoBorder,
     },
     sketchIconPickerContainer: {
         marginTop: 16,

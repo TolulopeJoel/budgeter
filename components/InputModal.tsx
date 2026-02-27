@@ -1,7 +1,8 @@
-import { Colors } from '@/constants/Colors';
+import { NeoButton, NeoCard } from '@/components/ui/NeobrutalistComponents';
+import { Colors, SharedStyles } from '@/constants/Colors';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface InputModalProps {
@@ -48,18 +49,18 @@ export default function InputModal({
                 style={styles.overlay}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
-                <View style={[styles.content, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
+                <NeoCard style={[styles.content, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
                     {title && <Text style={[styles.title, { color: theme.text }]}>{title}</Text>}
 
-                    <View style={styles.inputContainer}>
+                    <View style={[styles.inputContainer, SharedStyles.neoBorder, { backgroundColor: '#fff', padding: 12 }]}>
                         {leftElement}
                         {prefix && (
-                            <Text style={[styles.prefix, { color: theme.text }]}>{prefix}</Text>
+                            <Text style={[styles.prefix, { color: '#000' }]}>{prefix}</Text>
                         )}
                         <TextInput
-                            style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+                            style={[styles.input, { color: '#000' }]}
                             placeholder={placeholder}
-                            placeholderTextColor={theme.icon}
+                            placeholderTextColor="#999"
                             keyboardType={keyboardType}
                             value={value}
                             onChangeText={onChangeText}
@@ -70,24 +71,24 @@ export default function InputModal({
                     {children}
 
                     <View style={styles.buttons}>
-                        <TouchableOpacity
-                            style={[styles.button, { backgroundColor: theme.background }]}
+                        <NeoButton
+                            title={cancelText}
                             onPress={onCancel}
-                        >
-                            <Text style={[styles.buttonText, { color: theme.text }]}>{cancelText}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.button, { backgroundColor: theme.tint, opacity: disabled ? 0.5 : 1 }]}
+                            backgroundColor={theme.card}
+                            style={{ flex: 1 }}
+                        />
+                        <NeoButton
+                            title={confirmText}
                             onPress={() => {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                                 onConfirm();
                             }}
+                            backgroundColor={theme.tint}
                             disabled={disabled}
-                        >
-                            <Text style={[styles.buttonText, { color: '#fff' }]}>{confirmText}</Text>
-                        </TouchableOpacity>
+                            style={{ flex: 1 }}
+                        />
                     </View>
-                </View>
+                </NeoCard>
             </KeyboardAvoidingView>
         </Modal>
     );
@@ -100,13 +101,14 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     content: {
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
         padding: 24,
     },
     title: {
         fontSize: 20,
-        fontWeight: 'bold',
+        fontWeight: '900',
+        textTransform: 'uppercase',
         marginBottom: 24,
     },
     inputContainer: {
@@ -116,29 +118,18 @@ const styles = StyleSheet.create({
     },
     prefix: {
         fontSize: 32,
-        fontWeight: 'bold',
+        fontWeight: '900',
         marginRight: 8,
     },
     input: {
         flex: 1,
         fontSize: 32,
-        fontWeight: 'bold',
-        borderBottomWidth: 2,
-        paddingVertical: 8,
+        fontWeight: '900',
+        paddingVertical: 4,
     },
     buttons: {
         flexDirection: 'row',
         gap: 12,
         marginTop: 8,
-    },
-    button: {
-        flex: 1,
-        padding: 16,
-        borderRadius: 12,
-        alignItems: 'center',
-    },
-    buttonText: {
-        fontSize: 16,
-        fontWeight: '600',
     },
 });

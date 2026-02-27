@@ -1,6 +1,7 @@
 import CategoryPicker from '@/components/CategoryPicker';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/Colors';
+import { NeoButton, NeoCard } from '@/components/ui/NeobrutalistComponents';
+import { Colors, SharedStyles } from '@/constants/Colors';
 import { Transaction, TransactionType, useBudget } from '@/context/BudgetContext';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
@@ -147,13 +148,13 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                 <TouchableWithoutFeedback onPress={onClose}>
                     <View style={styles.modalOverlay}>
                         <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
-                            <View style={[styles.modalContent, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
+                            <NeoCard style={[styles.modalContent, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
                                 <View style={styles.header}>
                                     <Text style={[styles.title, { color: theme.text }]}>
                                         {editingTransaction ? 'Edit Transaction' : 'New Transaction'}
                                     </Text>
                                     <TouchableOpacity onPress={onClose}>
-                                        <IconSymbol name="xmark.circle.fill" size={28} color={theme.icon} />
+                                        <Text style={{ fontSize: 24, padding: 4 }}>✕</Text>
                                     </TouchableOpacity>
                                 </View>
 
@@ -166,38 +167,39 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                                             <TouchableOpacity
                                                 key={t}
                                                 disabled={!!editingTransaction}
-                                                style={[
-                                                    styles.typeButton,
-                                                    type === t && { backgroundColor: theme.tint },
-                                                    { borderColor: theme.border },
-                                                    editingTransaction && type !== t && { opacity: 0.04 }
-                                                ]}
                                                 onPress={() => setType(t)}
+                                                style={{ flex: 1 }}
                                             >
-                                                <Text style={[
-                                                    styles.typeText,
-                                                    type === t ? { color: '#fff' } : { color: theme.text }
-                                                ]}>
-                                                    {t.charAt(0).toUpperCase() + t.slice(1)}
-                                                </Text>
+                                                <NeoCard
+                                                    style={[
+                                                        styles.typeButton,
+                                                        editingTransaction && type !== t && { opacity: 0.1 }
+                                                    ]}
+                                                    backgroundColor={type === t ? (t === 'expense' ? theme.danger : (t === 'income' ? theme.success : theme.primary)) : '#fff'}
+                                                >
+                                                    <Text style={[
+                                                        styles.typeText,
+                                                    ]}>
+                                                        {t.charAt(0).toUpperCase() + t.slice(1)}
+                                                    </Text>
+                                                </NeoCard>
                                             </TouchableOpacity>
                                         ))}
                                     </View>
 
                                     <View style={styles.inputGroup}>
                                         <Text style={[styles.label, { color: theme.text }]}>Amount</Text>
-                                        <View style={styles.amountInputContainer}>
-                                            <Text style={[styles.currencySymbol, { color: theme.text }]}>₦</Text>
+                                        <View style={[styles.amountInputContainer, SharedStyles.neoBorder, { backgroundColor: '#fff', padding: 12 }]}>
+                                            <Text style={[styles.currencySymbol, { color: '#000' }]}>₦</Text>
                                             <TextInput
                                                 style={[
                                                     styles.amountInput,
                                                     {
-                                                        color: theme.text,
-                                                        borderBottomColor: amountError ? theme.danger : theme.border,
+                                                        color: '#000',
                                                     },
                                                 ]}
                                                 placeholder="0"
-                                                placeholderTextColor={theme.icon}
+                                                placeholderTextColor="#999"
                                                 keyboardType="numeric"
                                                 value={amount}
                                                 onChangeText={(value) => {
@@ -205,7 +207,6 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                                                     if (value) setAmountError(false);
                                                 }}
                                             />
-
                                         </View>
                                     </View>
 
@@ -232,14 +233,15 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                                         <TextInput
                                             style={[
                                                 styles.input,
+                                                SharedStyles.neoBorder,
                                                 {
-                                                    color: theme.text,
-                                                    borderColor: noteError ? theme.danger : theme.border,
-                                                    backgroundColor: noteError ? theme.danger + '10' : theme.background
+                                                    color: '#000',
+                                                    backgroundColor: '#fff',
+                                                    borderColor: noteError ? theme.danger : '#000',
                                                 }
                                             ]}
                                             placeholder={type === 'income' ? "Where did this income come from?" : (type === 'debt' ? "Who did you lend this to?" : "What was this for?")}
-                                            placeholderTextColor={theme.icon}
+                                            placeholderTextColor="#999"
                                             value={note}
                                             onChangeText={(value) => {
                                                 setNote(value);
@@ -312,14 +314,11 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                                     )}
 
                                     <View style={styles.buttonContainer}>
-                                        <TouchableOpacity
-                                            style={[styles.saveButton, { backgroundColor: theme.tint }]}
+                                        <NeoButton
+                                            title={editingTransaction ? 'Update Transaction' : 'Save Transaction'}
                                             onPress={handleSave}
-                                        >
-                                            <Text style={styles.saveButtonText}>
-                                                {editingTransaction ? 'Update' : 'Save'}
-                                            </Text>
-                                        </TouchableOpacity>
+                                            backgroundColor={theme.tint}
+                                        />
 
                                         {editingTransaction && (
                                             <TouchableOpacity
@@ -331,7 +330,7 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                                         )}
                                     </View>
                                 </ScrollView>
-                            </View>
+                            </NeoCard>
                         </TouchableWithoutFeedback>
                     </View>
                 </TouchableWithoutFeedback>
@@ -347,8 +346,8 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     modalContent: {
-        borderTopLeftRadius: 32,
-        borderTopRightRadius: 32,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
         padding: 24,
         maxHeight: '90%',
     },
@@ -359,8 +358,9 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     title: {
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontSize: 24,
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
     typeSelector: {
         flexDirection: 'row',
@@ -368,15 +368,14 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     typeButton: {
-        flex: 1,
-        paddingVertical: 10,
-        borderRadius: 12,
-        borderWidth: 1,
+        paddingVertical: 12,
         alignItems: 'center',
     },
     typeText: {
-        fontWeight: '600',
-        fontSize: 14,
+        fontWeight: '900',
+        fontSize: 13,
+        textTransform: 'uppercase',
+        color: '#000',
     },
     disabledTypeSelector: {
         opacity: 0.8,
@@ -386,9 +385,9 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '900',
         marginBottom: 8,
-        opacity: 0.7,
+        textTransform: 'uppercase',
     },
     amountInputContainer: {
         flexDirection: 'row',
@@ -396,21 +395,19 @@ const styles = StyleSheet.create({
     },
     currencySymbol: {
         fontSize: 32,
-        fontWeight: 'bold',
+        fontWeight: '900',
         marginRight: 8,
     },
     amountInput: {
         flex: 1,
         fontSize: 32,
-        fontWeight: 'bold',
-        borderBottomWidth: 1,
-        paddingVertical: 8,
+        fontWeight: '900',
+        paddingVertical: 4,
     },
     input: {
-        borderWidth: 1,
-        borderRadius: 12,
         padding: 12,
         fontSize: 16,
+        fontWeight: '700',
         minHeight: 50,
     },
     dropdownTrigger: {
@@ -444,7 +441,8 @@ const styles = StyleSheet.create({
     },
     deleteButtonText: {
         fontSize: 15,
-        fontWeight: '600',
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
     innerModalButton: {
         paddingHorizontal: 20,
