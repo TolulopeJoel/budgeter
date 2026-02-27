@@ -65,6 +65,9 @@ export default function Dashboard() {
   const [_, setSecurityAction] = useState<'reveal_balance' | 'manage_savings'>('manage_savings');
   const [showInitialBalanceModal, setShowInitialBalanceModal] = useState(false);
   const [tempInitialBalance, setTempInitialBalance] = useState('');
+  const [isDashboardPrivacyEnabled, setIsDashboardPrivacyEnabled] = useState(false);
+  const [isBudgetsPrivacyEnabled, setIsBudgetsPrivacyEnabled] = useState(false);
+  const [isHistoryPrivacyEnabled, setIsHistoryPrivacyEnabled] = useState(false);
 
   // Real calculations from context
   const safeToSpend = getSafeToSpend();
@@ -79,7 +82,10 @@ export default function Dashboard() {
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number, privacyType?: 'dashboard' | 'budgets' | 'history') => {
+    if (privacyType === 'dashboard' && isDashboardPrivacyEnabled) return '₦ •••••';
+    if (privacyType === 'budgets' && isBudgetsPrivacyEnabled) return '₦ •••••';
+    if (privacyType === 'history' && isHistoryPrivacyEnabled) return '₦ •••••';
     return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
@@ -155,11 +161,19 @@ export default function Dashboard() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Image
-            source={colorScheme === 'dark' ? require('@/assets/images/iconDark.png') : require('@/assets/images/iconLight.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
+          <TouchableOpacity
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              setIsDashboardPrivacyEnabled(!isDashboardPrivacyEnabled);
+            }}
+            activeOpacity={0.7}
+          >
+            <Image
+              source={colorScheme === 'dark' ? require('@/assets/images/iconDark.png') : require('@/assets/images/iconLight.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Main Card - Account Balance */}
@@ -187,24 +201,24 @@ export default function Dashboard() {
               setShowInitialBalanceModal(true);
             }}
           >
-            <Text style={styles.mainCardAmount}>{formatCurrency(getAccountBalance())}</Text>
+            <Text style={styles.mainCardAmount}>{formatCurrency(getAccountBalance(), 'dashboard')}</Text>
           </TouchableOpacity>
           <View style={styles.mainCardFooter}>
             <View style={styles.mainCardStat}>
               <Text style={[styles.statLabel, { color: '#000' }]}>Safe to Spend</Text>
-              <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(safeToSpend)}</Text>
+              <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(safeToSpend, 'dashboard')}</Text>
             </View>
             <View style={[styles.statDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
             <TouchableOpacity style={styles.mainCardStat}>
               <Text style={[styles.statLabel, { color: '#000' }]}>Saved</Text>
               <Text style={[styles.statValue, { color: '#000' }]}>
-                {formatCurrency(savingsBalance)}
+                {formatCurrency(savingsBalance, 'dashboard')}
               </Text>
             </TouchableOpacity>
             <View style={[styles.statDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
             <View style={styles.mainCardStat}>
               <Text style={[styles.statLabel, { color: '#000' }]}>Spent</Text>
-              <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(currentSpent)}</Text>
+              <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(currentSpent, 'dashboard')}</Text>
             </View>
           </View>
         </NeoCard>
@@ -226,7 +240,7 @@ export default function Dashboard() {
               <View>
                 <Text style={styles.savingsLabel}>Need To Save</Text>
                 <Text style={styles.savingsAmount}>
-                  {formatCurrency(getRemainingSavingsGoal())}
+                  {formatCurrency(getRemainingSavingsGoal(), 'dashboard')}
                 </Text>
               </View>
             </View>
@@ -271,13 +285,18 @@ export default function Dashboard() {
           </Link>
         </View>
 
-        {/* Summary Section removed as it's now in the main card */}
-
         {/* Budget Status */}
         {budgets.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>Budget Status</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setIsBudgetsPrivacyEnabled(!isBudgetsPrivacyEnabled);
+                }}
+              >
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>Budget Status</Text>
+              </TouchableOpacity>
             </View>
 
             {budgets
@@ -337,7 +356,7 @@ export default function Dashboard() {
                             {budget.category}
                           </Text>
                           <Text style={[styles.budgetAmount, { color: theme.icon }]}>
-                            {formatCurrency(status.spent)} of {formatCurrency(status.limit)}
+                            {formatCurrency(status.spent, 'budgets')} of {formatCurrency(status.limit, 'budgets')}
                           </Text>
                         </View>
                         <View style={styles.budgetRight}>
@@ -417,7 +436,14 @@ export default function Dashboard() {
         {/* Recent Transactions */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Activity</Text>
+            <TouchableOpacity
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                setIsHistoryPrivacyEnabled(!isHistoryPrivacyEnabled);
+              }}
+            >
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Activity</Text>
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setShowAllTransactions(true);
@@ -465,7 +491,7 @@ export default function Dashboard() {
                     ]}
                   >
                     {t.type === 'income' ? '+' : '-'}
-                    {formatCurrency(t.amount)}
+                    {formatCurrency(t.amount, 'history')}
                   </Text>
                 </NeoCard>
               </TouchableOpacity>
@@ -478,10 +504,11 @@ export default function Dashboard() {
             </View>
           )}
         </View>
-      </ScrollView>
+      </ScrollView >
 
       {/* Category Transactions Modal */}
-      <Modal visible={selectedCategory !== null} animationType="slide" presentationStyle="pageSheet">
+      < Modal visible={selectedCategory !== null
+      } animationType="slide" presentationStyle="pageSheet" >
         <View style={[styles.modalContainer, { backgroundColor: theme.background, paddingTop: insets.top }]}>
           <View style={styles.modalHeader}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>{selectedCategory} Activity</Text>
@@ -544,7 +571,7 @@ export default function Dashboard() {
                       ]}
                     >
                       {t.type === 'income' ? '+' : '-'}
-                      {formatCurrency(t.amount)}
+                      {formatCurrency(t.amount, 'history')}
                     </Text>
                   </NeoCard>
                 </TouchableOpacity>
@@ -552,10 +579,10 @@ export default function Dashboard() {
             })()}
           </ScrollView>
         </View>
-      </Modal>
+      </Modal >
 
       {/* All Transactions Modal */}
-      <Modal visible={showAllTransactions} animationType="slide" presentationStyle="pageSheet">
+      < Modal visible={showAllTransactions} animationType="slide" presentationStyle="pageSheet" >
         <View style={[styles.modalContainer, { backgroundColor: theme.background, paddingTop: insets.top }]}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={handleExportCSV} style={[styles.exportButton, SharedStyles.neoBorder, { backgroundColor: theme.card, padding: 8 }]}>
@@ -622,7 +649,7 @@ export default function Dashboard() {
                       ]}
                     >
                       {t.type === 'income' ? '+' : '-'}
-                      {formatCurrency(t.amount)}
+                      {formatCurrency(t.amount, 'history')}
                     </Text>
                   </NeoCard>
                 </TouchableOpacity>
@@ -630,7 +657,7 @@ export default function Dashboard() {
             })()}
           </ScrollView>
         </View>
-      </Modal>
+      </Modal >
       <TransactionModal
         visible={showTransactionModal}
         onClose={() => setShowTransactionModal(false)}
