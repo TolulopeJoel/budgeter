@@ -125,12 +125,10 @@ const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [categories, setCategories] = useState<Category[]>([
-        { name: 'Salary', icon: 'cash.fill' },
         { name: 'Food', icon: 'cart.fill' },
         { name: 'Rent', icon: 'house.fill' },
         { name: 'Transport', icon: 'car.fill' },
         { name: 'Entertainment', icon: 'gamecontroller.fill' },
-        { name: 'Utilities', icon: 'bolt.fill' },
         { name: 'Shopping', icon: 'bag.fill' },
         { name: 'Healthcare', icon: 'heart.fill' },
         { name: 'Debt', icon: 'creditcard.fill' },
