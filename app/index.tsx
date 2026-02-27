@@ -218,16 +218,9 @@ export default function Dashboard() {
                 </Text>
               </View>
             </View>
-            <View style={styles.savingsFooter}>
-              <Text style={styles.savingsDeduction}>
-                {monthlySavingsGoal > 0
-                  ? `Deducting ${formatCurrency(monthlySavingsGoal)}/mo`
-                  : 'No monthly deduction set'}
-              </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="lock-closed" size={18} color="#000" style={{ marginRight: 8 }} />
-                <Ionicons name="chevron-forward" size={20} color="#000" />
-              </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="lock-closed" size={16} color="#000" />
+              <Ionicons name="chevron-forward" size={16} color="#000" />
             </View>
           </NeoCard>
         </TouchableOpacity>
@@ -1046,6 +1039,9 @@ const styles = StyleSheet.create({
   },
   savingsCard: {
     marginBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   savingsHeader: {
     flexDirection: 'row',
@@ -1077,8 +1073,8 @@ const styles = StyleSheet.create({
   },
   savingsDeduction: {
     fontSize: 12,
-    fontWeight: '500',
-    display: 'none', // Hide on small screens or if layout is tight, actually let's just show the arrow or make it simpler
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
   billsBreakdown: {
     marginTop: 12,

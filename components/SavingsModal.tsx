@@ -112,34 +112,34 @@ export default function SavingsModal({
                     </TouchableOpacity>
                 </View>
 
-                <NeoCard backgroundColor={theme.tint} style={styles.balanceCard}>
-                    <Text style={styles.balanceLabel}>Total Savings</Text>
-                    <Text style={styles.balanceAmount}>{formatCurrency(currentBalance)}</Text>
-                    <View style={[styles.goalContainer, SharedStyles.neoBorder, { backgroundColor: '#fff' }]}>
-                        <Text style={[styles.goalText, { color: '#000' }]}>
+                <NeoCard backgroundColor={theme.card} style={styles.balanceCard}>
+                    <Text style={[styles.balanceLabel, { color: theme.text }]}>Total Savings</Text>
+                    <Text style={[styles.balanceAmount, { color: theme.text }]}>{formatCurrency(currentBalance)}</Text>
+                    <View style={[styles.goalContainer, SharedStyles.neoBorder, { backgroundColor: theme.tint }]}>
+                        <Text style={[styles.goalText, { color: '#fff' }]}>
                             Monthly Deduction: {formatCurrency(currentGoal)}
                         </Text>
                         <TouchableOpacity
                             style={styles.editGoalButton}
                             onPress={() => setView('settings')}
                         >
-                            <Ionicons name="pencil" size={16} color="#000" />
+                            <Ionicons name="pencil" size={16} color="#fff" />
                         </TouchableOpacity>
                     </View>
                 </NeoCard>
 
                 <View style={styles.tabContainer}>
                     <TouchableOpacity
-                        style={[styles.tab, view === 'history' && { borderBottomColor: theme.tint, borderBottomWidth: 2 }]}
+                        style={[styles.tab, view === 'history' && { backgroundColor: theme.tint }]}
                         onPress={() => setView('history')}
                     >
-                        <Text style={[styles.tabText, { color: view === 'history' ? theme.tint : theme.icon }]}>History</Text>
+                        <Text style={[styles.tabText, { color: view === 'history' ? '#fff' : theme.icon }]}>History</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        style={[styles.tab, view === 'add' && { borderBottomColor: theme.tint, borderBottomWidth: 2 }]}
+                        style={[styles.tab, view === 'add' && { backgroundColor: theme.tint }]}
                         onPress={() => setView('add')}
                     >
-                        <Text style={[styles.tabText, { color: view === 'add' ? theme.tint : theme.icon }]}>Add Entry</Text>
+                        <Text style={[styles.tabText, { color: view === 'add' ? '#fff' : theme.icon }]}>Add Entry</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -191,7 +191,10 @@ export default function SavingsModal({
                                 <View style={styles.typeSelector}>
                                     <TouchableOpacity
                                         style={{ flex: 1 }}
-                                        onPress={() => setType('deposit')}
+                                        onPress={() => {
+                                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                            setType('deposit');
+                                        }}
                                     >
                                         <NeoCard
                                             style={styles.typeButton}
@@ -202,7 +205,10 @@ export default function SavingsModal({
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={{ flex: 1 }}
-                                        onPress={() => setType('withdrawal')}
+                                        onPress={() => {
+                                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                            setType('withdrawal');
+                                        }}
                                     >
                                         <NeoCard
                                             style={styles.typeButton}
@@ -242,8 +248,8 @@ export default function SavingsModal({
                                         style={styles.checkboxContainer}
                                         onPress={() => setIsInitialBalance(!isInitialBalance)}
                                     >
-                                        <View style={[styles.checkbox, { borderColor: theme.tint, backgroundColor: isInitialBalance ? theme.tint : 'transparent' }]}>
-                                            {isInitialBalance && <Ionicons name="checkmark" size={14} color="#fff" />}
+                                        <View style={[styles.checkbox, SharedStyles.neoBorder, { backgroundColor: isInitialBalance ? theme.tint : '#fff' }]}>
+                                            {isInitialBalance && <Ionicons name="checkmark" size={16} color="#fff" />}
                                         </View>
                                         <Text style={[styles.checkboxLabel, { color: theme.text }]}>
                                             Initial Balance (Don&apos;t affect budget)
@@ -335,35 +341,32 @@ const styles = StyleSheet.create({
     balanceCard: {
         margin: 20,
         padding: 24,
-        borderRadius: 24,
         alignItems: 'center',
     },
     balanceLabel: {
-        color: 'rgba(255, 255, 255, 0.8)',
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '900',
         marginBottom: 8,
         textTransform: 'uppercase',
     },
     balanceAmount: {
-        color: '#fff',
-        fontSize: 36,
+        fontSize: 48,
         fontWeight: '900',
         marginBottom: 16,
     },
     goalContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
         paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 12,
+        paddingVertical: 12,
+        width: '100%',
+        justifyContent: 'center',
     },
     goalText: {
-        color: '#fff',
-        fontSize: 13,
-        fontWeight: '600',
+        fontSize: 14,
+        fontWeight: '900',
         marginRight: 8,
+        textTransform: 'uppercase',
     },
     editGoalButton: {
         padding: 4,
@@ -372,10 +375,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         paddingHorizontal: 20,
         marginBottom: 20,
+        gap: 8,
     },
     tab: {
-        marginRight: 24,
-        paddingBottom: 8,
+        flex: 1,
+        padding: 12,
+        alignItems: 'center',
+        ...SharedStyles.neoBorder,
     },
     tabText: {
         fontSize: 16,
@@ -413,18 +419,16 @@ const styles = StyleSheet.create({
     typeSelector: {
         flexDirection: 'row',
         marginBottom: 24,
-        gap: 12,
+        gap: 8,
     },
     typeButton: {
-        flex: 1,
         paddingVertical: 12,
-        borderRadius: 12,
-        borderWidth: 1,
         alignItems: 'center',
     },
     typeText: {
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
     inputGroup: {
         marginBottom: 24,
@@ -465,15 +469,15 @@ const styles = StyleSheet.create({
     checkbox: {
         width: 24,
         height: 24,
-        borderRadius: 6,
-        borderWidth: 2,
+        borderRadius: 0,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
     },
     checkboxLabel: {
-        fontSize: 14,
-        fontWeight: '500',
+        fontSize: 13,
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
     cancelButton: {
         padding: 16,

@@ -256,21 +256,21 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                                             <Text style={[styles.label, { color: theme.text }]}>Date & Time</Text>
                                             <View style={styles.dateTimeRow}>
                                                 <TouchableOpacity
-                                                    style={[styles.dateTimeButton, { borderColor: theme.border, backgroundColor: theme.background }]}
+                                                    style={[styles.dateTimeButton, SharedStyles.neoBorder, { backgroundColor: '#fff' }]}
                                                     onPress={() => setShowDatePicker(true)}
                                                 >
-                                                    <IconSymbol name="calendar" size={20} color={theme.tint} />
-                                                    <Text style={[styles.dateTimeText, { color: theme.text }]}>
+                                                    <IconSymbol name="calendar" size={20} color="#000" />
+                                                    <Text style={[styles.dateTimeText, { color: '#000' }]}>
                                                         {date.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                     </Text>
                                                 </TouchableOpacity>
 
                                                 <TouchableOpacity
-                                                    style={[styles.dateTimeButton, { borderColor: theme.border, backgroundColor: theme.background }]}
+                                                    style={[styles.dateTimeButton, SharedStyles.neoBorder, { backgroundColor: '#fff' }]}
                                                     onPress={() => setShowTimePicker(true)}
                                                 >
-                                                    <IconSymbol name="clock" size={20} color={theme.tint} />
-                                                    <Text style={[styles.dateTimeText, { color: theme.text }]}>
+                                                    <IconSymbol name="clock" size={20} color="#000" />
+                                                    <Text style={[styles.dateTimeText, { color: '#000' }]}>
                                                         {date.toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' })}
                                                     </Text>
                                                 </TouchableOpacity>
@@ -458,12 +458,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         padding: 12,
-        borderRadius: 12,
-        borderWidth: 1,
+        borderRadius: 0,
         gap: 8,
     },
     dateTimeText: {
         fontSize: 15,
-        fontWeight: '500',
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
 });
