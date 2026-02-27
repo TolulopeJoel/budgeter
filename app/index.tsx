@@ -13,7 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { Link } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Dashboard() {
@@ -52,8 +52,7 @@ export default function Dashboard() {
 
   const insets = useSafeAreaInsets();
 
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const theme = Colors.light;
 
   const [showAllTransactions, setShowAllTransactions] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
@@ -197,11 +196,6 @@ export default function Dashboard() {
       >
         {/* Header */}
         <View style={styles.header}>
-          {/* <Image
-            source={colorScheme === 'dark' ? require('@/assets/images/iconDark.png') : require('@/assets/images/iconLight.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          /> */}
           <Text style={styles.headerTitle}>Akíkanjú Ọkùnrin, {new Date().getDate()}</Text>
         </View>
 

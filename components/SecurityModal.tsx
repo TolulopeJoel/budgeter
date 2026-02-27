@@ -3,7 +3,7 @@ import { Colors, SharedStyles } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface SecurityModalProps {
     visible: boolean;
@@ -22,8 +22,7 @@ export default function SecurityModal({
     onSetPin,
     title,
 }: SecurityModalProps) {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const theme = Colors.light;
 
     const [pin, setPin] = useState('');
     const [error, setError] = useState(false);

@@ -2,7 +2,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { NeoCard } from '@/components/ui/NeobrutalistComponents';
 import { Colors } from '@/constants/Colors';
 import React from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface IconPickerProps {
     selectedIcon: string;
@@ -21,8 +21,7 @@ const ICONS = [
 ];
 
 export const IconPicker: React.FC<IconPickerProps> = ({ selectedIcon, onSelect }) => {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const theme = Colors.light;
 
     return (
         <View style={styles.container}>

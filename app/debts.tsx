@@ -6,14 +6,13 @@ import { Transaction, useBudget } from '@/context/BudgetContext';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Debts() {
     const router = useRouter();
     const { transactions, getDebts, categories } = useBudget();
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const theme = Colors.light;
     const insets = useSafeAreaInsets();
     const [showTransactionModal, setShowTransactionModal] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);

@@ -4,13 +4,13 @@ import { Transaction, useBudget } from '@/context/BudgetContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function MonthConfirmModal() {
     const { needsMonthConfirmation, confirmNewMonth, getLastMonthIncomeTransactions, transactions, addTransaction, currentPeriod } = useBudget();
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const theme = Colors.light;
+    const styles = createStyles(theme, SharedStyles);
     const insets = useSafeAreaInsets();
 
     const [visible, setVisible] = useState(false);
@@ -85,7 +85,7 @@ export default function MonthConfirmModal() {
     };
 
     const formatCurrency = (amount: number) => {
-        return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+        return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} `;
     };
 
     return (
@@ -235,7 +235,7 @@ export default function MonthConfirmModal() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.85)',
@@ -254,10 +254,11 @@ const styles = StyleSheet.create({
     iconContainer: {
         width: 64,
         height: 64,
-        borderRadius: 16,
+        borderRadius: 0,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16,
+        ...neoStyles.neoBorder,
     },
     icon: {
         fontSize: 32,
@@ -350,8 +351,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         padding: 14,
-        borderRadius: 16,
-        borderWidth: 1.5,
+        borderRadius: 0,
+        ...neoStyles.neoBorder,
         borderStyle: 'dashed',
         marginTop: 4,
     },
@@ -361,8 +362,8 @@ const styles = StyleSheet.create({
         marginLeft: 8,
     },
     manualInput: {
-        borderRadius: 16,
-        borderWidth: 1.5,
+        borderRadius: 0,
+        ...neoStyles.neoBorder,
         padding: 4,
     },
     input: {
@@ -374,26 +375,10 @@ const styles = StyleSheet.create({
         height: 1.5,
         marginHorizontal: 12,
     },
-    button: {
-        width: '100%',
-        padding: 18,
-        borderRadius: 16,
-        alignItems: 'center',
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 5,
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
     footer: {
         fontSize: 12,
         textAlign: 'center',
         opacity: 0.6,
+        marginTop: 16,
     },
 });

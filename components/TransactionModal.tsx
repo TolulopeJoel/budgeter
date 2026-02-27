@@ -16,7 +16,8 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    TouchableWithoutFeedback, useColorScheme, View
+    TouchableWithoutFeedback,
+    View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -28,8 +29,7 @@ interface TransactionModalProps {
 
 export default function TransactionModal({ visible, onClose, editingTransaction }: TransactionModalProps) {
     const { addTransaction, updateTransaction, deleteTransaction, categories } = useBudget();
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const theme = Colors.light;
     const insets = useSafeAreaInsets();
 
     const [type, setType] = useState<TransactionType>('expense');

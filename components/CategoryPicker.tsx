@@ -3,7 +3,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors, SharedStyles } from '@/constants/Colors';
 import { Category } from '@/context/BudgetContext';
 import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
 interface CategoryPickerProps {
     value: string;
@@ -22,8 +22,8 @@ export default function CategoryPicker({
     placeholder = 'Select Category',
     label,
 }: CategoryPickerProps) {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const theme = Colors.light;
+    const styles = createStyles(theme, SharedStyles);
     const [showPicker, setShowPicker] = useState(false);
 
     return (
@@ -104,7 +104,7 @@ export default function CategoryPicker({
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
     container: {
         width: '100%',
     },
@@ -165,10 +165,11 @@ const styles = StyleSheet.create({
     iconContainer: {
         width: 36,
         height: 36,
-        borderRadius: 10,
+        borderRadius: 0,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
+        ...neoStyles.neoBorder,
     },
     optionText: {
         fontSize: 16,

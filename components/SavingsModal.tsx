@@ -4,7 +4,7 @@ import { SavingsTransaction, Transaction } from '@/context/BudgetContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface SavingsModalProps {
@@ -32,8 +32,8 @@ export default function SavingsModal({
     onDeleteTransaction,
     onUpdateGoal,
 }: SavingsModalProps) {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const theme = Colors.light;
+    const styles = createStyles(theme, SharedStyles);
     const insets = useSafeAreaInsets();
 
     const [amount, setAmount] = useState('');
@@ -309,7 +309,7 @@ export default function SavingsModal({
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
     container: {
         flex: 1,
     },
@@ -352,6 +352,7 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         width: '100%',
         justifyContent: 'center',
+        ...neoStyles.neoBorder,
     },
     goalText: {
         fontSize: 14,
@@ -416,12 +417,14 @@ const styles = StyleSheet.create({
         fontWeight: '900',
         padding: 12,
         borderRadius: 0,
+        ...neoStyles.neoBorder,
     },
     actionButton: {
         padding: 16,
-        borderRadius: 16,
+        borderRadius: 0,
         alignItems: 'center',
         marginTop: 8,
+        ...neoStyles.neoBorder,
     },
     actionButtonText: {
         color: '#fff',
@@ -440,6 +443,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
+        ...neoStyles.neoBorder,
     },
     checkboxLabel: {
         fontSize: 13,

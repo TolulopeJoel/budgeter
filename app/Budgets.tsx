@@ -7,7 +7,7 @@ import { useBudget } from '@/context/BudgetContext';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Alert, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Budgets() {
@@ -22,8 +22,7 @@ export default function Budgets() {
         deleteCategory,
         deleteBudget
     } = useBudget();
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const theme = Colors.light;
     const insets = useSafeAreaInsets();
 
     const [editingCategory, setEditingCategory] = useState<string | null>(null);

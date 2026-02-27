@@ -2,7 +2,7 @@ import { NeoButton, NeoCard } from '@/components/ui/NeobrutalistComponents';
 import { Colors, SharedStyles } from '@/constants/Colors';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface InputModalProps {
@@ -38,8 +38,8 @@ export default function InputModal({
     children,
     disabled = false,
 }: InputModalProps) {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const theme = Colors.light;
+    const styles = createStyles(theme, SharedStyles);
     const insets = useSafeAreaInsets();
 
     return (
@@ -94,7 +94,7 @@ export default function InputModal({
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -115,6 +115,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 16,
+        ...neoStyles.neoBorder,
+        ...neoStyles.neoShadow,
     },
     prefix: {
         fontSize: 32,

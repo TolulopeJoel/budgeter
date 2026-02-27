@@ -10,7 +10,6 @@ import {
     TextStyle,
     View,
     ViewStyle,
-    useColorScheme
 } from 'react-native';
 
 interface NeoCardProps {
@@ -20,8 +19,7 @@ interface NeoCardProps {
 }
 
 export const NeoCard = ({ children, style, backgroundColor }: NeoCardProps) => {
-    const colorScheme = useColorScheme() ?? 'light';
-    const theme = Colors[colorScheme as 'light' | 'dark'];
+    const theme = Colors.light;
     const bg = backgroundColor || theme.card;
 
     return (
@@ -54,8 +52,7 @@ export const NeoButton = ({
     backgroundColor,
     disabled
 }: NeoButtonProps) => {
-    const colorScheme = useColorScheme() ?? 'light';
-    const theme = Colors[colorScheme as 'light' | 'dark'];
+    const theme = Colors.light;
     const bg = backgroundColor || theme.primary;
 
     const animatedValue = React.useRef(new Animated.Value(0)).current;
@@ -133,8 +130,7 @@ export const NeoInput = ({
     secureTextEntry,
     style
 }: NeoInputProps) => {
-    const colorScheme = useColorScheme() ?? 'light';
-    const theme = Colors[colorScheme as 'light' | 'dark'];
+    const theme = Colors.light;
 
     return (
         <TextInput
