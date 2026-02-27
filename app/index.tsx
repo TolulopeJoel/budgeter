@@ -578,54 +578,48 @@ export default function Dashboard() {
                 );
               }
 
-              return filtered.map((t, index, arr) => (
+              return filtered.map((t) => (
                 <TouchableOpacity
                   key={t.id}
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    paddingVertical: 16,
-                    borderBottomWidth: index === arr.length - 1 ? 0 : 1,
-                    borderBottomColor: theme.border + '40',
-                  }}
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     setEditingTransaction(t);
                     setShowTransactionModal(true);
                   }}
                 >
-                  <View style={styles.transactionLeft}>
-                    <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
-                      <IconSymbol
-                        name={getCategoryIcon(t.category, t.type) as any}
-                        size={20}
-                        color={theme.tint}
-                      />
+                  <NeoCard style={styles.transactionItem}>
+                    <View style={styles.transactionLeft}>
+                      <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
+                        <IconSymbol
+                          name={getCategoryIcon(t.category, t.type) as any}
+                          size={20}
+                          color={theme.tint}
+                        />
+                      </View>
+                      <View>
+                        <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
+                          {t.category}
+                        </Text>
+                        <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>
+                          {new Date(t.date).toLocaleDateString('en-NG', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                          {t.note && ` • ${t.note}`}
+                        </Text>
+                      </View>
                     </View>
-                    <View>
-                      <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
-                        {t.category}
-                      </Text>
-                      <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>
-                        {new Date(t.date).toLocaleDateString('en-NG', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                        {t.note && ` • ${t.note}`}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text
-                    style={[
-                      styles.transactionAmount,
-                      { color: t.type === 'income' ? theme.success : theme.danger }
-                    ]}
-                  >
-                    {t.type === 'income' ? '+' : '-'}
-                    {formatCurrency(t.amount)}
-                  </Text>
+                    <Text
+                      style={[
+                        styles.transactionAmount,
+                        { color: t.type === 'income' ? theme.success : theme.danger }
+                      ]}
+                    >
+                      {t.type === 'income' ? '+' : '-'}
+                      {formatCurrency(t.amount)}
+                    </Text>
+                  </NeoCard>
                 </TouchableOpacity>
               ));
             })()}
@@ -943,6 +937,8 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   transactionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
   },
   transactionLeft: {
