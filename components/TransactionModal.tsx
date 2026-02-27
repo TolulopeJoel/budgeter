@@ -269,7 +269,7 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                                                     style={[styles.dateTimeButton, SharedStyles.neoBorder, { backgroundColor: '#fff' }]}
                                                     onPress={() => setShowTimePicker(true)}
                                                 >
-                                                    <IconSymbol name="clock" size={20} color="#000" />
+                                                    <IconSymbol name="time" size={20} color="#000" />
                                                     <Text style={[styles.dateTimeText, { color: '#000' }]}>
                                                         {date.toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' })}
                                                     </Text>

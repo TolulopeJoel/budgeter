@@ -62,7 +62,7 @@ const MAPPING = {
   'chevron.left': 'chevron-back',
   'checkmark': 'checkmark',
   'calendar': 'calendar-outline',
-  'clock': 'clock',
+  'time': 'time-outline',
   'ellipsis.circle.fill': 'ellipsis-horizontal-circle',
   'arrow.down.circle.fill': 'arrow-down-circle',
   'arrow.up.circle.fill': 'arrow-up-circle',
