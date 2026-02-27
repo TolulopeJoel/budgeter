@@ -990,4 +990,5 @@ export const useBudget = () => {
     if (!context) {
         throw new Error('useBudget must be used within a BudgetProvider');
     }
+    return context;
 };

@@ -1,6 +1,7 @@
 import CategoryPicker from '@/components/CategoryPicker';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/Colors';
+import { NeoCard } from '@/components/ui/NeobrutalistComponents';
+import { Colors, SharedStyles } from '@/constants/Colors';
 import { useBudget } from '@/context/BudgetContext';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -151,11 +152,11 @@ export default function RecurringBills() {
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 {/* Total Summary */}
-                <View style={[styles.summaryCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <NeoCard style={styles.summaryCard} backgroundColor={theme.card}>
                     <View style={styles.summaryHeader}>
-                        <Text style={[styles.summaryLabel, { color: theme.icon }]}>Total Monthly Bills</Text>
-                        <View style={[styles.badge, { backgroundColor: theme.danger + '20' }]}>
-                            <Text style={[styles.badgeText, { color: theme.danger }]}>
+                        <Text style={[styles.summaryLabel, { color: '#000' }]}>Total Monthly Bills</Text>
+                        <View style={[SharedStyles.neoBorder, { backgroundColor: theme.danger, paddingHorizontal: 10, paddingVertical: 4 }]}>
+                            <Text style={[styles.badgeText, { color: '#000' }]}>
                                 {recurringBills.length} {recurringBills.length === 1 ? 'bill' : 'bills'}
                             </Text>
                         </View>
@@ -163,7 +164,7 @@ export default function RecurringBills() {
                     <Text style={[styles.summaryAmount, { color: theme.danger }]}>
                         {formatCurrency(totalBills)}
                     </Text>
-                </View>
+                </NeoCard>
 
                 {/* Bills List */}
                 {sortedBills.length > 0 && (
@@ -173,87 +174,90 @@ export default function RecurringBills() {
                         {sortedBills.map(bill => (
                             <TouchableOpacity
                                 key={bill.id}
-                                style={[styles.billCard, { backgroundColor: theme.card, borderColor: theme.border }]}
                                 onPress={() => {
                                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                                     handleOpenEdit(bill.id);
                                 }}
                             >
-                                <View style={styles.billContent}>
-                                    <View
-                                        style={[
-                                            styles.iconContainer,
-                                            { backgroundColor: theme.tint + '10' },
-                                        ]}
-                                    >
-                                        <IconSymbol name={getCategoryIcon(bill.category) as any} size={20} color={theme.tint} />
-                                    </View>
-
-                                    <View style={styles.billInfo}>
-                                        <Text style={[styles.billName, { color: theme.text }]}>{bill.name}</Text>
-                                        <View style={styles.billMeta}>
-                                            <Text style={[styles.billCategory, { color: theme.icon }]}>
-                                                {bill.category}
-                                            </Text>
-                                            <Text style={[styles.billDue, { color: theme.icon }]}>
-                                                • Due on day {bill.dueDay}
-                                            </Text>
+                                <NeoCard style={styles.billCard}>
+                                    <View style={styles.billContent}>
+                                        <View
+                                            style={[
+                                                styles.iconContainer,
+                                                SharedStyles.neoBorder,
+                                                { backgroundColor: '#fff' },
+                                            ]}
+                                        >
+                                            <IconSymbol name={getCategoryIcon(bill.category) as any} size={20} color={theme.tint} />
                                         </View>
-                                    </View>
 
-                                    <View style={styles.billRight}>
-                                        <Text style={[styles.billAmount, { color: theme.danger }]}>
-                                            {formatCurrency(bill.amount)}
-                                        </Text>
-                                        <View style={styles.billActions}>
-                                            {isBillPaid(bill.id, currentMonthKey) ? (
+                                        <View style={styles.billInfo}>
+                                            <Text style={[styles.billName, { color: theme.text }]}>{bill.name}</Text>
+                                            <View style={styles.billMeta}>
+                                                <Text style={[styles.billCategory, { color: theme.icon }]}>
+                                                    {bill.category}
+                                                </Text>
+                                                <Text style={[styles.billDue, { color: theme.icon }]}>
+                                                    • Day {bill.dueDay}
+                                                </Text>
+                                            </View>
+                                        </View>
+
+                                        <View style={styles.billRight}>
+                                            <Text style={[styles.billAmount, { color: theme.danger }]}>
+                                                {formatCurrency(bill.amount)}
+                                            </Text>
+                                            <View style={styles.billActions}>
+                                                {isBillPaid(bill.id, currentMonthKey) ? (
+                                                    <TouchableOpacity
+                                                        style={[styles.paidBadge, SharedStyles.neoBorder, { backgroundColor: theme.success }]}
+                                                        onPress={(e) => {
+                                                            e.stopPropagation();
+                                                            handleUnmarkPaid(bill.id);
+                                                        }}
+                                                    >
+                                                        <IconSymbol name="checkmark.circle.fill" size={14} color="#000" />
+                                                        <Text style={[styles.paidText, { color: '#000' }]}>Paid</Text>
+                                                    </TouchableOpacity>
+                                                ) : (
+                                                    <TouchableOpacity
+                                                        style={[styles.actionButton, SharedStyles.neoBorder, { backgroundColor: theme.success }]}
+                                                        onPress={(e) => {
+                                                            e.stopPropagation();
+                                                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                                                            markBillAsPaid(bill.id);
+                                                        }}
+                                                    >
+                                                        <IconSymbol name="checkmark" size={16} color="#000" />
+                                                    </TouchableOpacity>
+                                                )}
                                                 <TouchableOpacity
-                                                    style={[styles.paidBadge, { backgroundColor: theme.success + '20' }]}
+                                                    style={[styles.actionButton, SharedStyles.neoBorder, { backgroundColor: theme.danger }]}
                                                     onPress={(e) => {
                                                         e.stopPropagation();
-                                                        handleUnmarkPaid(bill.id);
+                                                        handleDelete(bill.id);
                                                     }}
                                                 >
-                                                    <IconSymbol name="checkmark.circle.fill" size={14} color={theme.success} />
-                                                    <Text style={[styles.paidText, { color: theme.success }]}>Paid</Text>
+                                                    <IconSymbol name="trash" size={16} color="#000" />
                                                 </TouchableOpacity>
-                                            ) : (
-                                                <TouchableOpacity
-                                                    style={[styles.actionButton, { backgroundColor: theme.success + '10' }]}
-                                                    onPress={(e) => {
-                                                        e.stopPropagation();
-                                                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                                                        markBillAsPaid(bill.id);
-                                                    }}
-                                                >
-                                                    <IconSymbol name="checkmark" size={16} color={theme.success} />
-                                                </TouchableOpacity>
-                                            )}
-                                            <TouchableOpacity
-                                                style={[styles.actionButton, { backgroundColor: theme.danger + '10' }]}
-                                                onPress={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDelete(bill.id);
-                                                }}
-                                            >
-                                                <IconSymbol name="trash" size={16} color={theme.danger} />
-                                            </TouchableOpacity>
+                                            </View>
                                         </View>
                                     </View>
-                                </View>
+                                </NeoCard>
                             </TouchableOpacity>
                         ))}
                     </View>
                 )}
 
                 <TouchableOpacity
-                    style={[styles.billCard, { backgroundColor: theme.card, borderColor: theme.border, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', paddingVertical: 20 }]}
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         handleOpenAdd();
                     }}
                 >
-                    <Text style={[styles.billName, { color: theme.tint }]}>+ Add New Bill</Text>
+                    <NeoCard style={[styles.billCard, { borderStyle: 'dashed' } as any]}>
+                        <Text style={[styles.billName, { color: theme.tint }]}>+ Add New Bill</Text>
+                    </NeoCard>
                 </TouchableOpacity>
             </ScrollView>
 
@@ -363,8 +367,6 @@ const styles = StyleSheet.create({
     },
     summaryCard: {
         padding: 20,
-        borderRadius: 16,
-        borderWidth: 1,
         marginBottom: 24,
     },
     summaryHeader: {
@@ -394,14 +396,12 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 20,
+        fontWeight: '900',
+        textTransform: 'uppercase',
         marginBottom: 12,
     },
     billCard: {
-        padding: 16,
-        borderRadius: 24,
-        borderWidth: 1,
         marginBottom: 12,
     },
     billContent: {
@@ -421,8 +421,8 @@ const styles = StyleSheet.create({
     },
     billName: {
         fontSize: 16,
-        fontWeight: '700',
-        marginBottom: 2,
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
     billMeta: {
         flexDirection: 'row',

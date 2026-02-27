@@ -1,7 +1,8 @@
 import { IconPicker } from '@/components/IconPicker';
 import InputModal from '@/components/InputModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/Colors';
+import { NeoCard } from '@/components/ui/NeobrutalistComponents';
+import { Colors, SharedStyles } from '@/constants/Colors';
 import { useBudget } from '@/context/BudgetContext';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -174,65 +175,68 @@ export default function Budgets() {
                     {allCategories.map(item => (
                         <TouchableOpacity
                             key={item.name}
-                            style={[styles.categoryCard, { backgroundColor: theme.card, borderColor: theme.border }]}
                             onPress={() => {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                                 handleEditBudget(item.name);
                             }}
                         >
-                            <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
-                                <IconSymbol name={item.icon as any} size={20} color={theme.tint} />
-                            </View>
-                            <View style={styles.categoryInfo}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                                    <Text style={[styles.categoryName, { color: theme.text }]}>{item.name}</Text>
-                                    {(item.hasBudget && item.type === 'fixed') && (
-                                        <View style={{ backgroundColor: theme.tint + '15', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                                            <Text style={{ fontSize: 10, color: theme.tint, fontWeight: '600' }}>
-                                                {item.type.toUpperCase()}
-                                            </Text>
-                                        </View>
-                                    )}
+                            <NeoCard style={styles.categoryCard}>
+                                <View style={styles.categoryIconContainer}>
+                                    <IconSymbol name={item.icon as any} size={20} color={theme.tint} />
                                 </View>
-                                <Text style={[styles.categorySubtext, { color: theme.icon }]}>
-                                    {item.hasBudget
-                                        ? `${formatCurrency(Math.max(0, item.limit - item.spent))} left`
-                                        : (item.spent > 0 ? `${formatCurrency(item.spent)} spent` : 'No spending')
-                                    }
-                                    {item.hasBudget && ` • Limit: ${formatCurrency(item.limit)}`}
-                                </Text>
-                            </View>
-                            {item.hasBudget ? (
-                                <TouchableOpacity
-                                    style={[styles.iconButton, { backgroundColor: theme.danger + '10' }]}
-                                    onPress={() => handleRemoveBudget(item.name)}
-                                >
-                                    <IconSymbol name="trash" size={16} color={theme.danger} />
-                                </TouchableOpacity>
-                            ) : (
-                                <IconSymbol name="plus.circle" size={24} color={theme.tint} />
-                            )}
+                                <View style={styles.categoryInfo}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                                        <Text style={[styles.categoryName, { color: theme.text }]}>{item.name}</Text>
+                                        {(item.hasBudget && item.type === 'fixed') && (
+                                            <View style={[SharedStyles.neoBorder, { backgroundColor: theme.tint, paddingHorizontal: 6, paddingVertical: 2 }]}>
+                                                <Text style={{ fontSize: 10, color: '#000', fontWeight: '900' }}>
+                                                    {item.type.toUpperCase()}
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                    <Text style={[styles.categorySubtext, { color: theme.icon }]}>
+                                        {item.hasBudget
+                                            ? `${formatCurrency(Math.max(0, item.limit - item.spent))} left`
+                                            : (item.spent > 0 ? `${formatCurrency(item.spent)} spent` : 'No spending')
+                                        }
+                                        {item.hasBudget && ` • Limit: ${formatCurrency(item.limit)}`}
+                                    </Text>
+                                </View>
+                                {item.hasBudget ? (
+                                    <TouchableOpacity
+                                        style={[styles.iconButton, SharedStyles.neoBorder, { backgroundColor: theme.danger }]}
+                                        onPress={() => handleRemoveBudget(item.name)}
+                                    >
+                                        <IconSymbol name="trash" size={16} color="#000" />
+                                    </TouchableOpacity>
+                                ) : (
+                                    <IconSymbol name="plus.circle" size={24} color={theme.tint} />
+                                )}
+                            </NeoCard>
                         </TouchableOpacity>
                     ))}
 
                     <TouchableOpacity
-                        style={[styles.categoryCard, { backgroundColor: theme.card, borderColor: theme.border, borderStyle: 'dashed' }]}
                         onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                             setShowNewCategoryModal(true);
                         }}
                     >
-                        <Text style={[styles.categoryName, { color: theme.tint }]}>+ Create New Category</Text>
+                        <NeoCard style={[styles.categoryCard, { borderStyle: 'dashed' } as any]}>
+                            <Text style={[styles.categoryName, { color: theme.tint }]}>+ Create New Category</Text>
+                        </NeoCard>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.categoryCard, { backgroundColor: theme.card, borderColor: theme.border, borderStyle: 'dashed', marginTop: 12 }]}
                         onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                             setShowManageCategories(true);
                         }}
                     >
-                        <Text style={[styles.categoryName, { color: theme.text }]}>Manage Categories</Text>
+                        <NeoCard style={[styles.categoryCard, { borderStyle: 'dashed' } as any]}>
+                            <Text style={[styles.categoryName, { color: theme.text }]}>Manage Categories</Text>
+                        </NeoCard>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -429,17 +433,20 @@ const styles = StyleSheet.create({
         marginBottom: 32,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 20,
+        fontWeight: '900',
+        textTransform: 'uppercase',
         marginBottom: 16,
     },
     categoryIconContainer: {
         width: 40,
         height: 40,
-        borderRadius: 12,
+        borderRadius: 0,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
+        backgroundColor: '#fff',
+        ...SharedStyles.neoBorder,
     },
     iconButton: {
         width: 32,
@@ -453,8 +460,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 16,
-        borderRadius: 20,
-        borderWidth: 1,
         marginBottom: 8,
     },
     categoryInfo: {
@@ -462,7 +467,8 @@ const styles = StyleSheet.create({
     },
     categoryName: {
         fontSize: 16,
-        fontWeight: '500',
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
     categorySpent: {
         fontSize: 12,

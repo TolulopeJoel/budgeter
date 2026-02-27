@@ -1,6 +1,7 @@
 import TransactionModal from '@/components/TransactionModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/Colors';
+import { NeoCard } from '@/components/ui/NeobrutalistComponents';
+import { Colors, SharedStyles } from '@/constants/Colors';
 import { Transaction, useBudget } from '@/context/BudgetContext';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -43,14 +44,14 @@ export default function Debts() {
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 {/* Total Summary */}
-                <View style={[styles.summaryCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <NeoCard style={styles.summaryCard} backgroundColor={theme.card}>
                     <View style={styles.summaryHeader}>
-                        <Text style={[styles.summaryLabel, { color: theme.icon }]}>To Collect</Text>
+                        <Text style={[styles.summaryLabel, { color: '#000' }]}>To Collect</Text>
                     </View>
                     <Text style={[styles.summaryAmount, { color: theme.success }]}>
                         {formatCurrency(totalDebt)}
                     </Text>
-                </View>
+                </NeoCard>
 
                 {/* Debts List */}
                 {debts.length > 0 && (
@@ -60,46 +61,48 @@ export default function Debts() {
                         {debts.map(debt => (
                             <TouchableOpacity
                                 key={debt.id}
-                                style={[styles.debtCard, { backgroundColor: theme.card, borderColor: theme.border }]}
                                 onPress={() => {
                                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                                     setEditingTransaction(debt);
                                     setShowTransactionModal(true);
                                 }}
                             >
-                                <View style={styles.debtContent}>
-                                    <View style={[styles.iconContainer, { backgroundColor: theme.danger + '10' }]}>
-                                        <IconSymbol name={getCategoryIcon(debt.category) as any} size={20} color={theme.danger} />
-                                    </View>
+                                <NeoCard style={styles.debtCard}>
+                                    <View style={styles.debtContent}>
+                                        <View style={[styles.iconContainer, SharedStyles.neoBorder, { backgroundColor: '#fff' }]}>
+                                            <IconSymbol name={getCategoryIcon(debt.category) as any} size={20} color={theme.danger} />
+                                        </View>
 
-                                    <View style={styles.debtInfo}>
-                                        <Text style={[styles.debtCategory, { color: theme.text }]}>{debt.note}</Text>
-                                        <Text style={[styles.debtDate, { color: theme.icon }]}>
-                                            {new Date(debt.date).toLocaleDateString('en-NG', {
-                                                month: 'short',
-                                                day: 'numeric'
-                                            })}
+                                        <View style={styles.debtInfo}>
+                                            <Text style={[styles.debtCategory, { color: theme.text }]}>{debt.note}</Text>
+                                            <Text style={[styles.debtDate, { color: theme.icon }]}>
+                                                {new Date(debt.date).toLocaleDateString('en-NG', {
+                                                    month: 'short',
+                                                    day: 'numeric'
+                                                })}
+                                            </Text>
+                                        </View>
+
+                                        <Text style={[styles.debtAmount, { color: theme.danger }]}>
+                                            {formatCurrency(debt.amount)}
                                         </Text>
                                     </View>
-
-                                    <Text style={[styles.debtAmount, { color: theme.danger }]}>
-                                        {formatCurrency(debt.amount)}
-                                    </Text>
-                                </View>
+                                </NeoCard>
                             </TouchableOpacity>
                         ))}
                     </View>
                 )}
 
                 <TouchableOpacity
-                    style={[styles.debtCard, { backgroundColor: theme.card, borderColor: theme.border, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', paddingVertical: 20 }]}
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         setEditingTransaction(null);
                         setShowTransactionModal(true);
                     }}
                 >
-                    <Text style={[styles.debtCategory, { color: theme.tint }]}>+ Add New Debt Record</Text>
+                    <NeoCard style={[styles.debtCard, { borderStyle: 'dashed' } as any]}>
+                        <Text style={[styles.debtCategory, { color: theme.tint }]}>+ Add New Debt Record</Text>
+                    </NeoCard>
                 </TouchableOpacity>
             </ScrollView>
             <TransactionModal
@@ -132,8 +135,6 @@ const styles = StyleSheet.create({
     },
     summaryCard: {
         padding: 20,
-        borderRadius: 16,
-        borderWidth: 1,
         marginBottom: 24,
     },
     summaryHeader: {
@@ -151,14 +152,12 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 20,
+        fontWeight: '900',
+        textTransform: 'uppercase',
         marginBottom: 12,
     },
     debtCard: {
-        padding: 16,
-        borderRadius: 24,
-        borderWidth: 1,
         marginBottom: 12,
     },
     debtContent: {
@@ -178,8 +177,8 @@ const styles = StyleSheet.create({
     },
     debtCategory: {
         fontSize: 16,
-        fontWeight: '700',
-        marginBottom: 2,
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
     debtDate: {
         fontSize: 12,

@@ -3,7 +3,8 @@ import SavingsModal from '@/components/SavingsModal';
 import SecurityModal from '@/components/SecurityModal';
 import TransactionModal from '@/components/TransactionModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/Colors';
+import { NeoCard } from '@/components/ui/NeobrutalistComponents';
+import { Colors, SharedStyles } from '@/constants/Colors';
 import { Transaction, useBudget } from '@/context/BudgetContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -156,7 +157,7 @@ export default function Dashboard() {
         </View>
 
         {/* Main Card - Safe to Spend */}
-        <View style={[styles.mainCard, { backgroundColor: theme.tint }]}>
+        <NeoCard backgroundColor={theme.primary} style={styles.mainCard}>
           <View style={styles.mainCardHeader}>
             <Text style={styles.mainCardLabel}>Safe to Spend</Text>
             <TouchableOpacity
@@ -167,7 +168,7 @@ export default function Dashboard() {
               }}
             >
               <Text style={styles.mainCardMonth}>{getMonthName()}</Text>
-              <Ionicons name="chevron-down" size={12} color="rgba(255,255,255,0.7)" />
+              <Ionicons name="chevron-down" size={12} color="#000" />
             </TouchableOpacity>
           </View>
           <Text style={styles.mainCardAmount}>{formatCurrency(safeToSpend)}</Text>
@@ -183,74 +184,84 @@ export default function Dashboard() {
                 }
               }}
             >
-              <Text style={styles.statLabel}>Saved</Text>
-              <Text style={styles.statValue}>
+              <Text style={[styles.statLabel, { color: '#000' }]}>Saved</Text>
+              <Text style={[styles.statValue, { color: '#000' }]}>
                 {isTotalSavingsVisible ? formatCurrency(savingsBalance) : '••••••'}
               </Text>
             </TouchableOpacity>
-            <View style={styles.statDivider} />
+            <View style={[styles.statDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
             <View style={styles.mainCardStat}>
-              <Text style={styles.statLabel}>Spent</Text>
-              <Text style={styles.statValue}>{formatCurrency(currentSpent)}</Text>
+              <Text style={[styles.statLabel, { color: '#000' }]}>Spent</Text>
+              <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(currentSpent)}</Text>
             </View>
           </View>
-        </View>
+        </NeoCard>
 
         {/* Savings Card */}
         <TouchableOpacity
-          style={[styles.savingsCard, { backgroundColor: theme.card, borderColor: theme.border }]}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             setSecurityAction('manage_savings');
             setShowSecurityModal(true);
           }}
+          activeOpacity={0.9}
         >
-          <View style={styles.savingsHeader}>
-            <View style={[styles.savingsIconContainer, { backgroundColor: theme.primary + '15' }]}>
-              <Ionicons name="wallet" size={24} color={theme.primary} />
+          <NeoCard backgroundColor={theme.warning} style={styles.savingsCard}>
+            <View style={styles.savingsHeader}>
+              <View style={styles.savingsIconContainer}>
+                <Ionicons name="wallet" size={24} color="#000" />
+              </View>
+              <View>
+                <Text style={styles.savingsLabel}>Need To Save</Text>
+                <Text style={styles.savingsAmount}>
+                  {formatCurrency(getRemainingSavingsGoal())}
+                </Text>
+              </View>
             </View>
-            <View>
-              <Text style={[styles.savingsLabel, { color: theme.icon }]}>Need To Save</Text>
-              <Text style={[styles.savingsAmount, { color: theme.text }]}>
-                {formatCurrency(getRemainingSavingsGoal())}
+            <View style={styles.savingsFooter}>
+              <Text style={styles.savingsDeduction}>
+                {monthlySavingsGoal > 0
+                  ? `Deducting ${formatCurrency(monthlySavingsGoal)}/mo`
+                  : 'No monthly deduction set'}
               </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="lock-closed" size={18} color="#000" style={{ marginRight: 8 }} />
+                <Ionicons name="chevron-forward" size={20} color="#000" />
+              </View>
             </View>
-          </View>
-          <View style={styles.savingsFooter}>
-            <Text style={[styles.savingsDeduction, { color: theme.icon }]}>
-              {monthlySavingsGoal > 0
-                ? `Deducting ${formatCurrency(monthlySavingsGoal)}/mo`
-                : 'No monthly deduction set'}
-            </Text>
-            <Ionicons name="lock-closed" size={18} color={theme.icon} style={{ marginLeft: 8 }} />
-            <Ionicons name="chevron-forward" size={20} color={theme.icon} />
-          </View>
+          </NeoCard>
         </TouchableOpacity>
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
-          <Link href="/budgets" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '10', borderColor: theme.border }]}>
+          <Link href="/budgets" asChild>
             <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
-              <View style={styles.actionIconContainer}>
-                <Ionicons name="pie-chart" size={24} color={theme.tint} />
-              </View>
-              <Text style={[styles.actionText, { color: theme.text }]}>Budgets</Text>
+              <NeoCard style={styles.actionLink} backgroundColor={theme.success}>
+                <View style={styles.actionIconContainer}>
+                  <Ionicons name="pie-chart" size={24} color="#000" />
+                </View>
+                <Text style={styles.actionText}>Budgets</Text>
+              </NeoCard>
             </TouchableOpacity>
           </Link>
-          <Link href="/bills" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '10', borderColor: theme.border }]}>
+          <Link href="/bills" asChild>
             <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
-              <View style={styles.actionIconContainer}>
-                <Ionicons name="receipt" size={24} color={theme.tint} />
-              </View>
-              <Text style={[styles.actionText, { color: theme.text }]}>Bills</Text>
+              <NeoCard style={styles.actionLink} backgroundColor={theme.warning}>
+                <View style={styles.actionIconContainer}>
+                  <Ionicons name="receipt" size={24} color="#000" />
+                </View>
+                <Text style={styles.actionText}>Bills</Text>
+              </NeoCard>
             </TouchableOpacity>
           </Link>
-          <Link href="/debts" asChild style={[styles.actionLink, { backgroundColor: theme.tint + '10', borderColor: theme.border }]}>
+          <Link href="/debts" asChild>
             <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
-              <View style={styles.actionIconContainer}>
-                <Ionicons name="cash" size={24} color={theme.tint} />
-              </View>
-              <Text style={[styles.actionText, { color: theme.text }]}>Lent Out</Text>
+              <NeoCard style={styles.actionLink} backgroundColor={theme.primary}>
+                <View style={styles.actionIconContainer}>
+                  <Ionicons name="cash" size={24} color="#000" />
+                </View>
+                <Text style={styles.actionText}>Lent Out</Text>
+              </NeoCard>
             </TouchableOpacity>
           </Link>
         </View>
@@ -306,91 +317,92 @@ export default function Dashboard() {
                 return (
                   <TouchableOpacity
                     key={budget.category}
-                    style={[styles.budgetItem, { backgroundColor: theme.card, borderColor: theme.border }]}
                     onPress={() => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                       setSelectedCategory(budget.category);
                     }}
                   >
-                    <View style={styles.budgetHeader}>
-                      <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
-                        <IconSymbol name={getCategoryIcon(budget.category) as any} size={20} color={theme.tint} />
+                    <NeoCard style={styles.budgetItem}>
+                      <View style={styles.budgetHeader}>
+                        <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
+                          <IconSymbol name={getCategoryIcon(budget.category) as any} size={20} color={theme.tint} />
+                        </View>
+                        <View style={styles.budgetInfo}>
+                          <Text style={[styles.budgetCategory, { color: theme.text }]}>
+                            {budget.category}
+                          </Text>
+                          <Text style={[styles.budgetAmount, { color: theme.icon }]}>
+                            {formatCurrency(status.spent)} of {formatCurrency(status.limit)}
+                          </Text>
+                        </View>
+                        <View style={styles.budgetRight}>
+                          <Text style={[styles.budgetPercentage, { color: budgetColor }]}>
+                            {status.percentage.toFixed(0)}%
+                          </Text>
+                        </View>
                       </View>
-                      <View style={styles.budgetInfo}>
-                        <Text style={[styles.budgetCategory, { color: theme.text }]}>
-                          {budget.category}
-                        </Text>
-                        <Text style={[styles.budgetAmount, { color: theme.icon }]}>
-                          {formatCurrency(status.spent)} of {formatCurrency(status.limit)}
-                        </Text>
-                      </View>
-                      <View style={styles.budgetRight}>
-                        <Text style={[styles.budgetPercentage, { color: budgetColor }]}>
-                          {status.percentage.toFixed(0)}%
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={styles.progressBarContainer}>
-                      {(() => {
-                        // Calculate what spending would be if unpaid bills were paid
-                        const categoryBills = recurringBills.filter(b => b.category === budget.category);
-                        const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
-                        const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
-                        const projectedSpent = status.spent + totalUnpaidBills;
-                        const projectedPercentage = Math.min((projectedSpent / status.limit) * 100, 100);
+                      <View style={styles.progressBarContainer}>
+                        {(() => {
+                          // Calculate what spending would be if unpaid bills were paid
+                          const categoryBills = recurringBills.filter(b => b.category === budget.category);
+                          const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
+                          const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
+                          const projectedSpent = status.spent + totalUnpaidBills;
+                          const projectedPercentage = Math.min((projectedSpent / status.limit) * 100, 100);
 
-                        return (
-                          <>
-                            {/* Projected spending bar (if bills were paid) */}
-                            {totalUnpaidBills > 0 && (
+                          return (
+                            <>
+                              {/* Projected spending bar (if bills were paid) */}
+                              {totalUnpaidBills > 0 && (
+                                <View
+                                  style={[
+                                    styles.progressBar,
+                                    styles.projectedProgressBar,
+                                    { width: `${projectedPercentage}%`, backgroundColor: budgetColor + '40' }
+                                  ]}
+                                />
+                              )}
+                              {/* Current actual spending bar */}
                               <View
                                 style={[
                                   styles.progressBar,
-                                  styles.projectedProgressBar,
-                                  { width: `${projectedPercentage}%`, backgroundColor: budgetColor + '40' }
+                                  { width: `${status.percentage}%`, backgroundColor: budgetColor }
                                 ]}
                               />
-                            )}
-                            {/* Current actual spending bar */}
-                            <View
-                              style={[
-                                styles.progressBar,
-                                { width: `${status.percentage}%`, backgroundColor: budgetColor }
-                              ]}
-                            />
-                          </>
-                        );
-                      })()}
-                    </View>
+                            </>
+                          );
+                        })()}
+                      </View>
 
-                    {/* Bills Breakdown */}
-                    {(() => {
-                      const categoryBills = recurringBills.filter(b => b.category === budget.category);
-                      const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
+                      {/* Bills Breakdown */}
+                      {(() => {
+                        const categoryBills = recurringBills.filter(b => b.category === budget.category);
+                        const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
 
-                      if (unpaidBills.length === 0) return null;
+                        if (unpaidBills.length === 0) return null;
 
-                      const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
+                        const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
 
-                      return (
-                        <View style={[styles.billsBreakdown, { borderTopColor: theme.border }]}>
-                          <View style={styles.billsHeader}>
-                            <Text style={[styles.billsTitle, { color: theme.icon }]}>Unpaid bills:</Text>
-                            <Text style={[styles.billsTotal, { color: theme.danger + '80' }]}>
-                              {formatCurrency(totalUnpaidBills)}
-                            </Text>
-                          </View>
-                          {unpaidBills.map(bill => (
-                            <View key={bill.id} style={styles.billRow}>
-                              <Text style={[styles.billName, { color: theme.text }]}>• {bill.name}</Text>
-                              <Text style={[styles.billAmount, { color: theme.icon }]}>
-                                {formatCurrency(bill.amount)}
+                        return (
+                          <View style={[styles.billsBreakdown, { borderTopColor: theme.border }]}>
+                            <View style={styles.billsHeader}>
+                              <Text style={[styles.billsTitle, { color: theme.icon }]}>Unpaid bills:</Text>
+                              <Text style={[styles.billsTotal, { color: theme.danger + '80' }]}>
+                                {formatCurrency(totalUnpaidBills)}
                               </Text>
                             </View>
-                          ))}
-                        </View>
-                      );
-                    })()}
+                            {unpaidBills.map(bill => (
+                              <View key={bill.id} style={styles.billRow}>
+                                <Text style={[styles.billName, { color: theme.text }]}>• {bill.name}</Text>
+                                <Text style={[styles.billAmount, { color: theme.icon }]}>
+                                  {formatCurrency(bill.amount)}
+                                </Text>
+                              </View>
+                            ))}
+                          </View>
+                        );
+                      })()}
+                    </NeoCard>
                   </TouchableOpacity>
                 );
               })}
@@ -413,43 +425,44 @@ export default function Dashboard() {
             recentTransactions.map((t) => (
               <TouchableOpacity
                 key={t.id}
-                style={[styles.transactionItem, { backgroundColor: theme.card, borderColor: theme.border }]}
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setEditingTransaction(t);
                   setShowTransactionModal(true);
                 }}
               >
-                <View style={styles.transactionLeft}>
-                  <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
-                    <IconSymbol
-                      name={getCategoryIcon(t.category, t.type) as any}
-                      size={20}
-                      color={t.type === 'income' ? theme.success : theme.danger}
-                    />
+                <NeoCard style={styles.transactionItem}>
+                  <View style={styles.transactionLeft}>
+                    <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
+                      <IconSymbol
+                        name={getCategoryIcon(t.category, t.type) as any}
+                        size={20}
+                        color={t.type === 'income' ? theme.success : theme.danger}
+                      />
+                    </View>
+                    <View>
+                      <Text style={[styles.transactionCategory, { color: theme.text }]}>
+                        {t.category}
+                      </Text>
+                      <Text style={[styles.transactionDate, { color: theme.icon }]}>
+                        {new Date(t.date).toLocaleDateString('en-NG', {
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                        {t.note && ` • ${t.note}`}
+                      </Text>
+                    </View>
                   </View>
-                  <View>
-                    <Text style={[styles.transactionCategory, { color: theme.text }]}>
-                      {t.category}
-                    </Text>
-                    <Text style={[styles.transactionDate, { color: theme.icon }]}>
-                      {new Date(t.date).toLocaleDateString('en-NG', {
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                      {t.note && ` • ${t.note}`}
-                    </Text>
-                  </View>
-                </View>
-                <Text
-                  style={[
-                    styles.transactionAmount,
-                    { color: t.type === 'income' ? theme.success : theme.danger }
-                  ]}
-                >
-                  {t.type === 'income' ? '+' : '-'}
-                  {formatCurrency(t.amount)}
-                </Text>
+                  <Text
+                    style={[
+                      styles.transactionAmount,
+                      { color: t.type === 'income' ? theme.success : theme.danger }
+                    ]}
+                  >
+                    {t.type === 'income' ? '+' : '-'}
+                    {formatCurrency(t.amount)}
+                  </Text>
+                </NeoCard>
               </TouchableOpacity>
             ))
           ) : (
@@ -739,8 +752,9 @@ const styles = StyleSheet.create({
     width: 25,
   },
   headerTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
   addButton: {
     width: 48,
@@ -760,25 +774,16 @@ const styles = StyleSheet.create({
     right: 24,
     width: 64,
     height: 64,
-    borderRadius: 18, // This creates the squircle effect
+    borderRadius: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    ...SharedStyles.neoBorder,
+    ...SharedStyles.neoShadow,
     zIndex: 1000,
   },
   mainCard: {
-    borderRadius: 28,
-    padding: 24,
-    marginBottom: 32,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    marginBottom: 24,
+    padding: 20,
   },
   mainCardHeader: {
     flexDirection: 'row',
@@ -789,62 +794,55 @@ const styles = StyleSheet.create({
   periodSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 10,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 0,
+    ...SharedStyles.neoBorder,
     gap: 4,
   },
   mainCardLabel: {
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#000',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 1,
   },
   mainCardMonth: {
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: '#000',
     fontSize: 13,
-    fontWeight: '600',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    overflow: 'hidden',
+    fontWeight: '800',
   },
   mainCardAmount: {
-    color: '#fff',
-    fontSize: 44,
-    fontWeight: '800',
-    marginBottom: 24,
-    textAlign: 'center',
+    color: '#000',
+    fontSize: 36,
+    fontWeight: '900',
+    marginVertical: 12,
   },
   mainCardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 0,
+    padding: 12,
+    ...SharedStyles.neoBorder,
   },
   mainCardStat: {
     flex: 1,
     alignItems: 'center',
   },
   statLabel: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: 12,
-    fontWeight: '500',
-    marginBottom: 4,
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
   },
   statValue: {
-    color: '#fff',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '900',
   },
   statDivider: {
-    width: 1,
+    width: 2,
     height: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#000',
   },
   quickActions: {
     flexDirection: 'row',
@@ -854,7 +852,6 @@ const styles = StyleSheet.create({
   actionLink: {
     flex: 1,
     alignItems: 'center',
-    borderRadius: 20,
     paddingVertical: 16,
     paddingHorizontal: 8,
   },
@@ -868,8 +865,9 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 14,
-    fontWeight: '600',
-    letterSpacing: -0.2,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    color: '#000',
     textAlign: 'center',
   },
   section: {
@@ -884,12 +882,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    letterSpacing: -0.5,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
   seeAllText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '800',
+    textTransform: 'uppercase',
   },
   card: {
     borderRadius: 20,
@@ -897,48 +896,48 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   budgetItem: {
-    borderRadius: 24,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
+    marginBottom: 8,
   },
   budgetHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   categoryIconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 0,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    backgroundColor: '#fff',
+    ...SharedStyles.neoBorder,
   },
   budgetInfo: {
     flex: 1,
   },
   budgetCategory: {
     fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 2,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
   budgetAmount: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '700',
   },
   budgetRight: {
     alignItems: 'flex-end',
   },
   progressBarContainer: {
-    height: 6,
-    backgroundColor: 'rgba(150, 150, 150, 0.1)',
-    borderRadius: 3,
+    height: 12,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 0,
     overflow: 'hidden',
+    ...SharedStyles.neoBorder,
   },
   progressBar: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 0,
   },
   projectedProgressBar: {
     position: 'absolute',
@@ -946,17 +945,11 @@ const styles = StyleSheet.create({
     top: 0,
   },
   budgetPercentage: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '900',
   },
   transactionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 20,
     marginBottom: 8,
-    borderWidth: 1,
   },
   transactionLeft: {
     flexDirection: 'row',
@@ -966,23 +959,25 @@ const styles = StyleSheet.create({
   transactionIconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 0,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    backgroundColor: '#fff',
+    ...SharedStyles.neoBorder,
   },
   transactionCategory: {
     fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 2,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
   transactionDate: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '700',
   },
   transactionAmount: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '900',
   },
   emptyState: {
     padding: 32,
@@ -1034,12 +1029,14 @@ const styles = StyleSheet.create({
   periodModalContent: {
     width: '100%',
     maxHeight: '60%',
-    borderRadius: 24,
     padding: 20,
+    ...SharedStyles.neoBorder,
+    ...SharedStyles.neoShadow,
   },
   periodModalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '900',
+    textTransform: 'uppercase',
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -1052,20 +1049,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 12,
-    borderRadius: 12,
-    marginBottom: 4,
+    marginBottom: 8,
+    ...SharedStyles.neoBorder,
   },
   periodItemText: {
-    fontSize: 18,
+    fontSize: 16,
+    fontWeight: '800',
+    textTransform: 'uppercase',
   },
   savingsCard: {
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 32,
-    borderWidth: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: 24,
   },
   savingsHeader: {
     flexDirection: 'row',
@@ -1075,20 +1068,20 @@ const styles = StyleSheet.create({
   savingsIconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 16,
+    borderRadius: 0,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#fff',
+    ...SharedStyles.neoBorder,
   },
   savingsLabel: {
     fontSize: 13,
-    fontWeight: '600',
-    marginBottom: 4,
+    fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   savingsAmount: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '900',
   },
   savingsFooter: {
     flexDirection: 'row',
