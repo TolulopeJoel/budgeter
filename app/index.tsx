@@ -62,8 +62,7 @@ export default function Dashboard() {
   const [showSavingsModal, setShowSavingsModal] = useState(false);
   const [showSecurityModal, setShowSecurityModal] = useState(false);
   const [showPeriodModal, setShowPeriodModal] = useState(false);
-  const [isTotalSavingsVisible, setIsTotalSavingsVisible] = useState(false);
-  const [securityAction, setSecurityAction] = useState<'reveal_balance' | 'manage_savings'>('manage_savings');
+  const [_, setSecurityAction] = useState<'reveal_balance' | 'manage_savings'>('manage_savings');
   const [showInitialBalanceModal, setShowInitialBalanceModal] = useState(false);
   const [tempInitialBalance, setTempInitialBalance] = useState('');
 
@@ -196,20 +195,10 @@ export default function Dashboard() {
               <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(safeToSpend)}</Text>
             </View>
             <View style={[styles.statDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
-            <TouchableOpacity
-              style={styles.mainCardStat}
-              onPress={() => {
-                if (isTotalSavingsVisible) {
-                  setIsTotalSavingsVisible(false);
-                } else {
-                  setSecurityAction('reveal_balance');
-                  setShowSecurityModal(true);
-                }
-              }}
-            >
+            <TouchableOpacity style={styles.mainCardStat}>
               <Text style={[styles.statLabel, { color: '#000' }]}>Saved</Text>
               <Text style={[styles.statValue, { color: '#000' }]}>
-                {isTotalSavingsVisible ? formatCurrency(savingsBalance) : '••••••'}
+                {formatCurrency(savingsBalance)}
               </Text>
             </TouchableOpacity>
             <View style={[styles.statDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
@@ -716,11 +705,7 @@ export default function Dashboard() {
         visible={showSecurityModal}
         onClose={() => setShowSecurityModal(false)}
         onSuccess={() => {
-          if (securityAction === 'reveal_balance') {
-            setIsTotalSavingsVisible(true);
-          } else {
-            setShowSavingsModal(true);
-          }
+          setShowSavingsModal(true);
         }}
         storedPin={userPin}
         onSetPin={(pin) => updateUserPin(pin)}
