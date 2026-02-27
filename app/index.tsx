@@ -210,11 +210,23 @@ export default function Dashboard() {
               <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(safeToSpend, 'dashboard')}</Text>
             </View>
             <View style={[styles.statDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
-            <TouchableOpacity style={styles.mainCardStat}>
+            <TouchableOpacity
+              style={styles.mainCardStat}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                setSecurityAction('manage_savings');
+                setShowSecurityModal(true);
+              }}
+            >
               <Text style={[styles.statLabel, { color: '#000' }]}>Saved</Text>
               <Text style={[styles.statValue, { color: '#000' }]}>
                 {formatCurrency(savingsBalance, 'dashboard')}
               </Text>
+              {!isDashboardPrivacyEnabled && getRemainingSavingsGoal() > 0 && (
+                <Text style={{ fontSize: 9, color: 'rgba(0,0,0,0.5)', fontWeight: '900', marginTop: 2 }}>
+                  LEFT: {formatCurrency(getRemainingSavingsGoal())}
+                </Text>
+              )}
             </TouchableOpacity>
             <View style={[styles.statDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
             <View style={styles.mainCardStat}>
@@ -225,32 +237,6 @@ export default function Dashboard() {
         </NeoCard>
 
         {/* Savings Card */}
-        <TouchableOpacity
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            setSecurityAction('manage_savings');
-            setShowSecurityModal(true);
-          }}
-          activeOpacity={0.9}
-        >
-          <NeoCard backgroundColor={theme.warning} style={styles.savingsCard}>
-            <View style={styles.savingsHeader}>
-              <View style={styles.savingsIconContainer}>
-                <Ionicons name="wallet" size={24} color="#000" />
-              </View>
-              <View>
-                <Text style={styles.savingsLabel}>Need To Save</Text>
-                <Text style={styles.savingsAmount}>
-                  {formatCurrency(getRemainingSavingsGoal(), 'dashboard')}
-                </Text>
-              </View>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Ionicons name="lock-closed" size={16} color="#000" />
-              <Ionicons name="chevron-forward" size={16} color="#000" />
-            </View>
-          </NeoCard>
-        </TouchableOpacity>
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
@@ -1095,45 +1081,6 @@ const styles = StyleSheet.create({
   periodItemText: {
     fontSize: 16,
     fontWeight: '800',
-    textTransform: 'uppercase',
-  },
-  savingsCard: {
-    marginBottom: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  savingsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  savingsIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    ...SharedStyles.neoBorder,
-  },
-  savingsLabel: {
-    fontSize: 13,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-  },
-  savingsAmount: {
-    fontSize: 20,
-    fontWeight: '900',
-  },
-  savingsFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  savingsDeduction: {
-    fontSize: 12,
-    fontWeight: '900',
     textTransform: 'uppercase',
   },
   billsBreakdown: {
