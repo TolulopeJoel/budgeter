@@ -13,7 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { Link } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useState } from 'react';
-import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Dashboard() {
@@ -65,7 +65,7 @@ export default function Dashboard() {
   const [_, setSecurityAction] = useState<'reveal_balance' | 'manage_savings'>('manage_savings');
   const [showInitialBalanceModal, setShowInitialBalanceModal] = useState(false);
   const [tempInitialBalance, setTempInitialBalance] = useState('');
-  const [isDashboardPrivacyEnabled, setIsDashboardPrivacyEnabled] = useState(false);
+  const [isMainCardPrivacyEnabled, setIsMainCardPrivacyEnabled] = useState(false);
   const [isBudgetsPrivacyEnabled, setIsBudgetsPrivacyEnabled] = useState(false);
   const [isHistoryPrivacyEnabled, setIsHistoryPrivacyEnabled] = useState(false);
 
@@ -83,7 +83,7 @@ export default function Dashboard() {
   };
 
   const formatCurrency = (amount: number, privacyType?: 'dashboard' | 'budgets' | 'history') => {
-    if (privacyType === 'dashboard' && isDashboardPrivacyEnabled) return '₦ •••••';
+    if (privacyType === 'dashboard' && isMainCardPrivacyEnabled) return '₦ •••••';
     if (privacyType === 'budgets' && isBudgetsPrivacyEnabled) return '₦ •••••';
     if (privacyType === 'history' && isHistoryPrivacyEnabled) return '₦ •••••';
     return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -197,19 +197,12 @@ export default function Dashboard() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              setIsDashboardPrivacyEnabled(!isDashboardPrivacyEnabled);
-            }}
-            activeOpacity={0.7}
-          >
-            <Image
-              source={colorScheme === 'dark' ? require('@/assets/images/iconDark.png') : require('@/assets/images/iconLight.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
+          {/* <Image
+            source={colorScheme === 'dark' ? require('@/assets/images/iconDark.png') : require('@/assets/images/iconLight.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          /> */}
+          <Text style={styles.headerTitle}>Akíkanjú Ọkùnrin, {new Date().getDate()}</Text>
         </View>
 
         {/* Main Card Section */}
@@ -219,9 +212,17 @@ export default function Dashboard() {
             style={styles.mainCard}
           >
             <View style={styles.mainCardHeader}>
-              <View style={styles.historicalBadge}>
-                <Text style={styles.historicalBadgeText}>PAST MONTH</Text>
-              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setIsMainCardPrivacyEnabled(!isMainCardPrivacyEnabled);
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.historicalBadge}>
+                  <Text style={styles.historicalBadgeText}>PAST MONTH</Text>
+                </View>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.periodSelector, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
                 onPress={() => {
@@ -287,10 +288,18 @@ export default function Dashboard() {
             style={styles.mainCard}
           >
             <View style={styles.mainCardHeader}>
-              <View>
-                <Text style={styles.mainCardLabel}>Account Balance</Text>
-                <Text style={[styles.mainCardSubLabel, { color: 'rgba(0,0,0,0.5)' }]}>Live Total</Text>
-              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setIsMainCardPrivacyEnabled(!isMainCardPrivacyEnabled);
+                }}
+                activeOpacity={0.7}
+              >
+                <View>
+                  <Text style={styles.mainCardLabel}>Account Balance</Text>
+                  <Text style={[styles.mainCardSubLabel, { color: 'rgba(0,0,0,0.5)' }]}>Live Total</Text>
+                </View>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.periodSelector}
                 onPress={() => {
@@ -309,7 +318,7 @@ export default function Dashboard() {
                 setTempInitialBalance(getAccountBalance().toString());
                 setShowInitialBalanceModal(true);
               }}
-              disabled={isDashboardPrivacyEnabled}
+              disabled={isMainCardPrivacyEnabled}
             >
               <Text style={styles.mainCardAmount}>
                 {formatCurrency(getAccountBalance(), 'dashboard')}
@@ -334,7 +343,7 @@ export default function Dashboard() {
                 <Text style={[styles.statValue, { color: '#000' }]}>
                   {formatCurrency(savingsBalance, 'dashboard')}
                 </Text>
-                {!isDashboardPrivacyEnabled && getRemainingSavingsGoal() > 0 && (
+                {!isMainCardPrivacyEnabled && getRemainingSavingsGoal() > 0 && (
                   <Text style={{ fontSize: 9, color: 'rgba(0,0,0,0.5)', fontWeight: '900', marginTop: 2 }}>
                     LEFT: {formatCurrency(getRemainingSavingsGoal())}
                   </Text>
