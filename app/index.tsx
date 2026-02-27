@@ -1,3 +1,4 @@
+import InputModal from '@/components/InputModal';
 import MonthConfirmModal from '@/components/MonthConfirmModal';
 import SavingsModal from '@/components/SavingsModal';
 import SecurityModal from '@/components/SecurityModal';
@@ -43,6 +44,9 @@ export default function Dashboard() {
     updateUserPin,
     recurringBills,
     isBillPaid,
+    initialBalance,
+    updateInitialBalance,
+    getAccountBalance,
   } = useBudget();
 
   const insets = useSafeAreaInsets();
@@ -59,6 +63,8 @@ export default function Dashboard() {
   const [showPeriodModal, setShowPeriodModal] = useState(false);
   const [isTotalSavingsVisible, setIsTotalSavingsVisible] = useState(false);
   const [securityAction, setSecurityAction] = useState<'reveal_balance' | 'manage_savings'>('manage_savings');
+  const [showInitialBalanceModal, setShowInitialBalanceModal] = useState(false);
+  const [tempInitialBalance, setTempInitialBalance] = useState('');
 
   // Real calculations from context
   const safeToSpend = getSafeToSpend();
@@ -156,10 +162,13 @@ export default function Dashboard() {
           />
         </View>
 
-        {/* Main Card - Safe to Spend */}
+        {/* Main Card - Account Balance */}
         <NeoCard backgroundColor={theme.primary} style={styles.mainCard}>
           <View style={styles.mainCardHeader}>
-            <Text style={styles.mainCardLabel}>Safe to Spend</Text>
+            <View>
+              <Text style={styles.mainCardLabel}>Account Balance</Text>
+              <Text style={[styles.mainCardSubLabel, { color: 'rgba(0,0,0,0.5)' }]}>Live Total</Text>
+            </View>
             <TouchableOpacity
               style={styles.periodSelector}
               onPress={() => {
@@ -171,8 +180,20 @@ export default function Dashboard() {
               <Ionicons name="chevron-down" size={12} color="#000" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.mainCardAmount}>{formatCurrency(safeToSpend)}</Text>
+          <TouchableOpacity
+            onPress={() => {
+              setTempInitialBalance(initialBalance.toString());
+              setShowInitialBalanceModal(true);
+            }}
+          >
+            <Text style={styles.mainCardAmount}>{formatCurrency(getAccountBalance())}</Text>
+          </TouchableOpacity>
           <View style={styles.mainCardFooter}>
+            <View style={styles.mainCardStat}>
+              <Text style={[styles.statLabel, { color: '#000' }]}>Safe to Spend</Text>
+              <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(safeToSpend)}</Text>
+            </View>
+            <View style={[styles.statDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
             <TouchableOpacity
               style={styles.mainCardStat}
               onPress={() => {
@@ -703,6 +724,20 @@ export default function Dashboard() {
         onSetPin={(pin) => updateUserPin(pin)}
       />
 
+      <InputModal
+        visible={showInitialBalanceModal}
+        title="Set Starting Balance"
+        value={tempInitialBalance}
+        onChangeText={setTempInitialBalance}
+        onConfirm={async () => {
+          await updateInitialBalance(Number(tempInitialBalance) || 0);
+          setShowInitialBalanceModal(false);
+        }}
+        onCancel={() => setShowInitialBalanceModal(false)}
+        keyboardType="numeric"
+        prefix="₦"
+      />
+
       <TouchableOpacity
         style={[styles.floatingButton, { backgroundColor: theme.tint }]}
         onPress={() => {
@@ -787,6 +822,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '900',
     textTransform: 'uppercase',
+  },
+  mainCardSubLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    marginTop: -2,
   },
   mainCardMonth: {
     color: '#000',

@@ -90,6 +90,7 @@ export interface BudgetContextType {
 
     // Calculations
     getBalance: () => number;
+    getAccountBalance: () => number;
     getCurrentMonthIncome: () => number;
     getCurrentMonthExpenses: () => number;
     getSafeToSpend: () => number;
@@ -97,7 +98,9 @@ export interface BudgetContextType {
     getDebts: () => number;
     getCurrentMonthTransactions: () => Transaction[];
 
-
+    // Account Balance
+    initialBalance: number;
+    updateInitialBalance: (amount: number) => Promise<void>;
 
     // Savings
     savingsTransactions: SavingsTransaction[];
@@ -140,6 +143,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [savingsTransactions, setSavingsTransactions] = useState<SavingsTransaction[]>([]);
     const [savingsGoalsByMonth, setSavingsGoalsByMonth] = useState<Record<string, number>>({});
     const [monthlySavingsGoal, setMonthlySavingsGoal] = useState(0);
+    const [initialBalance, setInitialBalance] = useState(0);
     const [userPin, setUserPin] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -187,6 +191,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 storedSavingsTransactions,
                 storedMonthlySavingsGoal,
                 storedSavingsGoalsByMonth,
+                storedInitialBalance,
                 storedUserPin
             ] = await Promise.all([
                 AsyncStorage.getItem('@budgeter_transactions'),
@@ -199,6 +204,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 AsyncStorage.getItem('@budgeter_savings_transactions'),
                 AsyncStorage.getItem('@budgeter_monthly_savings_goal'),
                 AsyncStorage.getItem('@budgeter_savings_goals_by_month'),
+                AsyncStorage.getItem('@budgeter_initial_balance'),
                 AsyncStorage.getItem('@budgeter_user_pin'),
             ]);
 
@@ -254,6 +260,8 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     if (rbbm[month]) setRecurringBills(rbbm[month]);
                 }
             }
+
+            if (storedInitialBalance) setInitialBalance(Number(storedInitialBalance) || 0);
             if (storedUserPin) setUserPin(storedUserPin);
 
             // Check for auto-pay bills after loading all data
@@ -819,6 +827,11 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     };
 
+    const updateInitialBalance = async (amount: number) => {
+        setInitialBalance(amount);
+        await AsyncStorage.setItem('@budgeter_initial_balance', amount.toString());
+    };
+
     const updateUserPin = async (pin: string) => {
         setUserPin(pin);
         await AsyncStorage.setItem('@budgeter_user_pin', pin);
@@ -845,6 +858,25 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             if (t.type === 'expense') return acc - t.amount;
             return acc;
         }, 0);
+    };
+
+    const getAccountBalance = () => {
+        const period = selectedPeriod || currentPeriod;
+        if (!period) return initialBalance + getBalance();
+
+        // Calculate balance up to the end of the selected month
+        const [year, month] = period.month.split('-');
+        const endOfMonth = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59);
+
+        const periodNet = transactions.reduce((acc, t) => {
+            if (new Date(t.date) <= endOfMonth) {
+                if (t.type === 'income') return acc + t.amount;
+                if (t.type === 'expense') return acc - t.amount;
+            }
+            return acc;
+        }, 0);
+
+        return initialBalance + periodNet;
     };
 
     const getCurrentMonthIncome = () => {
@@ -959,6 +991,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 getLastMonthIncomeTransactions,
 
                 getBalance,
+                getAccountBalance,
                 getCurrentMonthIncome,
                 getCurrentMonthExpenses,
                 getSafeToSpend,
@@ -967,6 +1000,9 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 getCurrentMonthTransactions,
 
                 loading,
+
+                initialBalance,
+                updateInitialBalance,
 
                 savingsTransactions,
                 savingsBalance: savingsTransactions.reduce((acc, t) => t.type === 'deposit' ? acc + t.amount : acc - t.amount, 0),
