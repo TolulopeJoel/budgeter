@@ -315,7 +315,7 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
 
                                     <View style={styles.buttonContainer}>
                                         <NeoButton
-                                            title={editingTransaction ? 'Update Transaction' : 'Save Transaction'}
+                                            title={editingTransaction ? 'Update' : 'Save'}
                                             onPress={handleSave}
                                             backgroundColor={theme.tint}
                                         />

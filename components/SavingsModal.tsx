@@ -257,32 +257,34 @@ export default function SavingsModal({
                                     </TouchableOpacity>
                                 )}
 
-                                <NeoButton
-                                    title={editingTransaction ? 'Update Entry' : (type === 'deposit' ? 'Add to Savings' : 'Withdraw from Savings')}
-                                    onPress={handleAddTransaction}
-                                    backgroundColor={theme.tint}
-                                />
+                                <View style={styles.buttons}>
+                                    <NeoButton
+                                        title="Cancel"
+                                        onPress={() => {
+                                            setEditingTransaction(null);
+                                            setAmount('');
+                                            setNote('');
+                                            setView('history');
+                                        }}
+                                        backgroundColor={theme.card}
+                                        style={{ flex: 1 }}
+                                    />
+                                    <NeoButton
+                                        title={editingTransaction ? 'Update' : (type === 'deposit' ? 'Add' : 'Withdraw')}
+                                        onPress={handleAddTransaction}
+                                        backgroundColor={theme.tint}
+                                        style={{ flex: 1 }}
+                                    />
+                                </View>
 
                                 {editingTransaction && (
                                     <TouchableOpacity
-                                        style={[styles.deleteButton, { marginTop: 12 }]}
+                                        style={styles.deleteButton}
                                         onPress={handleDeleteTransaction}
                                     >
                                         <Text style={[styles.deleteButtonText, { color: theme.danger }]}>Delete Entry</Text>
                                     </TouchableOpacity>
                                 )}
-
-                                <TouchableOpacity
-                                    style={[styles.cancelButton, { marginTop: editingTransaction ? 8 : 12 }]}
-                                    onPress={() => {
-                                        setEditingTransaction(null);
-                                        setAmount('');
-                                        setNote('');
-                                        setView('history');
-                                    }}
-                                >
-                                    <Text style={[styles.cancelButtonText, { color: theme.icon }]}>Cancel</Text>
-                                </TouchableOpacity>
                             </View>
                         )}
 
@@ -304,11 +306,20 @@ export default function SavingsModal({
                                     />
                                 </View>
 
-                                <NeoButton
-                                    title="Update Goal"
-                                    onPress={handleUpdateGoal}
-                                    backgroundColor={theme.tint}
-                                />
+                                <View style={styles.buttons}>
+                                    <NeoButton
+                                        title="Cancel"
+                                        onPress={() => setView('history')}
+                                        backgroundColor={theme.card}
+                                        style={{ flex: 1 }}
+                                    />
+                                    <NeoButton
+                                        title="Update Goal"
+                                        onPress={handleUpdateGoal}
+                                        backgroundColor={theme.tint}
+                                        style={{ flex: 1 }}
+                                    />
+                                </View>
                             </View>
                         )}
                     </ScrollView>
@@ -490,13 +501,17 @@ const styles = StyleSheet.create({
     deleteButton: {
         padding: 16,
         alignItems: 'center',
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 59, 48, 0.2)',
+        marginTop: 4,
     },
     deleteButtonText: {
-        fontSize: 15,
+        fontSize: 13,
         fontWeight: '900',
         textTransform: 'uppercase',
+        textDecorationLine: 'underline',
+    },
+    buttons: {
+        flexDirection: 'row',
+        gap: 12,
+        marginTop: 8,
     },
 });
