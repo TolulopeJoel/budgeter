@@ -111,9 +111,45 @@ export default function Dashboard() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 3);
 
-  // Get current month key for bill status checks
+  // Historical check
   const now = new Date();
   const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const isHistorical = selectedPeriod && selectedPeriod.month !== currentMonthKey;
+
+  // Data for historical view
+  const currentMonthTransactions = getCurrentMonthTransactions();
+  const currentIncome = getCurrentMonthIncome();
+  const totalExpenses = getCurrentMonthExpenses();
+
+  const monthlySavingsDeposits = currentMonthTransactions
+    .filter(t => t.type === 'expense' && t.category === 'Savings')
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const coreSpent = totalExpenses - monthlySavingsDeposits;
+  const monthlyUnused = currentIncome - (coreSpent + monthlySavingsDeposits);
+
+  const getOpeningBalance = () => {
+    const period = selectedPeriod || currentPeriod;
+    if (!period) return initialBalance;
+
+    const [year, month] = period.month.split('-');
+    const startOfMonth = new Date(parseInt(year), parseInt(month) - 1, 1);
+
+    const netBefore = transactions.reduce((acc, t) => {
+      if (t.isCarryOver === true) return acc;
+      if (new Date(t.date) < startOfMonth) {
+        const amount = Number(t.amount) || 0;
+        if (t.type === 'income') return acc + amount;
+        if (t.type === 'expense' || t.type === 'debt') return acc - amount;
+      }
+      return acc;
+    }, 0);
+
+    return initialBalance + netBefore;
+  };
+
+  const openingBalance = getOpeningBalance();
+  const closingBalance = getAccountBalance();
 
   const handleExportCSV = async () => {
     try {
@@ -176,101 +212,178 @@ export default function Dashboard() {
           </TouchableOpacity>
         </View>
 
-        {/* Main Card - Account Balance */}
-        <NeoCard backgroundColor={theme.primary} style={styles.mainCard}>
-          <View style={styles.mainCardHeader}>
-            <View>
-              <Text style={styles.mainCardLabel}>Account Balance</Text>
-              <Text style={[styles.mainCardSubLabel, { color: 'rgba(0,0,0,0.5)' }]}>Live Total</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.periodSelector}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setShowPeriodModal(true);
-              }}
-            >
-              <Text style={styles.mainCardMonth}>{getMonthName()}</Text>
-              <Ionicons name="chevron-down" size={12} color="#000" />
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            onPress={() => {
-              // Show current calculated balance as starting point, but user enters target
-              setTempInitialBalance(getAccountBalance().toString());
-              setShowInitialBalanceModal(true);
-            }}
-            disabled={isDashboardPrivacyEnabled}
+        {/* Main Card Section */}
+        {isHistorical ? (
+          <NeoCard
+            backgroundColor="#2C3E50"
+            style={styles.mainCard}
           >
-            <Text style={styles.mainCardAmount}>{formatCurrency(getAccountBalance(), 'dashboard')}</Text>
-          </TouchableOpacity>
-          <View style={styles.mainCardFooter}>
-            <View style={styles.mainCardStat}>
-              <Text style={[styles.statLabel, { color: '#000' }]}>Safe to Spend</Text>
-              <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(safeToSpend, 'dashboard')}</Text>
+            <View style={styles.mainCardHeader}>
+              <View style={styles.historicalBadge}>
+                <Text style={styles.historicalBadgeText}>PAST MONTH</Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.periodSelector, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowPeriodModal(true);
+                }}
+              >
+                <Text style={[styles.mainCardMonth, { color: '#fff' }]}>{getMonthName()}</Text>
+                <Ionicons name="chevron-down" size={12} color="#fff" />
+              </TouchableOpacity>
             </View>
-            <View style={[styles.statDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
+
+            <View style={styles.historicalGridContainer}>
+              <View style={styles.historicalGrid}>
+                {/* Row 1: Balances */}
+                <View style={styles.historicalRow}>
+                  <View style={styles.historicalStatItem}>
+                    <Text style={styles.historicalStatLabel}>Opening</Text>
+                    <Text style={styles.historicalStatValue}>
+                      {formatCurrency(openingBalance, 'dashboard')}
+                    </Text>
+                  </View>
+                  <View style={styles.historicalDivider} />
+                  <View style={styles.historicalStatItem}>
+                    <Text style={styles.historicalStatLabel}>Closing</Text>
+                    <Text style={styles.historicalStatValue}>
+                      {formatCurrency(closingBalance, 'dashboard')}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.historicalRowDivider} />
+
+                {/* Row 2: Performance */}
+                <View style={styles.historicalRow}>
+                  <View style={styles.historicalStatItem}>
+                    <Text style={styles.historicalStatLabel}>Spent</Text>
+                    <Text style={styles.historicalStatValue}>
+                      {formatCurrency(coreSpent, 'dashboard')}
+                    </Text>
+                  </View>
+                  <View style={styles.historicalDivider} />
+                  <View style={styles.historicalStatItem}>
+                    <Text style={styles.historicalStatLabel}>Saved</Text>
+                    <Text style={styles.historicalStatValue}>
+                      {formatCurrency(monthlySavingsDeposits, 'dashboard')}
+                    </Text>
+                  </View>
+                  <View style={styles.historicalDivider} />
+                  <View style={styles.historicalStatItem}>
+                    <Text style={styles.historicalStatLabel}>Unused</Text>
+                    <Text style={[styles.historicalStatValue, { color: monthlyUnused >= 0 ? theme.success : theme.danger }]}>
+                      {formatCurrency(monthlyUnused, 'dashboard')}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </NeoCard>
+        ) : (
+          <NeoCard
+            backgroundColor={theme.primary}
+            style={styles.mainCard}
+          >
+            <View style={styles.mainCardHeader}>
+              <View>
+                <Text style={styles.mainCardLabel}>Account Balance</Text>
+                <Text style={[styles.mainCardSubLabel, { color: 'rgba(0,0,0,0.5)' }]}>Live Total</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.periodSelector}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowPeriodModal(true);
+                }}
+              >
+                <Text style={styles.mainCardMonth}>{getMonthName()}</Text>
+                <Ionicons name="chevron-down" size={12} color="#000" />
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity
-              style={styles.mainCardStat}
+              style={styles.mainCardBody}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                setSecurityAction('manage_savings');
-                setShowSecurityModal(true);
+                setTempInitialBalance(getAccountBalance().toString());
+                setShowInitialBalanceModal(true);
               }}
+              disabled={isDashboardPrivacyEnabled}
             >
-              <Text style={[styles.statLabel, { color: '#000' }]}>Saved</Text>
-              <Text style={[styles.statValue, { color: '#000' }]}>
-                {formatCurrency(savingsBalance, 'dashboard')}
+              <Text style={styles.mainCardAmount}>
+                {formatCurrency(getAccountBalance(), 'dashboard')}
               </Text>
-              {!isDashboardPrivacyEnabled && getRemainingSavingsGoal() > 0 && (
-                <Text style={{ fontSize: 9, color: 'rgba(0,0,0,0.5)', fontWeight: '900', marginTop: 2 }}>
-                  LEFT: {formatCurrency(getRemainingSavingsGoal())}
+            </TouchableOpacity>
+
+            <View style={styles.mainCardFooter}>
+              <View style={styles.mainCardStat}>
+                <Text style={[styles.statLabel, { color: '#000' }]}>Safe to Spend</Text>
+                <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(safeToSpend, 'dashboard')}</Text>
+              </View>
+              <View style={[styles.statDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
+              <TouchableOpacity
+                style={styles.mainCardStat}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setSecurityAction('manage_savings');
+                  setShowSecurityModal(true);
+                }}
+              >
+                <Text style={[styles.statLabel, { color: '#000' }]}>Saved</Text>
+                <Text style={[styles.statValue, { color: '#000' }]}>
+                  {formatCurrency(savingsBalance, 'dashboard')}
                 </Text>
-              )}
-            </TouchableOpacity>
-            <View style={[styles.statDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
-            <View style={styles.mainCardStat}>
-              <Text style={[styles.statLabel, { color: '#000' }]}>Spent</Text>
-              <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(currentSpent, 'dashboard')}</Text>
+                {!isDashboardPrivacyEnabled && getRemainingSavingsGoal() > 0 && (
+                  <Text style={{ fontSize: 9, color: 'rgba(0,0,0,0.5)', fontWeight: '900', marginTop: 2 }}>
+                    LEFT: {formatCurrency(getRemainingSavingsGoal())}
+                  </Text>
+                )}
+              </TouchableOpacity>
+              <View style={[styles.statDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
+              <View style={styles.mainCardStat}>
+                <Text style={[styles.statLabel, { color: '#000' }]}>Spent</Text>
+                <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(totalExpenses, 'dashboard')}</Text>
+              </View>
             </View>
+          </NeoCard>
+        )}
+
+        {/* Quick Actions - Hidden for historical periods */}
+        {!isHistorical && (
+          <View style={styles.quickActions}>
+            <Link href="/budgets" asChild>
+              <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
+                <NeoCard style={styles.actionLink} backgroundColor={theme.success}>
+                  <View style={styles.actionIconContainer}>
+                    <Ionicons name="pie-chart" size={24} color="#000" />
+                  </View>
+                  <Text style={styles.actionText}>Budgets</Text>
+                </NeoCard>
+              </TouchableOpacity>
+            </Link>
+            <Link href="/bills" asChild>
+              <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
+                <NeoCard style={styles.actionLink} backgroundColor={theme.warning}>
+                  <View style={styles.actionIconContainer}>
+                    <Ionicons name="receipt" size={24} color="#000" />
+                  </View>
+                  <Text style={styles.actionText}>Bills</Text>
+                </NeoCard>
+              </TouchableOpacity>
+            </Link>
+            <Link href="/debts" asChild>
+              <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
+                <NeoCard style={styles.actionLink} backgroundColor={theme.primary}>
+                  <View style={styles.actionIconContainer}>
+                    <Ionicons name="cash" size={24} color="#000" />
+                  </View>
+                  <Text style={styles.actionText}>Lent Out</Text>
+                </NeoCard>
+              </TouchableOpacity>
+            </Link>
           </View>
-        </NeoCard>
-
-        {/* Savings Card */}
-
-        {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <Link href="/budgets" asChild>
-            <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
-              <NeoCard style={styles.actionLink} backgroundColor={theme.success}>
-                <View style={styles.actionIconContainer}>
-                  <Ionicons name="pie-chart" size={24} color="#000" />
-                </View>
-                <Text style={styles.actionText}>Budgets</Text>
-              </NeoCard>
-            </TouchableOpacity>
-          </Link>
-          <Link href="/bills" asChild>
-            <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
-              <NeoCard style={styles.actionLink} backgroundColor={theme.warning}>
-                <View style={styles.actionIconContainer}>
-                  <Ionicons name="receipt" size={24} color="#000" />
-                </View>
-                <Text style={styles.actionText}>Bills</Text>
-              </NeoCard>
-            </TouchableOpacity>
-          </Link>
-          <Link href="/debts" asChild>
-            <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
-              <NeoCard style={styles.actionLink} backgroundColor={theme.primary}>
-                <View style={styles.actionIconContainer}>
-                  <Ionicons name="cash" size={24} color="#000" />
-                </View>
-                <Text style={styles.actionText}>Lent Out</Text>
-              </NeoCard>
-            </TouchableOpacity>
-          </Link>
-        </View>
+        )}
 
         {/* Budget Status */}
         {budgets.length > 0 && (
@@ -332,8 +445,9 @@ export default function Dashboard() {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                       setSelectedCategory(budget.category);
                     }}
+                    disabled={!!isHistorical}
                   >
-                    <NeoCard style={styles.budgetItem}>
+                    <NeoCard style={[styles.budgetItem, isHistorical && { backgroundColor: theme.card + '80' }]}>
                       <View style={styles.budgetHeader}>
                         <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
                           <IconSymbol name={getCategoryIcon(budget.category) as any} size={20} color={theme.tint} />
@@ -347,7 +461,7 @@ export default function Dashboard() {
                           </Text>
                         </View>
                         <View style={styles.budgetRight}>
-                          <Text style={[styles.budgetPercentage, { color: budgetColor }]}>
+                          <Text style={[styles.budgetPercentage, { color: isHistorical ? 'rgba(0,0,0,0.4)' : budgetColor }]}>
                             {status.percentage.toFixed(0)}%
                           </Text>
                         </View>
@@ -377,7 +491,7 @@ export default function Dashboard() {
                               <View
                                 style={[
                                   styles.progressBar,
-                                  { width: `${status.percentage}%`, backgroundColor: budgetColor }
+                                  { width: `${status.percentage}%`, backgroundColor: isHistorical ? 'rgba(0,0,0,0.2)' : budgetColor }
                                 ]}
                               />
                             </>
@@ -743,16 +857,18 @@ export default function Dashboard() {
         </Text>
       </InputModal>
 
-      <TouchableOpacity
-        style={[styles.floatingButton, { backgroundColor: theme.tint }]}
-        onPress={() => {
-          setEditingTransaction(null);
-          setShowTransactionModal(true);
-        }}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="add" size={28} color="#fff" />
-      </TouchableOpacity>
+      {!isHistorical && (
+        <TouchableOpacity
+          style={[styles.floatingButton, { backgroundColor: theme.tint }]}
+          onPress={() => {
+            setEditingTransaction(null);
+            setShowTransactionModal(true);
+          }}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="add" size={28} color="#fff" />
+        </TouchableOpacity>
+      )}
       <View style={{ height: insets.bottom }} />
     </>
   );
@@ -806,12 +922,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     padding: 20,
   },
-  mainCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
   periodSelector: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -821,6 +931,28 @@ const styles = StyleSheet.create({
     borderRadius: 0,
     ...SharedStyles.neoBorder,
     gap: 4,
+  },
+  historicalBadge: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  historicalBadgeText: {
+    color: '#fff',
+    fontSize: 8,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  mainCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    minHeight: 40,
+  },
+  mainCardBody: {
+    minHeight: 0,
   },
   mainCardLabel: {
     color: '#000',
@@ -851,6 +983,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: 0,
     padding: 12,
+    marginTop: 8,
     ...SharedStyles.neoBorder,
   },
   mainCardStat: {
@@ -870,6 +1003,47 @@ const styles = StyleSheet.create({
     width: 2,
     height: 24,
     backgroundColor: '#000',
+  },
+  historicalGridContainer: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+    marginTop: 12,
+    paddingTop: 16,
+  },
+  historicalGrid: {
+    gap: 20,
+  },
+  historicalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  historicalStatItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  historicalStatLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.5)',
+    textTransform: 'uppercase',
+    marginBottom: 6,
+    letterSpacing: 0.5,
+  },
+  historicalStatValue: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#fff',
+  },
+  historicalDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  historicalRowDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginHorizontal: -16,
   },
   quickActions: {
     flexDirection: 'row',
