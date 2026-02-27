@@ -83,9 +83,9 @@ export default function Dashboard() {
   };
 
   const formatCurrency = (amount: number, privacyType?: 'dashboard' | 'budgets' | 'history') => {
-    if (privacyType === 'dashboard' && isMainCardPrivacyEnabled) return '₦ •••••';
-    if (privacyType === 'budgets' && isBudgetsPrivacyEnabled) return '₦ •••••';
-    if (privacyType === 'history' && isHistoryPrivacyEnabled) return '₦ •••••';
+    if (privacyType === 'dashboard' && isMainCardPrivacyEnabled) return '₦ █████';
+    if (privacyType === 'budgets' && isBudgetsPrivacyEnabled) return '₦ █████';
+    if (privacyType === 'history' && isHistoryPrivacyEnabled) return '₦ █████';
     return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
@@ -361,8 +361,8 @@ export default function Dashboard() {
         {/* Quick Actions - Hidden for historical periods */}
         {!isHistorical && (
           <View style={styles.quickActions}>
-            <Link href="/budgets" asChild>
-              <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
+            <Link href="/budgets" asChild style={{ flex: 1 }}>
+              <TouchableOpacity style={{ flex: 1 }} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
                 <NeoCard style={styles.actionLink} backgroundColor={theme.success}>
                   <View style={styles.actionIconContainer}>
                     <Ionicons name="pie-chart" size={24} color="#000" />
@@ -371,8 +371,8 @@ export default function Dashboard() {
                 </NeoCard>
               </TouchableOpacity>
             </Link>
-            <Link href="/bills" asChild>
-              <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
+            <Link href="/bills" asChild style={{ flex: 1 }}>
+              <TouchableOpacity style={{ flex: 1 }} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
                 <NeoCard style={styles.actionLink} backgroundColor={theme.warning}>
                   <View style={styles.actionIconContainer}>
                     <Ionicons name="receipt" size={24} color="#000" />
@@ -381,8 +381,8 @@ export default function Dashboard() {
                 </NeoCard>
               </TouchableOpacity>
             </Link>
-            <Link href="/debts" asChild>
-              <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
+            <Link href="/debts" asChild style={{ flex: 1 }}>
+              <TouchableOpacity style={{ flex: 1 }} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
                 <NeoCard style={styles.actionLink} backgroundColor={theme.primary}>
                   <View style={styles.actionIconContainer}>
                     <Ionicons name="cash" size={24} color="#000" />

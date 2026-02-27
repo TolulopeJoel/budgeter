@@ -153,6 +153,47 @@ export const NeoInput = ({
     );
 };
 
+interface NeoSegmentedToggleProps<T extends string> {
+    options: { label: string; value: T; activeColor?: string }[];
+    value: T;
+    onValueChange: (value: T) => void;
+    style?: StyleProp<ViewStyle>;
+}
+
+export function NeoSegmentedToggle<T extends string>({
+    options,
+    value,
+    onValueChange,
+    style
+}: NeoSegmentedToggleProps<T>) {
+    return (
+        <View style={[styles.toggleContainer, style]}>
+            {options.map((option) => {
+                const isActive = option.value === value;
+                return (
+                    <Pressable
+                        key={option.value}
+                        style={styles.toggleButton}
+                        onPress={() => onValueChange(option.value)}
+                    >
+                        {isActive && (
+                            <View
+                                style={[
+                                    styles.activeToggle,
+                                    { backgroundColor: option.activeColor || '#fff' }
+                                ]}
+                            />
+                        )}
+                        <Text style={[styles.toggleText, { color: isActive ? '#000' : 'rgba(255, 255, 255, 0.4)' }]}>
+                            {option.label}
+                        </Text>
+                    </Pressable>
+                );
+            })}
+        </View>
+    );
+}
+
 const styles = StyleSheet.create({
     card: {
         padding: 16,
@@ -193,5 +234,35 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         marginVertical: 8,
+    },
+    toggleContainer: {
+        flexDirection: 'row',
+        height: 49.5,
+        backgroundColor: '#000',
+        alignItems: 'center',
+        marginVertical: 15, // Provide space for the popping element
+        overflow: 'visible',
+    },
+    toggleButton: {
+        flex: 1,
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'visible', // Ensure the background can pop
+    },
+    activeToggle: {
+        position: 'absolute', // Popping from the rail
+        height: 52,
+        width: '100%', // Fills its flex segment
+        ...SharedStyles.neoBorder,
+        ...SharedStyles.neoShadow,
+        zIndex: 10,
+    },
+    toggleText: {
+        fontSize: 13,
+        fontWeight: '900',
+        textTransform: 'uppercase',
+        letterSpacing: .5,
+        zIndex: 20, // Always above the active block
     },
 });

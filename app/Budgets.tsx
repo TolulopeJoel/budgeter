@@ -1,7 +1,7 @@
 import { IconPicker } from '@/components/IconPicker';
 import InputModal from '@/components/InputModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { NeoCard } from '@/components/ui/NeobrutalistComponents';
+import { NeoCard, NeoSegmentedToggle } from '@/components/ui/NeobrutalistComponents';
 import { Colors, SharedStyles } from '@/constants/Colors';
 import { useBudget } from '@/context/BudgetContext';
 import * as Haptics from 'expo-haptics';
@@ -258,30 +258,18 @@ export default function Budgets() {
                 confirmText="Save Budget"
                 disabled={!editAmount}
             >
-                <View style={styles.typeToggleContainer}>
-                    <TouchableOpacity
-                        style={[
-                            styles.typeToggleButton,
-                            editType === 'flexible' && { backgroundColor: theme.tint + '20', borderColor: theme.tint }
-                        ]}
-                        onPress={() => setEditType('flexible')}
-                    >
-                        <Text style={[styles.typeToggleText, { color: editType === 'flexible' ? theme.tint : theme.text }]}>
-                            Flexible
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[
-                            styles.typeToggleButton,
-                            editType === 'fixed' && { backgroundColor: theme.tint + '20', borderColor: theme.tint }
-                        ]}
-                        onPress={() => setEditType('fixed')}
-                    >
-                        <Text style={[styles.typeToggleText, { color: editType === 'fixed' ? theme.tint : theme.text }]}>
-                            Fixed
-                        </Text>
-                    </TouchableOpacity>
-                </View>
+                <NeoSegmentedToggle
+                    options={[
+                        { label: 'Flexible', value: 'flexible', activeColor: theme.primary },
+                        { label: 'Fixed', value: 'fixed', activeColor: theme.primary },
+                    ]}
+                    value={editType}
+                    onValueChange={(val) => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setEditType(val);
+                    }}
+                    style={{ marginBottom: 24 }}
+                />
 
                 <Text style={[styles.helperText, { color: theme.icon }]}>
                     {editType === 'fixed'
@@ -466,7 +454,7 @@ const styles = StyleSheet.create({
     iconButton: {
         width: 32,
         height: 32,
-        borderRadius: 10,
+        borderRadius: 0,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -534,31 +522,13 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         padding: 8,
-        borderWidth: 1,
-        borderRadius: 8,
+        ...SharedStyles.neoBorder,
+        borderRadius: 0,
+        backgroundColor: '#fff',
     },
     typeTag: {
         fontSize: 12,
         fontWeight: '500',
-    },
-    typeToggleContainer: {
-        flexDirection: 'row',
-        gap: 12,
-        marginBottom: 16,
-    },
-    typeToggleButton: {
-        flex: 1,
-        paddingVertical: 10,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: 'transparent',
-        alignItems: 'center',
-        backgroundColor: 'rgba(150, 150, 150, 0.1)',
-    },
-    typeToggleText: {
-        fontSize: 14,
-        fontWeight: '900',
-        textTransform: 'uppercase',
     },
     sketchIconPlaceholder: {
         width: 64,

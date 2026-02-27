@@ -52,7 +52,7 @@ export default function InputModal({
                 <NeoCard style={[styles.content, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
                     {title && <Text style={[styles.title, { color: theme.text }]}>{title}</Text>}
 
-                    <View style={[styles.inputContainer, SharedStyles.neoBorder, { backgroundColor: '#fff', padding: 12 }]}>
+                    <View style={[styles.inputContainer, SharedStyles.neoBorder, SharedStyles.neoShadow, { backgroundColor: '#fff', padding: 12 }]}>
                         {leftElement}
                         {prefix && (
                             <Text style={[styles.prefix, { color: '#000' }]}>{prefix}</Text>

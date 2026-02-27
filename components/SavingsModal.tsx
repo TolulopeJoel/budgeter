@@ -1,4 +1,4 @@
-import { NeoButton, NeoCard } from '@/components/ui/NeobrutalistComponents';
+import { NeoButton, NeoCard, NeoSegmentedToggle } from '@/components/ui/NeobrutalistComponents';
 import { Colors, SharedStyles } from '@/constants/Colors';
 import { SavingsTransaction, Transaction } from '@/context/BudgetContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -128,20 +128,18 @@ export default function SavingsModal({
                     </View>
                 </NeoCard>
 
-                <View style={styles.tabContainer}>
-                    <TouchableOpacity
-                        style={[styles.tab, view === 'history' && { backgroundColor: theme.tint }]}
-                        onPress={() => setView('history')}
-                    >
-                        <Text style={[styles.tabText, { color: view === 'history' ? '#fff' : theme.icon }]}>History</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tab, view === 'add' && { backgroundColor: theme.tint }]}
-                        onPress={() => setView('add')}
-                    >
-                        <Text style={[styles.tabText, { color: view === 'add' ? '#fff' : theme.icon }]}>Add Entry</Text>
-                    </TouchableOpacity>
-                </View>
+                <NeoSegmentedToggle
+                    options={[
+                        { label: 'History', value: 'history', activeColor: theme.tint },
+                        { label: 'Add Entry', value: 'add', activeColor: theme.tint },
+                    ]}
+                    value={view === 'settings' ? 'history' : view as any}
+                    onValueChange={(val) => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setView(val as any);
+                    }}
+                    style={styles.tabContainer}
+                />
 
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -188,36 +186,18 @@ export default function SavingsModal({
 
                         {view === 'add' && (
                             <View>
-                                <View style={styles.typeSelector}>
-                                    <TouchableOpacity
-                                        style={{ flex: 1 }}
-                                        onPress={() => {
-                                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                            setType('deposit');
-                                        }}
-                                    >
-                                        <NeoCard
-                                            style={styles.typeButton}
-                                            backgroundColor={type === 'deposit' ? theme.success : '#fff'}
-                                        >
-                                            <Text style={[styles.typeText, { color: '#000' }]}>Deposit</Text>
-                                        </NeoCard>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={{ flex: 1 }}
-                                        onPress={() => {
-                                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                            setType('withdrawal');
-                                        }}
-                                    >
-                                        <NeoCard
-                                            style={styles.typeButton}
-                                            backgroundColor={type === 'withdrawal' ? theme.danger : '#fff'}
-                                        >
-                                            <Text style={[styles.typeText, { color: '#000' }]}>Withdraw</Text>
-                                        </NeoCard>
-                                    </TouchableOpacity>
-                                </View>
+                                <NeoSegmentedToggle
+                                    options={[
+                                        { label: 'Deposit', value: 'deposit', activeColor: theme.success },
+                                        { label: 'Withdraw', value: 'withdrawal', activeColor: theme.danger },
+                                    ]}
+                                    value={type}
+                                    onValueChange={(val) => {
+                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                        setType(val);
+                                    }}
+                                    style={styles.typeSelector}
+                                />
 
                                 <View style={styles.inputGroup}>
                                     <Text style={[styles.label, { color: theme.text }]}>Amount</Text>
@@ -383,21 +363,8 @@ const styles = StyleSheet.create({
         padding: 4,
     },
     tabContainer: {
-        flexDirection: 'row',
-        paddingHorizontal: 20,
+        marginHorizontal: 20,
         marginBottom: 20,
-        gap: 8,
-    },
-    tab: {
-        flex: 1,
-        padding: 12,
-        alignItems: 'center',
-        ...SharedStyles.neoBorder,
-    },
-    tabText: {
-        fontSize: 16,
-        fontWeight: '900',
-        textTransform: 'uppercase',
     },
     content: {
         flex: 1,
@@ -428,18 +395,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     typeSelector: {
-        flexDirection: 'row',
         marginBottom: 24,
-        gap: 8,
-    },
-    typeButton: {
-        paddingVertical: 12,
-        alignItems: 'center',
-    },
-    typeText: {
-        fontSize: 14,
-        fontWeight: '900',
-        textTransform: 'uppercase',
     },
     inputGroup: {
         marginBottom: 24,
