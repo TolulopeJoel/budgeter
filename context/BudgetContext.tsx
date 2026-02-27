@@ -131,14 +131,44 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         { name: 'Debt', icon: 'creditcard.fill' },
         { name: 'Others', icon: 'ellipsis.circle.fill' }
     ]);
+    const [budgetsByMonth, setBudgetsByMonth] = useState<Record<string, Budget[]>>({});
     const [budgets, setBudgets] = useState<Budget[]>([]);
+    const [recurringBillsByMonth, setRecurringBillsByMonth] = useState<Record<string, RecurringBill[]>>({});
     const [recurringBills, setRecurringBills] = useState<RecurringBill[]>([]);
     const [currentPeriod, setCurrentPeriod] = useState<MonthlyPeriod | null>(null);
     const [selectedPeriod, setSelectedPeriod] = useState<MonthlyPeriod | null>(null);
     const [savingsTransactions, setSavingsTransactions] = useState<SavingsTransaction[]>([]);
+    const [savingsGoalsByMonth, setSavingsGoalsByMonth] = useState<Record<string, number>>({});
     const [monthlySavingsGoal, setMonthlySavingsGoal] = useState(0);
     const [userPin, setUserPin] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // Sync state when selectedPeriod changes
+    useEffect(() => {
+        const period = selectedPeriod || currentPeriod;
+        if (!period) return;
+
+        // Sync budgets
+        if (budgetsByMonth[period.month]) {
+            setBudgets(budgetsByMonth[period.month]);
+        } else {
+            setBudgets([]);
+        }
+
+        // Sync savings goal
+        if (savingsGoalsByMonth[period.month] !== undefined) {
+            setMonthlySavingsGoal(savingsGoalsByMonth[period.month]);
+        } else {
+            setMonthlySavingsGoal(0);
+        }
+
+        // Sync recurring bills
+        if (recurringBillsByMonth[period.month]) {
+            setRecurringBills(recurringBillsByMonth[period.month]);
+        } else {
+            setRecurringBills([]);
+        }
+    }, [selectedPeriod, currentPeriod, budgetsByMonth, savingsGoalsByMonth, recurringBillsByMonth]);
 
     useEffect(() => {
         loadData();
@@ -150,19 +180,25 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 storedTransactions,
                 storedCategories,
                 storedBudgets,
+                storedBudgetsByMonth,
                 storedBills,
+                storedBillsByMonth,
                 storedPeriod,
                 storedSavingsTransactions,
                 storedMonthlySavingsGoal,
+                storedSavingsGoalsByMonth,
                 storedUserPin
             ] = await Promise.all([
                 AsyncStorage.getItem('@budgeter_transactions'),
                 AsyncStorage.getItem('@budgeter_categories'),
                 AsyncStorage.getItem('@budgeter_budgets'),
+                AsyncStorage.getItem('@budgeter_budgets_by_month'),
                 AsyncStorage.getItem('@budgeter_recurring_bills'),
+                AsyncStorage.getItem('@budgeter_recurring_bills_by_month'),
                 AsyncStorage.getItem('@budgeter_current_period'),
                 AsyncStorage.getItem('@budgeter_savings_transactions'),
                 AsyncStorage.getItem('@budgeter_monthly_savings_goal'),
+                AsyncStorage.getItem('@budgeter_savings_goals_by_month'),
                 AsyncStorage.getItem('@budgeter_user_pin'),
             ]);
 
@@ -172,29 +208,51 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 setCategories(parsed);
             }
             if (storedBudgets) setBudgets(JSON.parse(storedBudgets));
+            if (storedBudgetsByMonth) setBudgetsByMonth(JSON.parse(storedBudgetsByMonth));
             if (storedBills) setRecurringBills(JSON.parse(storedBills));
+            if (storedBillsByMonth) setRecurringBillsByMonth(JSON.parse(storedBillsByMonth));
+
+            let activePeriod: MonthlyPeriod | null = null;
             if (storedPeriod) {
-                const parsedPeriod = JSON.parse(storedPeriod);
-                setCurrentPeriod(parsedPeriod);
-                setSelectedPeriod(parsedPeriod);
+                activePeriod = JSON.parse(storedPeriod);
+                setCurrentPeriod(activePeriod);
+                setSelectedPeriod(activePeriod);
             }
             else {
                 // Initialize first period
                 const now = new Date();
                 const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-                const initialPeriod: MonthlyPeriod = {
+                activePeriod = {
                     month: monthKey,
                     startDate: now.toISOString(),
                     confirmed: false,
                 };
-                setCurrentPeriod(initialPeriod);
-                await AsyncStorage.setItem('@budgeter_current_period', JSON.stringify(initialPeriod));
+                setCurrentPeriod(activePeriod);
+                await AsyncStorage.setItem('@budgeter_current_period', JSON.stringify(activePeriod));
             }
 
             if (storedSavingsTransactions) setSavingsTransactions(JSON.parse(storedSavingsTransactions));
             if (storedMonthlySavingsGoal) {
                 const parsedGoal = Number(storedMonthlySavingsGoal);
                 setMonthlySavingsGoal(isNaN(parsedGoal) ? 0 : parsedGoal);
+            }
+            if (storedSavingsGoalsByMonth) setSavingsGoalsByMonth(JSON.parse(storedSavingsGoalsByMonth));
+
+            // Sync budgets, savings goal, and bills for the loaded period
+            if (activePeriod) {
+                const month = activePeriod.month;
+                if (storedBudgetsByMonth) {
+                    const bbm = JSON.parse(storedBudgetsByMonth);
+                    if (bbm[month]) setBudgets(bbm[month]);
+                }
+                if (storedSavingsGoalsByMonth) {
+                    const sgbm = JSON.parse(storedSavingsGoalsByMonth);
+                    if (sgbm[month] !== undefined) setMonthlySavingsGoal(sgbm[month]);
+                }
+                if (storedBillsByMonth) {
+                    const rbbm = JSON.parse(storedBillsByMonth);
+                    if (rbbm[month]) setRecurringBills(rbbm[month]);
+                }
             }
             if (storedUserPin) setUserPin(storedUserPin);
 
@@ -222,11 +280,29 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const saveBudgets = async (newBudgets: Budget[]) => {
+        setBudgets(newBudgets);
         await AsyncStorage.setItem('@budgeter_budgets', JSON.stringify(newBudgets));
+
+        // Also update current period in budgetsByMonth
+        const period = selectedPeriod || currentPeriod;
+        if (period) {
+            const updatedBBM = { ...budgetsByMonth, [period.month]: newBudgets };
+            setBudgetsByMonth(updatedBBM);
+            await AsyncStorage.setItem('@budgeter_budgets_by_month', JSON.stringify(updatedBBM));
+        }
     };
 
     const saveBills = async (newBills: RecurringBill[]) => {
+        setRecurringBills(newBills);
         await AsyncStorage.setItem('@budgeter_recurring_bills', JSON.stringify(newBills));
+
+        // Also update current period in recurringBillsByMonth
+        const period = selectedPeriod || currentPeriod;
+        if (period) {
+            const updatedRBBM = { ...recurringBillsByMonth, [period.month]: newBills };
+            setRecurringBillsByMonth(updatedRBBM);
+            await AsyncStorage.setItem('@budgeter_recurring_bills_by_month', JSON.stringify(updatedRBBM));
+        }
     };
 
     const savePeriod = async (period: MonthlyPeriod) => {
@@ -537,6 +613,19 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             confirmed: true,
         };
 
+        // Snapshot current budgets, savings goal, and bills to the new month
+        const updatedBBM = { ...budgetsByMonth, [monthKey]: budgets };
+        const updatedSGBM = { ...savingsGoalsByMonth, [monthKey]: monthlySavingsGoal };
+        const updatedRBBM = { ...recurringBillsByMonth, [monthKey]: recurringBills };
+
+        setBudgetsByMonth(updatedBBM);
+        setSavingsGoalsByMonth(updatedSGBM);
+        setRecurringBillsByMonth(updatedRBBM);
+
+        await AsyncStorage.setItem('@budgeter_budgets_by_month', JSON.stringify(updatedBBM));
+        await AsyncStorage.setItem('@budgeter_savings_goals_by_month', JSON.stringify(updatedSGBM));
+        await AsyncStorage.setItem('@budgeter_recurring_bills_by_month', JSON.stringify(updatedRBBM));
+
         setCurrentPeriod(newPeriod);
         setSelectedPeriod(newPeriod);
         await savePeriod(newPeriod);
@@ -720,6 +809,14 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const updateMonthlySavingsGoal = async (amount: number) => {
         setMonthlySavingsGoal(amount);
         await AsyncStorage.setItem('@budgeter_monthly_savings_goal', amount.toString());
+
+        // Also update current period in savingsGoalsByMonth
+        const period = selectedPeriod || currentPeriod;
+        if (period) {
+            const updatedSGBM = { ...savingsGoalsByMonth, [period.month]: amount };
+            setSavingsGoalsByMonth(updatedSGBM);
+            await AsyncStorage.setItem('@budgeter_savings_goals_by_month', JSON.stringify(updatedSGBM));
+        }
     };
 
     const updateUserPin = async (pin: string) => {
@@ -893,5 +990,4 @@ export const useBudget = () => {
     if (!context) {
         throw new Error('useBudget must be used within a BudgetProvider');
     }
-    return context;
 };
