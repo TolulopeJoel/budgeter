@@ -200,6 +200,7 @@ export default function Dashboard() {
               setTempInitialBalance(getAccountBalance().toString());
               setShowInitialBalanceModal(true);
             }}
+            disabled={isDashboardPrivacyEnabled}
           >
             <Text style={styles.mainCardAmount}>{formatCurrency(getAccountBalance(), 'dashboard')}</Text>
           </TouchableOpacity>
