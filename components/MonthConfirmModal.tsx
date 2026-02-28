@@ -132,15 +132,22 @@ export default function MonthConfirmModal() {
                                             }}
                                             style={[
                                                 styles.checkAllBtn,
-                                                { backgroundColor: theme.tint + '15' }
+                                                SharedStyles.neoBorder,
+                                                {
+                                                    backgroundColor: selectedIds.size === lastMonthIncome.length
+                                                        ? theme.tint
+                                                        : theme.card
+                                                }
                                             ]}
                                         >
                                             <Ionicons
-                                                name={selectedIds.size === lastMonthIncome.length ? "checkmark-circle" : "ellipse-outline"}
-                                                size={16}
-                                                color={theme.tint}
+                                                name={selectedIds.size === lastMonthIncome.length ? "checkmark" : "add"}
+                                                size={14}
+                                                color={selectedIds.size === lastMonthIncome.length ? '#000' : theme.tint}
                                             />
-                                            <Text style={[styles.checkAllText, { color: theme.tint }]}>
+                                            <Text style={[styles.checkAllText, {
+                                                color: selectedIds.size === lastMonthIncome.length ? '#000' : theme.tint
+                                            }]}>
                                                 {selectedIds.size === lastMonthIncome.length ? "Deselect All" : "Select All"}
                                             </Text>
                                         </TouchableOpacity>
@@ -310,13 +317,19 @@ const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 10,
         paddingVertical: 6,
-        borderRadius: 20,
+        borderRadius: 0,
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 3,
     },
     checkAllText: {
         fontSize: 11,
         fontWeight: '900',
         marginLeft: 4,
         textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     incomeItem: {
         flexDirection: 'row',
