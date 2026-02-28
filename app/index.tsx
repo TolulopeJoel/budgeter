@@ -392,153 +392,195 @@ export default function Dashboard() {
         )}
 
         {/* Budget Status */}
-        {budgets.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <TouchableOpacity
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  toggleBudgetsPrivacy();
-                }}
-              >
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>Budget Status</Text>
-              </TouchableOpacity>
-            </View>
+        {(() => {
+          const currentMonthTxs = getCurrentMonthTransactions();
+          const categoriesWithSpending = Array.from(new Set(
+            currentMonthTxs
+              .filter(t => t.type === 'expense')
+              .map(t => t.category)
+          ));
 
-            {budgets
-              .map(b => {
-                const status = getBudgetStatus(b.category);
-                const categoryBills = recurringBills.filter(bill => bill.category === b.category);
-                const unpaidBills = categoryBills.filter(bill => !isBillPaid(bill.id, currentMonthKey));
-                const totalUnpaidBills = unpaidBills.reduce((sum, bill) => sum + bill.amount, 0);
-                const projectedTotal = status.spent + totalUnpaidBills;
+          const budgetedCategories = budgets.map(b => b.category);
+          const unbudgetedWithSpending = categoriesWithSpending.filter(cat => !budgetedCategories.includes(cat));
 
-                return {
-                  ...b,
-                  status,
-                  projectedTotal
-                };
-              })
-              .sort((a, b) => {
-                const aUrgent = a.status.percentage >= 50;
-                const bUrgent = b.status.percentage >= 50;
+          const allBudgetItems = [
+            ...budgets.map(b => {
+              const status = getBudgetStatus(b.category);
+              const categoryBills = recurringBills.filter(bill => bill.category === b.category);
+              const unpaidBills = categoryBills.filter(bill => !isBillPaid(bill.id, currentMonthKey));
+              const totalUnpaidBills = unpaidBills.reduce((sum, bill) => sum + bill.amount, 0);
+              const projectedTotal = status.spent + totalUnpaidBills;
+              return { ...b, status, projectedTotal, isUnbudgeted: false };
+            }),
+            ...unbudgetedWithSpending.map(cat => {
+              const spent = currentMonthTxs
+                .filter(t => t.type === 'expense' && t.category === cat)
+                .reduce((sum, t) => sum + t.amount, 0);
+              return {
+                category: cat,
+                limit: 0,
+                type: 'flexible' as const,
+                status: { spent, limit: 0, percentage: 0, type: 'flexible' as const },
+                projectedTotal: spent,
+                isUnbudgeted: true
+              };
+            })
+          ];
 
-                // 1. Urgent categories come first
-                if (aUrgent && !bUrgent) return -1;
-                if (!aUrgent && bUrgent) return 1;
+          if (allBudgetItems.length === 0) return null;
 
-                // 2. If both are Urgent (>50%), sort by Projected Total (Highest Bills/Spend first)
-                if (aUrgent && bUrgent) {
+          return (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <TouchableOpacity
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    toggleBudgetsPrivacy();
+                  }}
+                >
+                  <Text style={[styles.sectionTitle, { color: theme.text }]}>Budget Status</Text>
+                </TouchableOpacity>
+              </View>
+
+              {allBudgetItems
+                .sort((a, b) => {
+                  // 0. Unbudgeted always go to bottom
+                  if (a.isUnbudgeted && !b.isUnbudgeted) return 1;
+                  if (!a.isUnbudgeted && b.isUnbudgeted) return -1;
+
+                  if (a.isUnbudgeted && b.isUnbudgeted) {
+                    return b.status.spent - a.status.spent;
+                  }
+
+                  // Sorting for budgeted items
+                  const aUrgent = a.status.percentage >= 50;
+                  const bUrgent = b.status.percentage >= 50;
+
+                  if (aUrgent && !bUrgent) return -1;
+                  if (!aUrgent && bUrgent) return 1;
+
+                  if (aUrgent && bUrgent) {
+                    return b.projectedTotal - a.projectedTotal;
+                  }
+
+                  const percentDiff = b.status.percentage - a.status.percentage;
+                  if (percentDiff !== 0) return percentDiff;
+
                   return b.projectedTotal - a.projectedTotal;
-                }
+                })
+                .map((item) => {
+                  const { status, isUnbudgeted } = item;
+                  const budgetColor = isUnbudgeted ? theme.icon + '40' : getBudgetColor(status.percentage);
 
-                // 3. If both are Safe (<50%), sort by Percentage (Highest % first)
-                // This ensures that a category with 40% spent comes before one with 10% spent (even if 10% has huge bills)
-                const percentDiff = b.status.percentage - a.status.percentage;
-                if (percentDiff !== 0) return percentDiff;
-
-                // 4. Tie-breaker for Safe categories: Projected Total
-                return b.projectedTotal - a.projectedTotal;
-              })
-              .map((budget) => {
-                const { status } = budget;
-                const budgetColor = getBudgetColor(status.percentage);
-
-                return (
-                  <TouchableOpacity
-                    key={budget.category}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setSelectedCategory(budget.category);
-                    }}
-                    disabled={!!isHistorical}
-                  >
-                    <NeoCard style={[styles.budgetItem, isHistorical && { backgroundColor: theme.card + '80' }]}>
-                      <View style={styles.budgetHeader}>
-                        <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
-                          <IconSymbol name={getCategoryIcon(budget.category) as any} size={20} color={theme.tint} />
+                  return (
+                    <TouchableOpacity
+                      key={item.category}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setSelectedCategory(item.category);
+                      }}
+                      disabled={!!isHistorical}
+                    >
+                      {isUnbudgeted ? (
+                        // Permanently use Minimalist List for Unbudgeted
+                        <View style={styles.minimalistEntry}>
+                          <View style={[styles.minimalistIcon, { backgroundColor: theme.icon + '10' }]}>
+                            <IconSymbol name={getCategoryIcon(item.category) as any} size={18} color={theme.icon} />
+                          </View>
+                          <Text style={styles.minimalistName}>{item.category}</Text>
+                          <Text style={styles.minimalistAmount}>{formatCurrency(status.spent, 'budgets')}</Text>
                         </View>
-                        <View style={styles.budgetInfo}>
-                          <Text style={[styles.budgetCategory, { color: theme.text }]}>
-                            {budget.category}
-                          </Text>
-                          <Text style={[styles.budgetAmount, { color: theme.icon }]}>
-                            {formatCurrency(status.spent, 'budgets')} of {formatCurrency(status.limit, 'budgets')}
-                          </Text>
-                        </View>
-                        <View style={styles.budgetRight}>
-                          <Text style={[styles.budgetPercentage, { color: isHistorical ? 'rgba(0,0,0,0.4)' : budgetColor }]}>
-                            {status.percentage.toFixed(0)}%
-                          </Text>
-                        </View>
-                      </View>
-                      <View style={styles.progressBarContainer}>
-                        {(() => {
-                          // Calculate what spending would be if unpaid bills were paid
-                          const categoryBills = recurringBills.filter(b => b.category === budget.category);
-                          const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
-                          const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
-                          const projectedSpent = status.spent + totalUnpaidBills;
-                          const projectedPercentage = Math.min((projectedSpent / status.limit) * 100, 100);
-
-                          return (
-                            <>
-                              {/* Projected spending bar (if bills were paid) */}
-                              {totalUnpaidBills > 0 && (
-                                <View
-                                  style={[
-                                    styles.progressBar,
-                                    styles.projectedProgressBar,
-                                    { width: `${projectedPercentage}%`, backgroundColor: budgetColor + '40' }
-                                  ]}
-                                />
-                              )}
-                              {/* Current actual spending bar */}
-                              <View
-                                style={[
-                                  styles.progressBar,
-                                  { width: `${status.percentage}%`, backgroundColor: isHistorical ? 'rgba(0,0,0,0.2)' : budgetColor }
-                                ]}
-                              />
-                            </>
-                          );
-                        })()}
-                      </View>
-
-                      {/* Bills Breakdown */}
-                      {(() => {
-                        const categoryBills = recurringBills.filter(b => b.category === budget.category);
-                        const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
-
-                        if (unpaidBills.length === 0) return null;
-
-                        const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
-
-                        return (
-                          <View style={[styles.billsBreakdown, { borderTopColor: theme.border }]}>
-                            <View style={styles.billsHeader}>
-                              <Text style={[styles.billsTitle, { color: theme.icon }]}>Unpaid bills:</Text>
-                              <Text style={[styles.billsTotal, { color: theme.danger + '80' }]}>
-                                {formatCurrency(totalUnpaidBills)}
+                      ) : (
+                        // Standard Card for Budgeted
+                        <NeoCard style={[
+                          styles.budgetItem,
+                          isHistorical && { backgroundColor: theme.card + '80' }
+                        ]}>
+                          <View style={styles.budgetHeader}>
+                            <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
+                              <IconSymbol name={getCategoryIcon(item.category) as any} size={20} color={theme.tint} />
+                            </View>
+                            <View style={styles.budgetInfo}>
+                              <Text style={[styles.budgetCategory, { color: theme.text }]}>
+                                {item.category}
+                              </Text>
+                              <Text style={[styles.budgetAmount, { color: theme.icon }]}>
+                                {formatCurrency(status.spent, 'budgets')} of {formatCurrency(status.limit, 'budgets')}
                               </Text>
                             </View>
-                            {unpaidBills.map(bill => (
-                              <View key={bill.id} style={styles.billRow}>
-                                <Text style={[styles.billName, { color: theme.text }]}>• {bill.name}</Text>
-                                <Text style={[styles.billAmount, { color: theme.icon }]}>
-                                  {formatCurrency(bill.amount)}
-                                </Text>
-                              </View>
-                            ))}
+                            <View style={styles.budgetRight}>
+                              <Text style={[styles.budgetPercentage, { color: isHistorical ? 'rgba(0,0,0,0.4)' : budgetColor }]}>
+                                {status.percentage.toFixed(0)}%
+                              </Text>
+                            </View>
                           </View>
-                        );
-                      })()}
-                    </NeoCard>
-                  </TouchableOpacity>
-                );
-              })}
-          </View>
-        )}
+
+                          <View style={styles.progressBarContainer}>
+                            {(() => {
+                              const categoryBills = recurringBills.filter(b => b.category === item.category);
+                              const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
+                              const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
+                              const projectedSpent = status.spent + totalUnpaidBills;
+                              const projectedPercentage = Math.min((projectedSpent / status.limit) * 100, 100);
+
+                              return (
+                                <>
+                                  {totalUnpaidBills > 0 && (
+                                    <View
+                                      style={[
+                                        styles.progressBar,
+                                        styles.projectedProgressBar,
+                                        { width: `${projectedPercentage}%`, backgroundColor: budgetColor + '40' }
+                                      ]}
+                                    />
+                                  )}
+                                  <View
+                                    style={[
+                                      styles.progressBar,
+                                      { width: `${status.percentage}%`, backgroundColor: isHistorical ? 'rgba(0,0,0,0.2)' : budgetColor }
+                                    ]}
+                                  />
+                                </>
+                              );
+                            })()}
+                          </View>
+
+                          {/* Bills Breakdown */}
+                          {(() => {
+                            const categoryBills = recurringBills.filter(b => b.category === item.category);
+                            const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
+
+                            if (unpaidBills.length === 0) return null;
+
+                            const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
+
+                            return (
+                              <View style={[styles.billsBreakdown, { borderTopColor: theme.border }]}>
+                                <View style={styles.billsHeader}>
+                                  <Text style={[styles.billsTitle, { color: theme.icon }]}>Unpaid bills:</Text>
+                                  <Text style={[styles.billsTotal, { color: theme.danger + '80' }]}>
+                                    {formatCurrency(totalUnpaidBills, 'history')}
+                                  </Text>
+                                </View>
+                                {unpaidBills.map(bill => (
+                                  <View key={bill.id} style={styles.billRow}>
+                                    <Text style={[styles.billName, { color: theme.text }]}>• {bill.name}</Text>
+                                    <Text style={[styles.billAmount, { color: theme.icon }]}>
+                                      {formatCurrency(bill.amount, 'history')}
+                                    </Text>
+                                  </View>
+                                ))}
+                              </View>
+                            );
+                          })()}
+                        </NeoCard>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+            </View>
+          );
+        })()}
 
         {/* Recent Transactions */}
         <View style={styles.section}>
@@ -1154,6 +1196,45 @@ const styles = StyleSheet.create({
   budgetPercentage: {
     fontSize: 16,
     fontWeight: '900',
+  },
+  unbudgetedBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: '#000',
+  },
+  unbudgetedBadgeText: {
+    color: '#fff',
+    fontSize: 8,
+    fontWeight: '900',
+  },
+  minimalistEntry: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+    marginHorizontal: 4,
+  },
+  minimalistIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  minimalistName: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#000',
+    textTransform: 'uppercase',
+  },
+  minimalistAmount: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: 'rgba(0,0,0,0.5)',
   },
   transactionItem: {
     flexDirection: 'row',
