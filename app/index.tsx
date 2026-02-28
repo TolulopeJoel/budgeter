@@ -48,6 +48,12 @@ export default function Dashboard() {
     updateInitialBalance,
     reconcileBalance,
     getAccountBalance,
+    isMainCardPrivacyEnabled,
+    isBudgetsPrivacyEnabled,
+    isHistoryPrivacyEnabled,
+    toggleMainCardPrivacy,
+    toggleBudgetsPrivacy,
+    toggleHistoryPrivacy,
   } = useBudget();
 
   const insets = useSafeAreaInsets();
@@ -61,12 +67,9 @@ export default function Dashboard() {
   const [showSavingsModal, setShowSavingsModal] = useState(false);
   const [showSecurityModal, setShowSecurityModal] = useState(false);
   const [showPeriodModal, setShowPeriodModal] = useState(false);
-  const [_, setSecurityAction] = useState<'reveal_balance' | 'manage_savings'>('manage_savings');
   const [showInitialBalanceModal, setShowInitialBalanceModal] = useState(false);
+  const [_, setSecurityAction] = useState<'reveal_balance' | 'manage_savings'>('manage_savings');
   const [tempInitialBalance, setTempInitialBalance] = useState('');
-  const [isMainCardPrivacyEnabled, setIsMainCardPrivacyEnabled] = useState(false);
-  const [isBudgetsPrivacyEnabled, setIsBudgetsPrivacyEnabled] = useState(false);
-  const [isHistoryPrivacyEnabled, setIsHistoryPrivacyEnabled] = useState(false);
 
   // Real calculations from context
   const safeToSpend = getSafeToSpend();
@@ -209,7 +212,7 @@ export default function Dashboard() {
               <TouchableOpacity
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  setIsMainCardPrivacyEnabled(!isMainCardPrivacyEnabled);
+                  toggleMainCardPrivacy();
                 }}
                 activeOpacity={0.7}
               >
@@ -285,7 +288,7 @@ export default function Dashboard() {
               <TouchableOpacity
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  setIsMainCardPrivacyEnabled(!isMainCardPrivacyEnabled);
+                  toggleMainCardPrivacy();
                 }}
                 activeOpacity={0.7}
               >
@@ -395,7 +398,7 @@ export default function Dashboard() {
               <TouchableOpacity
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  setIsBudgetsPrivacyEnabled(!isBudgetsPrivacyEnabled);
+                  toggleBudgetsPrivacy();
                 }}
               >
                 <Text style={[styles.sectionTitle, { color: theme.text }]}>Budget Status</Text>
@@ -543,7 +546,7 @@ export default function Dashboard() {
             <TouchableOpacity
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                setIsHistoryPrivacyEnabled(!isHistoryPrivacyEnabled);
+                toggleHistoryPrivacy();
               }}
             >
               <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Activity</Text>

@@ -117,6 +117,14 @@ export interface BudgetContextType {
     userPin: string | null;
     updateUserPin: (pin: string) => Promise<void>;
 
+    // Privacy
+    isMainCardPrivacyEnabled: boolean;
+    isBudgetsPrivacyEnabled: boolean;
+    isHistoryPrivacyEnabled: boolean;
+    toggleMainCardPrivacy: () => Promise<void>;
+    toggleBudgetsPrivacy: () => Promise<void>;
+    toggleHistoryPrivacy: () => Promise<void>;
+
     loading: boolean;
 }
 
@@ -145,6 +153,9 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [monthlySavingsGoal, setMonthlySavingsGoal] = useState(0);
     const [initialBalance, setInitialBalance] = useState(0);
     const [userPin, setUserPin] = useState<string | null>(null);
+    const [isMainCardPrivacyEnabled, setIsMainCardPrivacyEnabled] = useState(false);
+    const [isBudgetsPrivacyEnabled, setIsBudgetsPrivacyEnabled] = useState(false);
+    const [isHistoryPrivacyEnabled, setIsHistoryPrivacyEnabled] = useState(false);
     const [loading, setLoading] = useState(true);
 
     // Sync state when selectedPeriod changes
@@ -192,7 +203,10 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 storedMonthlySavingsGoal,
                 storedSavingsGoalsByMonth,
                 storedInitialBalance,
-                storedUserPin
+                storedUserPin,
+                storedPrivacyMain,
+                storedPrivacyBudgets,
+                storedPrivacyHistory
             ] = await Promise.all([
                 AsyncStorage.getItem('@budgeter_transactions'),
                 AsyncStorage.getItem('@budgeter_categories'),
@@ -206,6 +220,9 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 AsyncStorage.getItem('@budgeter_savings_goals_by_month'),
                 AsyncStorage.getItem('@budgeter_initial_balance'),
                 AsyncStorage.getItem('@budgeter_user_pin'),
+                AsyncStorage.getItem('@budgeter_privacy_main'),
+                AsyncStorage.getItem('@budgeter_privacy_budgets'),
+                AsyncStorage.getItem('@budgeter_privacy_history'),
             ]);
 
             if (storedTransactions) setTransactions(JSON.parse(storedTransactions));
@@ -263,6 +280,9 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
             if (storedInitialBalance) setInitialBalance(Number(storedInitialBalance) || 0);
             if (storedUserPin) setUserPin(storedUserPin);
+            if (storedPrivacyMain) setIsMainCardPrivacyEnabled(storedPrivacyMain === 'true');
+            if (storedPrivacyBudgets) setIsBudgetsPrivacyEnabled(storedPrivacyBudgets === 'true');
+            if (storedPrivacyHistory) setIsHistoryPrivacyEnabled(storedPrivacyHistory === 'true');
 
             // Check for auto-pay bills after loading all data
             if (storedTransactions && storedBills) {
@@ -848,6 +868,24 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         await AsyncStorage.setItem('@budgeter_user_pin', pin);
     };
 
+    const toggleMainCardPrivacy = async () => {
+        const newValue = !isMainCardPrivacyEnabled;
+        setIsMainCardPrivacyEnabled(newValue);
+        await AsyncStorage.setItem('@budgeter_privacy_main', newValue.toString());
+    };
+
+    const toggleBudgetsPrivacy = async () => {
+        const newValue = !isBudgetsPrivacyEnabled;
+        setIsBudgetsPrivacyEnabled(newValue);
+        await AsyncStorage.setItem('@budgeter_privacy_budgets', newValue.toString());
+    };
+
+    const toggleHistoryPrivacy = async () => {
+        const newValue = !isHistoryPrivacyEnabled;
+        setIsHistoryPrivacyEnabled(newValue);
+        await AsyncStorage.setItem('@budgeter_privacy_history', newValue.toString());
+    };
+
     // Helper: Get current month transactions
     const getCurrentMonthTransactions = () => {
         const period = selectedPeriod || currentPeriod;
@@ -1030,6 +1068,13 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
                 userPin,
                 updateUserPin,
+
+                isMainCardPrivacyEnabled,
+                isBudgetsPrivacyEnabled,
+                isHistoryPrivacyEnabled,
+                toggleMainCardPrivacy,
+                toggleBudgetsPrivacy,
+                toggleHistoryPrivacy,
             }}
         >
             {children}
