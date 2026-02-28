@@ -13,7 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { Link } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Dashboard() {
@@ -70,6 +70,8 @@ export default function Dashboard() {
   const [showInitialBalanceModal, setShowInitialBalanceModal] = useState(false);
   const [_, setSecurityAction] = useState<'reveal_balance' | 'manage_savings'>('manage_savings');
   const [tempInitialBalance, setTempInitialBalance] = useState('');
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyCategoryFilter, setHistoryCategoryFilter] = useState<string | null>(null);
 
   // Real calculations from context
   const safeToSpend = getSafeToSpend();
@@ -112,6 +114,33 @@ export default function Dashboard() {
   const recentTransactions = getCurrentMonthTransactions()
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 3);
+
+  // Group transactions by date label
+  const groupTransactionsByDate = (txns: typeof transactions) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const groups: { label: string; data: typeof transactions }[] = [];
+    const seen: Record<string, number> = {};
+
+    for (const t of txns) {
+      const d = new Date(t.date);
+      d.setHours(0, 0, 0, 0);
+      let label: string;
+      if (d.getTime() === today.getTime()) label = 'Today';
+      else if (d.getTime() === yesterday.getTime()) label = 'Yesterday';
+      else label = d.toLocaleDateString('en-NG', { weekday: 'long', month: 'short', day: 'numeric' });
+
+      if (seen[label] === undefined) {
+        seen[label] = groups.length;
+        groups.push({ label, data: [] });
+      }
+      groups[seen[label]].data.push(t);
+    }
+    return groups;
+  };
 
   // Historical check
   const now = new Date();
@@ -610,48 +639,50 @@ export default function Dashboard() {
           </View>
 
           {recentTransactions.length > 0 ? (
-            recentTransactions.map((t) => (
-              <TouchableOpacity
-                key={t.id}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setEditingTransaction(t);
-                  setShowTransactionModal(true);
-                }}
-              >
-                <NeoCard style={styles.transactionItem}>
-                  <View style={styles.transactionLeft}>
-                    <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
-                      <IconSymbol
-                        name={getCategoryIcon(t.category, t.type) as any}
-                        size={20}
-                        color={t.type === 'income' ? theme.success : theme.danger}
-                      />
-                    </View>
-                    <View>
-                      <Text style={[styles.transactionCategory, { color: theme.text }]}>
-                        {t.category}
-                      </Text>
-                      <Text style={[styles.transactionDate, { color: theme.icon }]}>
-                        {new Date(t.date).toLocaleDateString('en-NG', {
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                        {t.note && ` • ${t.note}`}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text
-                    style={[
-                      styles.transactionAmount,
-                      { color: t.type === 'income' ? theme.success : theme.danger }
-                    ]}
+            groupTransactionsByDate(recentTransactions).map(group => (
+              <View key={group.label}>
+                <Text style={[styles.dateGroupLabel, { color: theme.icon }]}>{group.label}</Text>
+                {group.data.map((t) => (
+                  <TouchableOpacity
+                    key={t.id}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setEditingTransaction(t);
+                      setShowTransactionModal(true);
+                    }}
                   >
-                    {t.type === 'income' ? '+' : '-'}
-                    {formatCurrency(t.amount, 'history')}
-                  </Text>
-                </NeoCard>
-              </TouchableOpacity>
+                    <NeoCard style={styles.transactionItem}>
+                      <View style={styles.transactionLeft}>
+                        <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
+                          <IconSymbol
+                            name={getCategoryIcon(t.category, t.type) as any}
+                            size={20}
+                            color={t.type === 'income' ? theme.success : theme.danger}
+                          />
+                        </View>
+                        <View>
+                          <Text style={[styles.transactionCategory, { color: theme.text }]}>
+                            {t.category}
+                          </Text>
+                          <Text style={[styles.transactionDate, { color: theme.icon }]}>
+                            {new Date(t.date).toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' })}
+                            {t.note ? ` • ${t.note}` : ''}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text
+                        style={[
+                          styles.transactionAmount,
+                          { color: t.type === 'income' ? theme.success : theme.danger }
+                        ]}
+                      >
+                        {t.type === 'income' ? '+' : '-'}
+                        {formatCurrency(t.amount, 'history')}
+                      </Text>
+                    </NeoCard>
+                  </TouchableOpacity>
+                ))}
+              </View>
             ))
           ) : (
             <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
@@ -750,74 +781,142 @@ export default function Dashboard() {
               <Text style={[styles.exportButtonText, { color: theme.tint }]}>CSV</Text>
             </TouchableOpacity>
             <Text style={[styles.modalTitle, { color: theme.text }]}>All History</Text>
-            <TouchableOpacity onPress={() => setShowAllTransactions(false)}>
+            <TouchableOpacity onPress={() => {
+              setShowAllTransactions(false);
+              setHistorySearch('');
+              setHistoryCategoryFilter(null);
+            }}>
               <Ionicons name="close" size={24} color={theme.text} />
             </TouchableOpacity>
           </View>
 
+          {/* Search Bar — only shown when there are enough transactions */}
+          {getCurrentMonthTransactions().length >= 20 && (
+            <View style={[styles.searchBar, SharedStyles.neoBorder, { backgroundColor: theme.card }]}>
+              <Ionicons name="search-outline" size={16} color={theme.icon} />
+              <TextInput
+                style={[styles.searchInput, { color: theme.text }]}
+                placeholder="Search transactions..."
+                placeholderTextColor={theme.icon}
+                value={historySearch}
+                onChangeText={setHistorySearch}
+                autoCorrect={false}
+              />
+              {historySearch.length > 0 && (
+                <TouchableOpacity onPress={() => setHistorySearch('')}>
+                  <Ionicons name="close-circle" size={16} color={theme.icon} />
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+
+          {/* Category Filter Pills — only shown when there are enough transactions */}
+          {getCurrentMonthTransactions().length >= 10 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.filterPillsContainer}
+              contentContainerStyle={{ gap: 8, paddingHorizontal: 20, paddingBottom: 12 }}
+            >
+              {[null, ...categories.map(c => c.name)].map(cat => (
+                <TouchableOpacity
+                  key={cat ?? '__all__'}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setHistoryCategoryFilter(cat);
+                  }}
+                  style={[
+                    styles.filterPill,
+                    SharedStyles.neoBorder,
+                    { backgroundColor: historyCategoryFilter === cat ? theme.tint : theme.card }
+                  ]}
+                >
+                  <Text style={[
+                    styles.filterPillText,
+                    { color: historyCategoryFilter === cat ? '#fff' : theme.text }
+                  ]}>
+                    {cat ?? 'All'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
             {(() => {
-              const filtered = getCurrentMonthTransactions()
+              const sorted = getCurrentMonthTransactions()
                 .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+              const filtered = sorted.filter(t => {
+                const matchesSearch = historySearch.trim() === '' ||
+                  t.category.toLowerCase().includes(historySearch.toLowerCase()) ||
+                  (t.note?.toLowerCase().includes(historySearch.toLowerCase()) ?? false);
+                const matchesCategory = historyCategoryFilter === null || t.category === historyCategoryFilter;
+                return matchesSearch && matchesCategory;
+              });
 
               if (filtered.length === 0) {
                 return (
                   <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
-                    <Text style={[styles.emptyStateText, { color: theme.icon }]}>
-                      No transactions yet. Tap + to add one!
+                    <Ionicons name="search-outline" size={28} color={theme.icon} style={{ opacity: 0.4, marginBottom: 8 }} />
+                    <Text style={[styles.emptyStateText, { color: theme.text, fontWeight: '800' }]}>
+                      No results found
+                    </Text>
+                    <Text style={[styles.emptyStateSubText, { color: theme.icon }]}>
+                      Try a different search or category
                     </Text>
                   </View>
                 );
               }
 
-              return filtered.map((t) => (
-                <TouchableOpacity
-                  key={t.id}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setEditingTransaction(t);
-                    setShowTransactionModal(true);
-                  }}
-                >
-                  <NeoCard style={styles.transactionItem}>
-                    <View style={styles.transactionLeft}>
-                      <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
-                        <IconSymbol
-                          name={getCategoryIcon(t.category, t.type) as any}
-                          size={20}
-                          color={theme.tint}
-                        />
-                      </View>
-                      <View>
-                        <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
-                          {t.category}
-                        </Text>
-                        <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>
-                          {new Date(t.date).toLocaleDateString('en-NG', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
-                          {t.note && ` • ${t.note}`}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text
-                      style={[
-                        styles.transactionAmount,
-                        { color: t.type === 'income' ? theme.success : theme.danger }
-                      ]}
+              return groupTransactionsByDate(filtered).map(group => (
+                <View key={group.label}>
+                  <Text style={[styles.dateGroupLabel, { color: theme.icon }]}>{group.label}</Text>
+                  {group.data.map((t) => (
+                    <TouchableOpacity
+                      key={t.id}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setEditingTransaction(t);
+                        setShowTransactionModal(true);
+                      }}
                     >
-                      {t.type === 'income' ? '+' : '-'}
-                      {formatCurrency(t.amount, 'history')}
-                    </Text>
-                  </NeoCard>
-                </TouchableOpacity>
+                      <NeoCard style={styles.transactionItem}>
+                        <View style={styles.transactionLeft}>
+                          <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
+                            <IconSymbol
+                              name={getCategoryIcon(t.category, t.type) as any}
+                              size={20}
+                              color={t.type === 'income' ? theme.success : theme.danger}
+                            />
+                          </View>
+                          <View>
+                            <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
+                              {t.category}
+                            </Text>
+                            {t.note ? (
+                              <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>{t.note}</Text>
+                            ) : null}
+                          </View>
+                        </View>
+                        <Text
+                          style={[
+                            styles.transactionAmount,
+                            { color: t.type === 'income' ? theme.success : theme.danger }
+                          ]}
+                        >
+                          {t.type === 'income' ? '+' : '-'}
+                          {formatCurrency(t.amount, 'history')}
+                        </Text>
+                      </NeoCard>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               ));
             })()}
           </ScrollView>
         </View>
-      </Modal >
+      </Modal>
       <TransactionModal
         visible={showTransactionModal}
         onClose={() => setShowTransactionModal(false)}
@@ -1308,6 +1407,41 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
     opacity: 0.6,
+  },
+  dateGroupLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginTop: 16,
+    marginBottom: 6,
+    paddingHorizontal: 4,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  filterPillsContainer: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  filterPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  filterPillText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   modalContainer: {
     flex: 1,
