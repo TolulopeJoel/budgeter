@@ -4,6 +4,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { NeoCard, NeoSegmentedToggle } from '@/components/ui/NeobrutalistComponents';
 import { Colors, SharedStyles } from '@/constants/Colors';
 import { useBudget } from '@/context/BudgetContext';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -163,14 +164,13 @@ export default function Budgets() {
                 }}>
                     <IconSymbol name="chevron.left" size={28} color={theme.text} />
                 </TouchableOpacity>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>Budget Limits</Text>
                 <View style={{ width: 28 }} />
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 {/* Budget Limits */}
                 <View style={styles.section}>
-                    <Text style={[styles.sectionTitle, { color: theme.text }]}>Budget Limits</Text>
-
                     {allCategories.map(item => (
                         <TouchableOpacity
                             key={item.name}
@@ -187,9 +187,9 @@ export default function Budgets() {
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                                         <Text style={[styles.categoryName, { color: theme.text }]}>{item.name}</Text>
                                         {(item.hasBudget && item.type === 'fixed') && (
-                                            <View style={[SharedStyles.neoBorder, { backgroundColor: theme.tint, paddingHorizontal: 6, paddingVertical: 2 }]}>
-                                                <Text style={{ fontSize: 10, color: '#000', fontWeight: '900' }}>
-                                                    {item.type.toUpperCase()}
+                                            <View style={[SharedStyles.neoBorder, { backgroundColor: theme.primary, paddingHorizontal: 6, paddingVertical: 2 }]}>
+                                                <Text style={{ fontSize: 10, color: '#000', fontWeight: '800' }}>
+                                                    FIXED
                                                 </Text>
                                             </View>
                                         )}
@@ -355,7 +355,7 @@ export default function Budgets() {
                     <View style={styles.modalHeader}>
                         <Text style={[styles.modalTitle, { color: theme.text }]}>Manage Categories</Text>
                         <TouchableOpacity onPress={() => setShowManageCategories(false)}>
-                            <Text style={{ fontSize: 24 }}>✕</Text>
+                            <Ionicons name="close" size={24} color={theme.text} />
                         </TouchableOpacity>
                     </View>
 
@@ -415,6 +415,12 @@ const styles = StyleSheet.create({
         fontWeight: '900',
         textTransform: 'uppercase',
     },
+    pageTitle: {
+        fontSize: 20,
+        fontWeight: '900',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -469,8 +475,7 @@ const styles = StyleSheet.create({
     },
     categoryName: {
         fontSize: 16,
-        fontWeight: '900',
-        textTransform: 'uppercase',
+        fontWeight: '800',
     },
     categorySpent: {
         fontSize: 12,
@@ -499,8 +504,7 @@ const styles = StyleSheet.create({
     },
     categoryRowText: {
         fontSize: 16,
-        fontWeight: '900',
-        textTransform: 'uppercase',
+        fontWeight: '800',
     },
     categoryRowLeft: {
         flexDirection: 'row',

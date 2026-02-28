@@ -205,30 +205,24 @@ export default function Dashboard() {
         {/* Main Card Section */}
         {isHistorical ? (
           <NeoCard
-            backgroundColor="#2C3E50"
             style={styles.mainCard}
           >
             <View style={styles.mainCardHeader}>
-              <TouchableOpacity
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  toggleMainCardPrivacy();
-                }}
-                activeOpacity={0.7}
-              >
-                <View style={styles.historicalBadge}>
-                  <Text style={styles.historicalBadgeText}>PAST MONTH</Text>
+              <View>
+                <View style={[styles.historicalBadge, { backgroundColor: theme.icon + '10' }]}>
+                  <Text style={[styles.historicalBadgeText, { color: theme.icon }]}>PAST MONTH</Text>
                 </View>
-              </TouchableOpacity>
+                <Text style={styles.mainCardLabel}>Summary</Text>
+              </View>
               <TouchableOpacity
-                style={[styles.periodSelector, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
+                style={styles.periodSelector}
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setShowPeriodModal(true);
                 }}
               >
-                <Text style={[styles.mainCardMonth, { color: '#fff' }]}>{getMonthName()}</Text>
-                <Ionicons name="chevron-down" size={12} color="#fff" />
+                <Text style={styles.mainCardMonth}>{getMonthName()}</Text>
+                <Ionicons name="chevron-down" size={12} color={theme.icon} />
               </TouchableOpacity>
             </View>
 
@@ -285,18 +279,17 @@ export default function Dashboard() {
             style={styles.mainCard}
           >
             <View style={styles.mainCardHeader}>
-              <TouchableOpacity
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  toggleMainCardPrivacy();
-                }}
-                activeOpacity={0.7}
-              >
-                <View>
-                  <Text style={styles.mainCardLabel}>Account Balance</Text>
-                  <Text style={[styles.mainCardSubLabel, { color: 'rgba(0,0,0,0.5)' }]}>Live Total</Text>
-                </View>
-              </TouchableOpacity>
+              <View>
+                <TouchableOpacity
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    toggleMainCardPrivacy();
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.mainCardLabel}>Safe to Spend</Text>
+                </TouchableOpacity>
+              </View>
               <TouchableOpacity
                 style={styles.periodSelector}
                 onPress={() => {
@@ -309,23 +302,30 @@ export default function Dashboard() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={styles.mainCardBody}
-              onPress={() => {
-                setTempInitialBalance(getAccountBalance().toString());
-                setShowInitialBalanceModal(true);
-              }}
-              disabled={isMainCardPrivacyEnabled}
-            >
+            <View style={styles.mainCardBody}>
               <Text style={styles.mainCardAmount}>
-                {formatCurrency(getAccountBalance(), 'dashboard')}
+                {formatCurrency(safeToSpend, 'dashboard')}
               </Text>
-            </TouchableOpacity>
+            </View>
 
             <View style={styles.mainCardFooter}>
+              <TouchableOpacity
+                style={styles.mainCardStat}
+                onPress={() => {
+                  if (isMainCardPrivacyEnabled) return;
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setTempInitialBalance(getAccountBalance().toString());
+                  setShowInitialBalanceModal(true);
+                }}
+                activeOpacity={isMainCardPrivacyEnabled ? 1 : 0.7}
+              >
+                <Text style={[styles.statLabel, { color: '#000' }]}>Balance</Text>
+                <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(getAccountBalance(), 'dashboard')}</Text>
+              </TouchableOpacity>
+              <View style={[styles.statDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
               <View style={styles.mainCardStat}>
-                <Text style={[styles.statLabel, { color: '#000' }]}>Safe to Spend</Text>
-                <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(safeToSpend, 'dashboard')}</Text>
+                <Text style={[styles.statLabel, { color: '#000' }]}>Spent</Text>
+                <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(totalExpenses, 'dashboard')}</Text>
               </View>
               <View style={[styles.statDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
               <TouchableOpacity
@@ -341,16 +341,11 @@ export default function Dashboard() {
                   {formatCurrency(savingsBalance, 'dashboard')}
                 </Text>
                 {!isMainCardPrivacyEnabled && getRemainingSavingsGoal() > 0 && (
-                  <Text style={{ fontSize: 9, color: 'rgba(0,0,0,0.5)', fontWeight: '900', marginTop: 2 }}>
-                    LEFT: {formatCurrency(getRemainingSavingsGoal())}
+                  <Text style={{ fontSize: 9, color: 'rgba(0,0,0,0.5)', fontWeight: '700', marginTop: 2 }}>
+                    {formatCurrency(getRemainingSavingsGoal())} LEFT
                   </Text>
                 )}
               </TouchableOpacity>
-              <View style={[styles.statDivider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
-              <View style={styles.mainCardStat}>
-                <Text style={[styles.statLabel, { color: '#000' }]}>Spent</Text>
-                <Text style={[styles.statValue, { color: '#000' }]}>{formatCurrency(totalExpenses, 'dashboard')}</Text>
-              </View>
             </View>
           </NeoCard>
         )}
@@ -438,7 +433,10 @@ export default function Dashboard() {
                     toggleBudgetsPrivacy();
                   }}
                 >
-                  <Text style={[styles.sectionTitle, { color: theme.text }]}>Budget Status</Text>
+                  <View style={styles.sectionTitleRow}>
+                    <View style={styles.sectionAccent} />
+                    <Text style={[styles.sectionTitle, { color: theme.text }]}>Budget Status</Text>
+                  </View>
                 </TouchableOpacity>
               </View>
 
@@ -481,40 +479,44 @@ export default function Dashboard() {
                       }}
                       disabled={!!isHistorical}
                     >
-                      {isUnbudgeted ? (
-                        // Permanently use Minimalist List for Unbudgeted
-                        <View style={styles.minimalistEntry}>
-                          <View style={[styles.minimalistIcon, { backgroundColor: theme.icon + '10' }]}>
-                            <IconSymbol name={getCategoryIcon(item.category) as any} size={18} color={theme.icon} />
+                      <NeoCard style={[
+                        styles.budgetItem,
+                        isUnbudgeted && { borderStyle: 'dashed' },
+                        isHistorical && { backgroundColor: theme.card + '80' }
+                      ]}>
+                        <View style={styles.budgetHeader}>
+                          <View style={[styles.categoryIconContainer, { backgroundColor: (isUnbudgeted ? theme.icon : theme.tint) + '10' }]}>
+                            <IconSymbol name={getCategoryIcon(item.category) as any} size={20} color={isUnbudgeted ? theme.icon : theme.tint} />
                           </View>
-                          <Text style={styles.minimalistName}>{item.category}</Text>
-                          <Text style={styles.minimalistAmount}>{formatCurrency(status.spent, 'budgets')}</Text>
-                        </View>
-                      ) : (
-                        // Standard Card for Budgeted
-                        <NeoCard style={[
-                          styles.budgetItem,
-                          isHistorical && { backgroundColor: theme.card + '80' }
-                        ]}>
-                          <View style={styles.budgetHeader}>
-                            <View style={[styles.categoryIconContainer, { backgroundColor: theme.tint + '10' }]}>
-                              <IconSymbol name={getCategoryIcon(item.category) as any} size={20} color={theme.tint} />
-                            </View>
-                            <View style={styles.budgetInfo}>
+                          <View style={styles.budgetInfo}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                               <Text style={[styles.budgetCategory, { color: theme.text }]}>
                                 {item.category}
                               </Text>
-                              <Text style={[styles.budgetAmount, { color: theme.icon }]}>
-                                {formatCurrency(status.spent, 'budgets')} of {formatCurrency(status.limit, 'budgets')}
-                              </Text>
+                              {isUnbudgeted && (
+                                <View style={styles.unbudgetedBadge}>
+                                  <Text style={styles.unbudgetedBadgeText}>UNTRACKED</Text>
+                                </View>
+                              )}
                             </View>
-                            <View style={styles.budgetRight}>
+                            <Text style={[styles.budgetAmount, { color: theme.icon, opacity: 0.7 }]}>
+                              {isUnbudgeted ? 'Total Spent' : `Spent of ${formatCurrency(status.limit, 'budgets')}`}
+                            </Text>
+                          </View>
+                          <View style={styles.budgetRight}>
+                            {isUnbudgeted ? (
+                              <Text style={[styles.budgetPercentage, { color: theme.icon }]}>
+                                {formatCurrency(status.spent, 'budgets')}
+                              </Text>
+                            ) : (
                               <Text style={[styles.budgetPercentage, { color: isHistorical ? 'rgba(0,0,0,0.4)' : budgetColor }]}>
                                 {status.percentage.toFixed(0)}%
                               </Text>
-                            </View>
+                            )}
                           </View>
+                        </View>
 
+                        {!isUnbudgeted && (
                           <View style={styles.progressBarContainer}>
                             {(() => {
                               const categoryBills = recurringBills.filter(b => b.category === item.category);
@@ -544,37 +546,37 @@ export default function Dashboard() {
                               );
                             })()}
                           </View>
+                        )}
 
-                          {/* Bills Breakdown */}
-                          {(() => {
-                            const categoryBills = recurringBills.filter(b => b.category === item.category);
-                            const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
+                        {/* Bills Breakdown */}
+                        {!isUnbudgeted && (() => {
+                          const categoryBills = recurringBills.filter(b => b.category === item.category);
+                          const unpaidBills = categoryBills.filter(b => !isBillPaid(b.id, currentMonthKey));
 
-                            if (unpaidBills.length === 0) return null;
+                          if (unpaidBills.length === 0) return null;
 
-                            const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
+                          const totalUnpaidBills = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
 
-                            return (
-                              <View style={[styles.billsBreakdown, { borderTopColor: theme.border }]}>
-                                <View style={styles.billsHeader}>
-                                  <Text style={[styles.billsTitle, { color: theme.icon }]}>Unpaid bills:</Text>
-                                  <Text style={[styles.billsTotal, { color: theme.danger + '80' }]}>
-                                    {formatCurrency(totalUnpaidBills, 'history')}
+                          return (
+                            <View style={[styles.billsBreakdown, { borderTopColor: 'rgba(0,0,0,0.05)' }]}>
+                              <View style={styles.billsHeader}>
+                                <Text style={[styles.billsTitle, { color: theme.icon }]}>Unpaid bills:</Text>
+                                <Text style={[styles.billsTotal, { color: theme.danger + '80' }]}>
+                                  {formatCurrency(totalUnpaidBills, 'history')}
+                                </Text>
+                              </View>
+                              {unpaidBills.map(bill => (
+                                <View key={bill.id} style={styles.billRow}>
+                                  <Text style={[styles.billName, { color: theme.text }]}>• {bill.name}</Text>
+                                  <Text style={[styles.billAmount, { color: theme.icon }]}>
+                                    {formatCurrency(bill.amount, 'history')}
                                   </Text>
                                 </View>
-                                {unpaidBills.map(bill => (
-                                  <View key={bill.id} style={styles.billRow}>
-                                    <Text style={[styles.billName, { color: theme.text }]}>• {bill.name}</Text>
-                                    <Text style={[styles.billAmount, { color: theme.icon }]}>
-                                      {formatCurrency(bill.amount, 'history')}
-                                    </Text>
-                                  </View>
-                                ))}
-                              </View>
-                            );
-                          })()}
-                        </NeoCard>
-                      )}
+                              ))}
+                            </View>
+                          );
+                        })()}
+                      </NeoCard>
                     </TouchableOpacity>
                   );
                 })}
@@ -591,12 +593,18 @@ export default function Dashboard() {
                 toggleHistoryPrivacy();
               }}
             >
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Activity</Text>
+              <View style={styles.sectionTitleRow}>
+                <View style={styles.sectionAccent} />
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Activity</Text>
+              </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setShowAllTransactions(true);
-            }}>
+            <TouchableOpacity
+              style={styles.seeAllButton}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowAllTransactions(true);
+              }}
+            >
               <Text style={[styles.seeAllText, { color: theme.tint }]}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -647,8 +655,12 @@ export default function Dashboard() {
             ))
           ) : (
             <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
-              <Text style={[styles.emptyStateText, { color: theme.icon }]}>
-                No transactions yet. Tap + to add one!
+              <Ionicons name="receipt-outline" size={32} color={theme.icon} style={{ opacity: 0.4, marginBottom: 8 }} />
+              <Text style={[styles.emptyStateText, { color: theme.text, fontWeight: '800' }]}>
+                No transactions yet
+              </Text>
+              <Text style={[styles.emptyStateSubText, { color: theme.icon }]}>
+                Tap + below to add your first one
               </Text>
             </View>
           )}
@@ -656,13 +668,12 @@ export default function Dashboard() {
       </ScrollView >
 
       {/* Category Transactions Modal */}
-      < Modal visible={selectedCategory !== null
-      } animationType="slide" presentationStyle="pageSheet" >
+      <Modal visible={selectedCategory !== null} animationType="slide" presentationStyle="pageSheet">
         <View style={[styles.modalContainer, { backgroundColor: theme.background, paddingTop: insets.top }]}>
           <View style={styles.modalHeader}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>{selectedCategory} Activity</Text>
             <TouchableOpacity onPress={() => setSelectedCategory(null)}>
-              <Text style={[styles.modalCloseButton, { color: theme.tint }]}>DONE</Text>
+              <Ionicons name="close" size={24} color={theme.text} />
             </TouchableOpacity>
           </View>
 
@@ -731,7 +742,7 @@ export default function Dashboard() {
       </Modal >
 
       {/* All Transactions Modal */}
-      < Modal visible={showAllTransactions} animationType="slide" presentationStyle="pageSheet" >
+      <Modal visible={showAllTransactions} animationType="slide" presentationStyle="pageSheet">
         <View style={[styles.modalContainer, { backgroundColor: theme.background, paddingTop: insets.top }]}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={handleExportCSV} style={[styles.exportButton, SharedStyles.neoBorder, { backgroundColor: theme.card, padding: 8 }]}>
@@ -740,7 +751,7 @@ export default function Dashboard() {
             </TouchableOpacity>
             <Text style={[styles.modalTitle, { color: theme.text }]}>All History</Text>
             <TouchableOpacity onPress={() => setShowAllTransactions(false)}>
-              <Text style={[styles.modalCloseButton, { color: theme.tint }]}>DONE</Text>
+              <Ionicons name="close" size={24} color={theme.text} />
             </TouchableOpacity>
           </View>
 
@@ -843,7 +854,7 @@ export default function Dashboard() {
             <View style={styles.modalHeader}>
               <Text style={[styles.periodModalTitle, { color: theme.text }]}>Select Month</Text>
               <TouchableOpacity onPress={() => setShowPeriodModal(false)}>
-                <Text style={{ fontSize: 24, fontWeight: '900' }}>✕</Text>
+                <Ionicons name="close" size={24} color={theme.text} />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.periodList}>
@@ -937,9 +948,9 @@ const styles = StyleSheet.create({
     width: 25,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '900',
-    textTransform: 'uppercase',
+    color: '#000',
   },
   addButton: {
     width: 48,
@@ -963,7 +974,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     ...SharedStyles.neoBorder,
-    ...SharedStyles.neoShadow,
+    ...SharedStyles.neoShadowLarge,
     zIndex: 1000,
   },
   mainCard: {
@@ -973,24 +984,25 @@ const styles = StyleSheet.create({
   periodSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 0,
     ...SharedStyles.neoBorder,
     gap: 4,
   },
   historicalBadge: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+    paddingVertical: 3,
+    borderRadius: 2,
+    alignSelf: 'flex-start',
+    marginBottom: 4,
   },
   historicalBadgeText: {
-    color: '#fff',
     fontSize: 8,
-    fontWeight: '900',
+    fontWeight: '800',
     textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   mainCardHeader: {
     flexDirection: 'row',
@@ -1072,8 +1084,8 @@ const styles = StyleSheet.create({
   },
   historicalStatLabel: {
     fontSize: 9,
-    fontWeight: '800',
-    color: 'rgba(255,255,255,0.5)',
+    fontWeight: '700',
+    color: 'rgba(0,0,0,0.5)',
     textTransform: 'uppercase',
     marginBottom: 6,
     letterSpacing: 0.5,
@@ -1081,16 +1093,16 @@ const styles = StyleSheet.create({
   historicalStatValue: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#fff',
+    color: '#000',
   },
   historicalDivider: {
     width: 1,
     height: 24,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
   historicalRowDivider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.05)',
     marginHorizontal: -16,
   },
   quickActions: {
@@ -1129,15 +1141,30 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 4,
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sectionAccent: {
+    width: 3,
+    height: 18,
+    backgroundColor: '#0F172A',
+    borderRadius: 2,
+  },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '900',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  seeAllButton: {
+    borderBottomWidth: 1.5,
+    borderBottomColor: 'currentColor',
   },
   seeAllText: {
-    fontSize: 14,
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    fontSize: 13,
+    fontWeight: '700',
   },
   card: {
     borderRadius: 20,
@@ -1167,18 +1194,17 @@ const styles = StyleSheet.create({
   },
   budgetCategory: {
     fontSize: 16,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '800',
   },
   budgetAmount: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   budgetRight: {
     alignItems: 'flex-end',
   },
   progressBarContainer: {
-    height: 12,
+    height: 10,
     backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: 0,
     overflow: 'hidden',
@@ -1227,13 +1253,12 @@ const styles = StyleSheet.create({
   minimalistName: {
     flex: 1,
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#000',
-    textTransform: 'uppercase',
   },
   minimalistAmount: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '800',
     color: 'rgba(0,0,0,0.5)',
   },
   transactionItem: {
@@ -1258,12 +1283,11 @@ const styles = StyleSheet.create({
   },
   transactionCategory: {
     fontSize: 15,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '800',
   },
   transactionDate: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   transactionAmount: {
     fontSize: 16,
@@ -1271,12 +1295,19 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     padding: 32,
-    borderRadius: 12,
+    borderRadius: 0,
     alignItems: 'center',
+    ...SharedStyles.neoBorder,
   },
   emptyStateText: {
-    fontSize: 14,
+    fontSize: 15,
     textAlign: 'center',
+    marginBottom: 4,
+  },
+  emptyStateSubText: {
+    fontSize: 13,
+    textAlign: 'center',
+    opacity: 0.6,
   },
   modalContainer: {
     flex: 1,

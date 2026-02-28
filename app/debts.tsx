@@ -38,6 +38,7 @@ export default function Debts() {
                 }}>
                     <IconSymbol name="chevron.left" size={28} color={theme.text} />
                 </TouchableOpacity>
+                <Text style={[styles.pageTitle, { color: theme.text }]}>Lent Out</Text>
                 <View style={{ width: 28 }} />
             </View>
 
@@ -45,7 +46,7 @@ export default function Debts() {
                 {/* Total Summary */}
                 <NeoCard style={styles.summaryCard} backgroundColor={theme.card}>
                     <View style={styles.summaryHeader}>
-                        <Text style={[styles.summaryLabel, { color: '#000' }]}>To Collect</Text>
+                        <Text style={[styles.summaryLabel, { color: theme.text }]}>To Collect</Text>
                     </View>
                     <Text style={[styles.summaryAmount, { color: theme.success }]}>
                         {formatCurrency(totalDebt)}
@@ -124,6 +125,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingBottom: 20,
     },
+    pageTitle: {
+        fontSize: 20,
+        fontWeight: '900',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
@@ -141,11 +148,14 @@ const styles = StyleSheet.create({
     },
     summaryLabel: {
         fontSize: 14,
-        fontWeight: '500',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     summaryAmount: {
         fontSize: 36,
-        fontWeight: 'bold',
+        fontWeight: '900',
+        marginTop: 4,
     },
     section: {
         marginBottom: 24,
@@ -166,7 +176,7 @@ const styles = StyleSheet.create({
     iconContainer: {
         width: 40,
         height: 40,
-        borderRadius: 12,
+        borderRadius: 0,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
@@ -176,8 +186,7 @@ const styles = StyleSheet.create({
     },
     debtCategory: {
         fontSize: 16,
-        fontWeight: '900',
-        textTransform: 'uppercase',
+        fontWeight: '800',
     },
     debtDate: {
         fontSize: 12,

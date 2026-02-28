@@ -3,6 +3,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { NeoCard } from '@/components/ui/NeobrutalistComponents';
 import { Colors, SharedStyles } from '@/constants/Colors';
 import { useBudget } from '@/context/BudgetContext';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -146,6 +147,7 @@ export default function RecurringBills() {
                 }}>
                     <IconSymbol name="chevron.left" size={28} color={theme.text} />
                 </TouchableOpacity>
+                <Text style={[styles.pageTitle, { color: theme.text }]}>Recurring Bills</Text>
                 <View style={{ width: 28 }} />
             </View>
 
@@ -153,14 +155,14 @@ export default function RecurringBills() {
                 {/* Total Summary */}
                 <NeoCard style={styles.summaryCard} backgroundColor={theme.card}>
                     <View style={styles.summaryHeader}>
-                        <Text style={[styles.summaryLabel, { color: '#000' }]}>Total Monthly Bills</Text>
-                        <View style={[SharedStyles.neoBorder, { backgroundColor: theme.danger, paddingHorizontal: 10, paddingVertical: 4 }]}>
+                        <Text style={[styles.summaryLabel, { color: theme.text }]}>Total Monthly Bills</Text>
+                        <View style={[SharedStyles.neoBorder, { backgroundColor: theme.warning, paddingHorizontal: 10, paddingVertical: 4 }]}>
                             <Text style={[styles.badgeText, { color: '#000' }]}>
                                 {recurringBills.length} {recurringBills.length === 1 ? 'bill' : 'bills'}
                             </Text>
                         </View>
                     </View>
-                    <Text style={[styles.summaryAmount, { color: theme.danger }]}>
+                    <Text style={[styles.summaryAmount, { color: theme.text }]}>
                         {formatCurrency(totalBills)}
                     </Text>
                 </NeoCard>
@@ -277,7 +279,7 @@ export default function RecurringBills() {
                                     setEditingBill(null);
                                 }}
                             >
-                                <Text style={{ fontSize: 24, fontWeight: '900' }}>✕</Text>
+                                <Ionicons name="close" size={24} color={theme.text} />
                             </TouchableOpacity>
                         </View>
 
@@ -360,6 +362,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingBottom: 20,
     },
+    pageTitle: {
+        fontSize: 20,
+        fontWeight: '900',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
@@ -380,20 +388,22 @@ const styles = StyleSheet.create({
     },
     summaryLabel: {
         fontSize: 14,
-        fontWeight: '500',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     badge: {
         paddingHorizontal: 10,
         paddingVertical: 4,
-        borderRadius: 12,
     },
     badgeText: {
         fontSize: 12,
-        fontWeight: '600',
+        fontWeight: '800',
     },
     summaryAmount: {
         fontSize: 36,
-        fontWeight: 'bold',
+        fontWeight: '900',
+        marginTop: 4,
     },
     section: {
         marginBottom: 24,
@@ -414,7 +424,7 @@ const styles = StyleSheet.create({
     iconContainer: {
         width: 40,
         height: 40,
-        borderRadius: 12,
+        borderRadius: 0,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
@@ -424,8 +434,7 @@ const styles = StyleSheet.create({
     },
     billName: {
         fontSize: 16,
-        fontWeight: '900',
-        textTransform: 'uppercase',
+        fontWeight: '800',
     },
     billMeta: {
         flexDirection: 'row',
@@ -524,15 +533,16 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     label: {
-        fontSize: 14,
+        fontSize: 12,
         marginBottom: 8,
-        fontWeight: '900',
+        fontWeight: '800',
         textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     input: {
         padding: 12,
         fontSize: 16,
-        fontWeight: '900',
+        fontWeight: '600',
     },
     row: {
         flexDirection: 'row',

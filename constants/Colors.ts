@@ -1,37 +1,39 @@
 const tintColorLight = '#FF2E63';
 const chicCream = '#FDF6E3';
+const ink = '#0F172A'; // Deep "Ink" for borders and grounding
 
 export const Colors = {
     light: {
-        text: '#000000',
-        background: chicCream, // Chic Cream
+        text: ink,
+        background: chicCream,
         tint: tintColorLight,
-        icon: '#000000',
-        tabIconDefault: '#000000',
+        icon: ink,
+        tabIconDefault: ink,
         tabIconSelected: tintColorLight,
         card: '#FFFFFF',
-        border: '#000000',
-        primary: '#FF2E63', // Pink
+        border: ink,
+        primary: tintColorLight, // Pink
         success: '#08D9D6', // Cyan
-        danger: '#FF2E63',
+        danger: '#E84545', // Semantic Red
         warning: '#FFDE7D', // Yellow
+        ink: ink,
     },
 };
 
 export const SharedStyles = {
     neoBorder: {
         borderWidth: 2,
-        borderColor: '#000000',
+        borderColor: ink,
     },
     neoShadow: {
-        shadowColor: '#000000',
+        shadowColor: ink,
         shadowOffset: { width: 4, height: 4 },
         shadowOpacity: 1,
         shadowRadius: 0,
         elevation: 4,
     },
     neoShadowLarge: {
-        shadowColor: '#000000',
+        shadowColor: ink,
         shadowOffset: { width: 6, height: 6 },
         shadowOpacity: 1,
         shadowRadius: 0,
