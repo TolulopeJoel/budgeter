@@ -198,6 +198,7 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         height: 54,
+        width: '100%',
         position: 'relative',
         marginVertical: 8,
     },
