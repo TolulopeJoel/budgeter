@@ -577,6 +577,26 @@ export default function Dashboard() {
                           </View>
                         )}
 
+                        {/* Velocity Indicator — only shown when spending is over-pacing */}
+                        {!isUnbudgeted && !isHistorical && (() => {
+                          const today = new Date();
+                          const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                          const monthProgressPct = (today.getDate() / daysInMonth) * 100;
+                          const spentPct = status.percentage;
+
+                          if (spentPct - monthProgressPct > 15 && spentPct < 100) {
+                            const overBy = formatCurrency(((spentPct - monthProgressPct) / 100) * status.limit, 'budgets');
+                            return (
+                              <View style={styles.velocityRow}>
+                                <View style={[styles.velocityDot, { backgroundColor: theme.warning }]} />
+                                <Text style={[styles.velocityText, { color: theme.warning }]}>
+                                  {overBy} ahead of pace
+                                </Text>
+                              </View>
+                            );
+                          }
+                        })()}
+
                         {/* Bills Breakdown */}
                         {!isUnbudgeted && (() => {
                           const categoryBills = recurringBills.filter(b => b.category === item.category);
@@ -724,48 +744,49 @@ export default function Dashboard() {
                 );
               }
 
-              return filtered.map((t) => (
-                <TouchableOpacity
-                  key={t.id}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setEditingTransaction(t);
-                    setShowTransactionModal(true);
-                  }}
-                >
-                  <NeoCard style={styles.transactionItem}>
-                    <View style={styles.transactionLeft}>
-                      <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
-                        <IconSymbol
-                          name={getCategoryIcon(t.category, t.type) as any}
-                          size={20}
-                          color={theme.tint}
-                        />
-                      </View>
-                      <View>
-                        <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
-                          {t.note ? t.note : t.category}
-                        </Text>
-                        <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>
-                          {new Date(t.date).toLocaleDateString('en-NG', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text
-                      style={[
-                        styles.transactionAmount,
-                        { color: t.type === 'income' ? theme.success : theme.danger }
-                      ]}
+              return groupTransactionsByDate(filtered).map(group => (
+                <View key={group.label}>
+                  <Text style={[styles.dateGroupLabel, { color: theme.icon }]}>{group.label}</Text>
+                  {group.data.map((t) => (
+                    <TouchableOpacity
+                      key={t.id}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setEditingTransaction(t);
+                        setShowTransactionModal(true);
+                      }}
                     >
-                      {t.type === 'income' ? '+' : '-'}
-                      {formatCurrency(t.amount, 'history')}
-                    </Text>
-                  </NeoCard>
-                </TouchableOpacity>
+                      <NeoCard style={styles.transactionItem}>
+                        <View style={styles.transactionLeft}>
+                          <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
+                            <IconSymbol
+                              name={getCategoryIcon(t.category, t.type) as any}
+                              size={20}
+                              color={t.type === 'income' ? theme.success : theme.danger}
+                            />
+                          </View>
+                          <View>
+                            <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
+                              {t.note ? t.note : t.category}
+                            </Text>
+                            <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>
+                              {new Date(t.date).toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' })}
+                            </Text>
+                          </View>
+                        </View>
+                        <Text
+                          style={[
+                            styles.transactionAmount,
+                            { color: t.type === 'income' ? theme.success : theme.danger }
+                          ]}
+                        >
+                          {t.type === 'income' ? '+' : '-'}
+                          {formatCurrency(t.amount, 'history')}
+                        </Text>
+                      </NeoCard>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               ));
             })()}
           </ScrollView>
@@ -810,37 +831,6 @@ export default function Dashboard() {
             </View>
           )}
 
-          {/* Category Filter Pills — only shown when there are enough transactions */}
-          {getCurrentMonthTransactions().length >= 10 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.filterPillsContainer}
-              contentContainerStyle={{ gap: 8, paddingHorizontal: 20, paddingBottom: 12 }}
-            >
-              {[null, ...categories.map(c => c.name)].map(cat => (
-                <TouchableOpacity
-                  key={cat ?? '__all__'}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setHistoryCategoryFilter(cat);
-                  }}
-                  style={[
-                    styles.filterPill,
-                    SharedStyles.neoBorder,
-                    { backgroundColor: historyCategoryFilter === cat ? theme.tint : theme.card }
-                  ]}
-                >
-                  <Text style={[
-                    styles.filterPillText,
-                    { color: historyCategoryFilter === cat ? '#fff' : theme.text }
-                  ]}>
-                    {cat ?? 'All'}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
 
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
             {(() => {
@@ -1051,18 +1041,6 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#000',
   },
-  addButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
   floatingButton: {
     position: 'absolute',
     bottom: 24,
@@ -1265,11 +1243,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
-  card: {
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-  },
   budgetItem: {
     marginBottom: 8,
   },
@@ -1333,32 +1306,20 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontWeight: '900',
   },
-  minimalistEntry: {
+  velocityRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
-    marginHorizontal: 4,
+    gap: 5,
+    marginTop: 6,
   },
-  minimalistIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+  velocityDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
   },
-  minimalistName: {
-    flex: 1,
-    fontSize: 16,
+  velocityText: {
+    fontSize: 11,
     fontWeight: '700',
-    color: '#000',
-  },
-  minimalistAmount: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: 'rgba(0,0,0,0.5)',
   },
   transactionItem: {
     flexDirection: 'row',
@@ -1431,18 +1392,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
   },
-  filterPillsContainer: {
-    flexGrow: 0,
-    flexShrink: 0,
-  },
-  filterPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  filterPillText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
   modalContainer: {
     flex: 1,
   },
@@ -1457,10 +1406,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '900',
     textTransform: 'uppercase',
-  },
-  modalCloseButton: {
-    fontSize: 16,
-    fontWeight: '900',
   },
   modalContent: {
     flex: 1,
