@@ -529,7 +529,7 @@ export default function Dashboard() {
                               )}
                             </View>
                             <Text style={[styles.budgetAmount, { color: theme.icon, opacity: 0.7 }]}>
-                              {isUnbudgeted ? 'Total Spent' : `Spent of ${formatCurrency(status.limit, 'budgets')}`}
+                              {isUnbudgeted ? 'Total Spent' : `${formatCurrency(status.spent, 'budgets')} spent of ${formatCurrency(status.limit, 'budgets')}`}
                             </Text>
                           </View>
                           <View style={styles.budgetRight}>

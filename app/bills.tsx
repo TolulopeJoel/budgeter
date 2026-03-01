@@ -23,6 +23,7 @@ export default function RecurringBills() {
         isBillPaid,
         markBillAsPaid,
         unmarkBillAsPaid,
+        isBudgetsPrivacyEnabled,
     } = useBudget();
     const theme = Colors.light;
     const insets = useSafeAreaInsets();
@@ -123,6 +124,7 @@ export default function RecurringBills() {
     };
 
     const formatCurrency = (amount: number) => {
+        if (isBudgetsPrivacyEnabled) return '₦ █████';
         return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
     };
 

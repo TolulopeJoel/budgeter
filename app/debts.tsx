@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Debts() {
     const router = useRouter();
-    const { transactions, getDebts, categories } = useBudget();
+    const { transactions, getDebts, categories, isHistoryPrivacyEnabled } = useBudget();
     const theme = Colors.light;
     const insets = useSafeAreaInsets();
     const [showTransactionModal, setShowTransactionModal] = useState(false);
@@ -25,7 +25,8 @@ export default function Debts() {
         return category?.icon || 'ellipsis.circle.fill';
     };
 
-    const formatCurrency = (amount: number) => {
+    const formatCurrency = (amount: number, forceShow: boolean = false) => {
+        if (isHistoryPrivacyEnabled && !forceShow) return '₦ █████';
         return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
     };
 
@@ -49,7 +50,7 @@ export default function Debts() {
                         <Text style={[styles.summaryLabel, { color: theme.text }]}>To Collect</Text>
                     </View>
                     <Text style={[styles.summaryAmount, { color: theme.success }]}>
-                        {formatCurrency(totalDebt)}
+                        {formatCurrency(totalDebt, true)}
                     </Text>
                 </NeoCard>
 
@@ -74,7 +75,9 @@ export default function Debts() {
                                         </View>
 
                                         <View style={styles.debtInfo}>
-                                            <Text style={[styles.debtCategory, { color: theme.text }]}>{debt.note}</Text>
+                                            <Text style={[styles.debtCategory, { color: theme.text }]}>
+                                                {isHistoryPrivacyEnabled ? 'REDACTED' : debt.note}
+                                            </Text>
                                             <Text style={[styles.debtDate, { color: theme.icon }]}>
                                                 {new Date(debt.date).toLocaleDateString('en-NG', {
                                                     month: 'short',
