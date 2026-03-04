@@ -420,7 +420,7 @@ export default function Dashboard() {
           const currentMonthTxs = getCurrentMonthTransactions();
           const categoriesWithSpending = Array.from(new Set(
             currentMonthTxs
-              .filter(t => t.type === 'expense')
+              .filter(t => t.type === 'expense' && t.category !== 'Savings')
               .map(t => t.category)
           ));
 
@@ -817,7 +817,7 @@ export default function Dashboard() {
               <Ionicons name="search-outline" size={16} color={theme.icon} />
               <TextInput
                 style={[styles.searchInput, { color: theme.text }]}
-                placeholder="Search transactions..."
+                placeholder={`Search ${getCurrentMonthTransactions().length} transactions...`}
                 placeholderTextColor={theme.icon}
                 value={historySearch}
                 onChangeText={setHistorySearch}
@@ -859,50 +859,62 @@ export default function Dashboard() {
                 );
               }
 
-              return groupTransactionsByDate(filtered).map(group => (
-                <View key={group.label}>
-                  <Text style={[styles.dateGroupLabel, { color: theme.icon }]}>{group.label}</Text>
-                  {group.data.map((t) => (
-                    <TouchableOpacity
-                      key={t.id}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setEditingTransaction(t);
-                        setShowTransactionModal(true);
-                      }}
-                    >
-                      <NeoCard style={styles.transactionItem}>
-                        <View style={styles.transactionLeft}>
-                          <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
-                            <IconSymbol
-                              name={getCategoryIcon(t.category, t.type) as any}
-                              size={20}
-                              color={t.type === 'income' ? theme.success : theme.danger}
-                            />
+              return groupTransactionsByDate(filtered).map(group => {
+                const dayNet = group.data.reduce((acc, t) => {
+                  if (t.type === 'income') return acc + t.amount;
+                  if (t.type === 'expense' || t.type === 'debt') return acc - t.amount;
+                  return acc;
+                }, 0);
+                return (
+                  <View key={group.label}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={[styles.dateGroupLabel, { color: theme.icon }]}>{group.label}</Text>
+                      <Text style={[styles.dateGroupLabel, { color: dayNet >= 0 ? theme.success : theme.danger, fontWeight: '700' }]}>
+                        {dayNet >= 0 ? '+' : ''}{formatCurrency(dayNet, 'history')}
+                      </Text>
+                    </View>
+                    {group.data.map((t) => (
+                      <TouchableOpacity
+                        key={t.id}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          setEditingTransaction(t);
+                          setShowTransactionModal(true);
+                        }}
+                      >
+                        <NeoCard style={styles.transactionItem}>
+                          <View style={styles.transactionLeft}>
+                            <View style={[styles.transactionIconContainer, { backgroundColor: (t.type === 'income' ? theme.success : theme.danger) + '10' }]}>
+                              <IconSymbol
+                                name={getCategoryIcon(t.category, t.type) as any}
+                                size={20}
+                                color={t.type === 'income' ? theme.success : theme.danger}
+                              />
+                            </View>
+                            <View>
+                              <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
+                                {t.category}
+                              </Text>
+                              {t.note ? (
+                                <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>{t.note}</Text>
+                              ) : null}
+                            </View>
                           </View>
-                          <View>
-                            <Text style={[styles.transactionCategory, { color: theme.text, fontSize: 16 }]}>
-                              {t.category}
-                            </Text>
-                            {t.note ? (
-                              <Text style={[styles.transactionDate, { color: theme.icon, marginTop: 2 }]}>{t.note}</Text>
-                            ) : null}
-                          </View>
-                        </View>
-                        <Text
-                          style={[
-                            styles.transactionAmount,
-                            { color: t.type === 'income' ? theme.success : theme.danger }
-                          ]}
-                        >
-                          {t.type === 'income' ? '+' : '-'}
-                          {formatCurrency(t.amount, 'history')}
-                        </Text>
-                      </NeoCard>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              ));
+                          <Text
+                            style={[
+                              styles.transactionAmount,
+                              { color: t.type === 'income' ? theme.success : theme.danger }
+                            ]}
+                          >
+                            {t.type === 'income' ? '+' : '-'}
+                            {formatCurrency(t.amount, 'history')}
+                          </Text>
+                        </NeoCard>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                );
+              });
             })()}
           </ScrollView>
         </View>
