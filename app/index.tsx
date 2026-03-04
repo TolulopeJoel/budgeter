@@ -332,9 +332,22 @@ export default function Dashboard() {
             </View>
 
             <View style={styles.mainCardBody}>
-              <Text style={styles.mainCardAmount}>
-                {formatCurrency(safeToSpend, 'dashboard')}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                <Text style={styles.mainCardAmount}>
+                  {formatCurrency(safeToSpend, 'dashboard')}
+                </Text>
+                {!isMainCardPrivacyEnabled && safeToSpend > 0 && (() => {
+                  const today = new Date();
+                  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                  const daysLeft = daysInMonth - today.getDate() + 1;
+                  const perDay = safeToSpend / daysLeft;
+                  return (
+                    <Text style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)', fontWeight: '700', marginTop: 6, marginLeft: 6 }}>
+                      {formatCurrency(perDay)}{'\n'}/day
+                    </Text>
+                  );
+                })()}
+              </View>
             </View>
 
             <View style={styles.mainCardFooter}>
@@ -577,25 +590,41 @@ export default function Dashboard() {
                           </View>
                         )}
 
-                        {/* Velocity Indicator — only shown when spending is over-pacing */}
+                        {/* Velocity Indicator */}
                         {!isUnbudgeted && !isHistorical && (() => {
                           const today = new Date();
                           const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                          const daysLeft = daysInMonth - today.getDate() + 1;
                           const monthProgressPct = (today.getDate() / daysInMonth) * 100;
                           const spentPct = status.percentage;
 
                           if (spentPct - monthProgressPct > 15 && spentPct < 100) {
-                            const overBy = formatCurrency(((spentPct - monthProgressPct) / 100) * status.limit, 'budgets');
+                            const overAmount = ((spentPct - monthProgressPct) / 100) * status.limit;
+                            const dailyRate = status.limit / daysInMonth;
+                            const daysToRecover = Math.ceil(overAmount / dailyRate);
+                            const overBy = formatCurrency(overAmount);
                             return (
                               <View style={styles.velocityRow}>
                                 <View style={[styles.velocityDot, { backgroundColor: theme.warning }]} />
                                 <Text style={[styles.velocityText, { color: theme.warning }]}>
-                                  {overBy} ahead of pace
+                                  {overBy} ahead · recover in {daysToRecover}d
+                                </Text>
+                              </View>
+                            );
+                          } else if (spentPct < 100) {
+                            const remaining = status.limit - status.spent;
+                            const perDay = remaining / daysLeft;
+                            return (
+                              <View style={styles.velocityRow}>
+                                <View style={[styles.velocityDot, { backgroundColor: theme.success }]} />
+                                <Text style={[styles.velocityText, { color: theme.success }]}>
+                                  {formatCurrency(perDay, 'budgets')} / day left to spend
                                 </Text>
                               </View>
                             );
                           }
                         })()}
+
 
                         {/* Bills Breakdown */}
                         {!isUnbudgeted && (() => {
