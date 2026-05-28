@@ -1135,7 +1135,7 @@ const styles = StyleSheet.create({
   },
   budgetCardDashed: {
     borderWidth: 1,
-    borderStyle: 'dashed',
+    borderStyle: 'dotted',
   },
   budgetCardRow: {
     flexDirection: 'row',
