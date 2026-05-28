@@ -115,7 +115,7 @@ export default function SavingsModal({
                 <NeoCard backgroundColor={theme.card} style={styles.balanceCard}>
                     <Text style={[styles.balanceLabel, { color: theme.text }]}>Total Savings</Text>
                     <Text style={[styles.balanceAmount, { color: theme.text }]}>{formatCurrency(currentBalance)}</Text>
-                    <View style={[styles.goalContainer, SharedStyles.neoBorder, { backgroundColor: theme.tint }]}>
+                    <View style={[styles.goalContainer, { backgroundColor: theme.tint, borderRadius: 50 }]}>
                         <Text style={[styles.goalText, { color: '#fff' }]}>
                             Monthly Deduction: {formatCurrency(currentGoal)}
                         </Text>
@@ -202,9 +202,9 @@ export default function SavingsModal({
                                 <View style={styles.inputGroup}>
                                     <Text style={[styles.label, { color: theme.text }]}>Amount</Text>
                                     <TextInput
-                                        style={[styles.input, SharedStyles.neoBorder, { color: '#000', backgroundColor: '#fff' }]}
+                                        style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundSecondary, borderColor: theme.border, borderWidth: 1, borderRadius: 12 }]}
                                         placeholder="0"
-                                        placeholderTextColor="#999"
+                                        placeholderTextColor={theme.textMuted}
                                         keyboardType="numeric"
                                         value={amount}
                                         onChangeText={setAmount}
@@ -215,9 +215,9 @@ export default function SavingsModal({
                                 <View style={styles.inputGroup}>
                                     <Text style={[styles.label, { color: theme.text }]}>Note (Optional)</Text>
                                     <TextInput
-                                        style={[styles.input, SharedStyles.neoBorder, { color: '#000', backgroundColor: '#fff', fontSize: 16 }]}
+                                        style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundSecondary, borderColor: theme.border, borderWidth: 1, borderRadius: 12, fontSize: 16 }]}
                                         placeholder="e.g. Monthly Savings"
-                                        placeholderTextColor="#999"
+                                        placeholderTextColor={theme.textMuted}
                                         value={note}
                                         onChangeText={setNote}
                                     />
@@ -228,7 +228,7 @@ export default function SavingsModal({
                                         style={styles.checkboxContainer}
                                         onPress={() => setIsInitialBalance(!isInitialBalance)}
                                     >
-                                        <View style={[styles.checkbox, SharedStyles.neoBorder, { backgroundColor: isInitialBalance ? theme.tint : '#fff' }]}>
+                                        <View style={[styles.checkbox, { backgroundColor: isInitialBalance ? theme.tint : theme.backgroundSecondary, borderColor: isInitialBalance ? theme.tint : theme.border, borderWidth: 1.5, borderRadius: 6 }]}>
                                             {isInitialBalance && <Ionicons name="checkmark" size={16} color="#fff" />}
                                         </View>
                                         <Text style={[styles.checkboxLabel, { color: theme.text }]}>
@@ -310,9 +310,7 @@ export default function SavingsModal({
 }
 
 const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
-    container: {
-        flex: 1,
-    },
+    container: { flex: 1 },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -320,158 +318,58 @@ const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
         paddingHorizontal: 20,
         paddingBottom: 20,
     },
-    title: {
-        fontSize: 24,
-        fontWeight: '900',
-        textTransform: 'uppercase',
-    },
-    closeButton: {
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    balanceCard: {
-        margin: 20,
-        padding: 24,
-        alignItems: 'center',
-    },
-    balanceLabel: {
-        fontSize: 14,
-        fontWeight: '900',
-        marginBottom: 8,
-        textTransform: 'uppercase',
-    },
-    balanceAmount: {
-        fontSize: 48,
-        fontWeight: '900',
-        marginBottom: 16,
-    },
+    title: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
+    closeButton: { fontSize: 16, fontWeight: '600' },
+    balanceCard: { margin: 20, padding: 24, alignItems: 'center' },
+    balanceLabel: { fontSize: 13, fontWeight: '600', marginBottom: 8, color: '#64748B' },
+    balanceAmount: { fontSize: 40, fontWeight: '700', marginBottom: 16, letterSpacing: -1 },
     goalContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
         width: '100%',
         justifyContent: 'center',
-        ...neoStyles.neoBorder,
     },
-    goalText: {
-        fontSize: 14,
-        fontWeight: '900',
-        marginRight: 8,
-        textTransform: 'uppercase',
-    },
-    editGoalButton: {
-        padding: 4,
-    },
-    tabContainer: {
-        marginHorizontal: 20,
-        marginBottom: 20,
-    },
-    content: {
-        flex: 1,
-        paddingHorizontal: 20,
-    },
+    goalText: { fontSize: 13, fontWeight: '600', marginRight: 8 },
+    editGoalButton: { padding: 4 },
+    tabContainer: { marginHorizontal: 20, marginBottom: 20 },
+    content: { flex: 1, paddingHorizontal: 20 },
     transactionItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 16,
-        marginBottom: 12,
+        padding: 14,
+        marginBottom: 10,
+        borderRadius: 12,
     },
-    transactionNote: {
-        fontSize: 16,
-        fontWeight: '900',
-        marginBottom: 4,
-    },
-    transactionDate: {
-        fontSize: 12,
-    },
-    transactionAmount: {
-        fontSize: 16,
-        fontWeight: '900',
-    },
-    emptyText: {
-        textAlign: 'center',
-        marginTop: 40,
-        fontSize: 14,
-    },
-    typeSelector: {
-        marginBottom: 24,
-    },
-    inputGroup: {
-        marginBottom: 24,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '900',
-        marginBottom: 8,
-        textTransform: 'uppercase',
-    },
-    helperText: {
-        fontSize: 12,
-        marginBottom: 12,
-        opacity: 0.7,
-    },
+    transactionNote: { fontSize: 15, fontWeight: '600', marginBottom: 3 },
+    transactionDate: { fontSize: 12 },
+    transactionAmount: { fontSize: 15, fontWeight: '700' },
+    emptyText: { textAlign: 'center', marginTop: 40, fontSize: 14 },
+    typeSelector: { marginBottom: 24 },
+    inputGroup: { marginBottom: 24 },
+    label: { fontSize: 12, fontWeight: '600', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.4 },
+    helperText: { fontSize: 12, marginBottom: 12, opacity: 0.7 },
     input: {
         fontSize: 18,
-        fontWeight: '900',
-        padding: 12,
-        borderRadius: 0,
-        ...neoStyles.neoBorder,
+        fontWeight: '600',
+        padding: 14,
     },
-    actionButton: {
-        padding: 16,
-        borderRadius: 0,
-        alignItems: 'center',
-        marginTop: 8,
-        ...neoStyles.neoBorder,
-    },
-    actionButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '700',
-    },
-    checkboxContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 24,
-    },
+    actionButton: { padding: 16, borderRadius: 14, alignItems: 'center', marginTop: 8 },
+    actionButtonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+    checkboxContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
     checkbox: {
-        width: 24,
-        height: 24,
-        borderRadius: 0,
+        width: 22,
+        height: 22,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
-        ...neoStyles.neoBorder,
     },
-    checkboxLabel: {
-        fontSize: 13,
-        fontWeight: '900',
-        textTransform: 'uppercase',
-    },
-    cancelButton: {
-        padding: 16,
-        alignItems: 'center',
-    },
-    cancelButtonText: {
-        fontSize: 15,
-        fontWeight: '600',
-    },
-    deleteButton: {
-        padding: 16,
-        alignItems: 'center',
-        marginTop: 4,
-    },
-    deleteButtonText: {
-        fontSize: 13,
-        fontWeight: '900',
-        textTransform: 'uppercase',
-        textDecorationLine: 'underline',
-    },
-    buttons: {
-        flexDirection: 'row',
-        gap: 12,
-        marginTop: 8,
-    },
+    checkboxLabel: { fontSize: 13, fontWeight: '500' },
+    cancelButton: { padding: 16, alignItems: 'center' },
+    cancelButtonText: { fontSize: 15, fontWeight: '600' },
+    deleteButton: { padding: 16, alignItems: 'center', marginTop: 4 },
+    deleteButtonText: { fontSize: 13, fontWeight: '600', textDecorationLine: 'underline' },
+    buttons: { flexDirection: 'row', gap: 12, marginTop: 8 },
 });

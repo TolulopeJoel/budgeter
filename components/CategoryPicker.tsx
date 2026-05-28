@@ -33,10 +33,11 @@ export default function CategoryPicker({
             <TouchableOpacity
                 style={[
                     styles.dropdownTrigger,
-                    SharedStyles.neoBorder,
                     {
-                        backgroundColor: error ? theme.danger + '10' : '#fff',
-                        borderColor: error ? theme.danger : '#000',
+                        backgroundColor: error ? theme.danger + '10' : theme.backgroundSecondary,
+                        borderColor: error ? theme.danger : theme.border,
+                        borderWidth: 1,
+                        borderRadius: 12,
                     },
                 ]}
                 onPress={() => setShowPicker(true)}
@@ -47,7 +48,7 @@ export default function CategoryPicker({
                 ]}>
                     {value || placeholder}
                 </Text>
-                <IconSymbol name="chevron.down" size={20} color="#000" />
+                <IconSymbol name="chevron.down" size={20} color={theme.textSecondary} />
             </TouchableOpacity>
 
             <Modal visible={showPicker} transparent animationType="slide">
@@ -77,8 +78,8 @@ export default function CategoryPicker({
                                                 backgroundColor={value === c.name ? theme.tint : '#fff'}
                                             >
                                                 <View style={styles.optionLeft}>
-                                                    <View style={[styles.iconContainer, SharedStyles.neoBorder, { backgroundColor: '#fff' }]}>
-                                                        <IconSymbol name={c.icon as any} size={20} color="#000" />
+                                                    <View style={[styles.iconContainer, { backgroundColor: theme.backgroundSecondary, borderRadius: 8 }]}>
+                                                        <IconSymbol name={c.icon as any} size={20} color={theme.textSecondary} />
                                                     </View>
                                                     <Text style={[
                                                         styles.optionText,
@@ -109,10 +110,11 @@ const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
         width: '100%',
     },
     label: {
-        fontSize: 14,
-        fontWeight: '900',
+        fontSize: 12,
+        fontWeight: '600',
         marginBottom: 8,
         textTransform: 'uppercase',
+        letterSpacing: 0.4,
     },
     dropdownTrigger: {
         flexDirection: 'row',
@@ -121,12 +123,12 @@ const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
         padding: 14,
     },
     dropdownText: {
-        fontSize: 16,
-        fontWeight: '700',
+        fontSize: 15,
+        fontWeight: '500',
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
@@ -135,6 +137,7 @@ const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
         width: '100%',
         maxHeight: '80%',
         padding: 24,
+        borderRadius: 20,
     },
     modalHeader: {
         flexDirection: 'row',
@@ -143,9 +146,9 @@ const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
         marginBottom: 20,
     },
     modalTitle: {
-        fontSize: 20,
-        fontWeight: '900',
-        textTransform: 'uppercase',
+        fontSize: 18,
+        fontWeight: '700',
+        letterSpacing: -0.3,
     },
     list: {
         maxHeight: 400,
@@ -156,7 +159,8 @@ const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 12,
         paddingHorizontal: 12,
-        marginBottom: 12,
+        marginBottom: 8,
+        borderRadius: 12,
     },
     optionLeft: {
         flexDirection: 'row',
@@ -165,14 +169,12 @@ const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
     iconContainer: {
         width: 36,
         height: 36,
-        borderRadius: 0,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
-        ...neoStyles.neoBorder,
     },
     optionText: {
-        fontSize: 16,
-        fontWeight: '800',
+        fontSize: 15,
+        fontWeight: '500',
     },
 });

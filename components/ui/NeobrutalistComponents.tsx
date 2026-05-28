@@ -26,8 +26,7 @@ export const NeoCard = ({ children, style, backgroundColor }: NeoCardProps) => {
         <View style={[
             styles.card,
             { backgroundColor: bg },
-            SharedStyles.neoBorder,
-            SharedStyles.neoShadow,
+            SharedStyles.softShadow,
             style
         ]}>
             {children}
@@ -55,35 +54,25 @@ export const NeoButton = ({
     const theme = Colors.light;
     const bg = backgroundColor || theme.primary;
 
-    const animatedValue = React.useRef(new Animated.Value(0)).current;
+    const animatedValue = React.useRef(new Animated.Value(1)).current;
 
     const onPressIn = () => {
         Animated.spring(animatedValue, {
-            toValue: 1,
+            toValue: 0.97,
             useNativeDriver: true,
-            tension: 40,
-            friction: 7
+            tension: 60,
+            friction: 8
         }).start();
     };
 
     const onPressOut = () => {
         Animated.spring(animatedValue, {
-            toValue: 0,
+            toValue: 1,
             useNativeDriver: true,
-            tension: 40,
-            friction: 7
+            tension: 60,
+            friction: 8
         }).start();
     };
-
-    const translateX = animatedValue.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, 2],
-    });
-
-    const translateY = animatedValue.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, 2],
-    });
 
     return (
         <Pressable
@@ -91,23 +80,16 @@ export const NeoButton = ({
             onPressIn={onPressIn}
             onPressOut={onPressOut}
             disabled={disabled}
-            style={[
-                styles.buttonContainer,
-                style
-            ]}
+            style={[styles.buttonContainer, style]}
         >
-            <Animated.View style={[
-                styles.buttonShadow,
-                { opacity: disabled ? 0.5 : 1 }
-            ]} />
             <Animated.View style={[
                 styles.buttonContent,
                 {
                     backgroundColor: bg,
-                    transform: [{ translateX }, { translateY }],
-                    opacity: disabled ? 0.7 : 1
+                    transform: [{ scale: animatedValue }],
+                    opacity: disabled ? 0.5 : 1,
                 },
-                SharedStyles.neoBorder,
+                SharedStyles.softShadow,
             ]}>
                 <Text style={[styles.buttonText, textStyle]}>{title}</Text>
             </Animated.View>
@@ -137,12 +119,11 @@ export const NeoInput = ({
             value={value}
             onChangeText={onChangeText}
             placeholder={placeholder}
-            placeholderTextColor={theme.icon}
+            placeholderTextColor={theme.textMuted}
             secureTextEntry={secureTextEntry}
             style={[
                 styles.input,
-                SharedStyles.neoBorder,
-                { backgroundColor: theme.card },
+                { backgroundColor: theme.backgroundSecondary, color: theme.text, borderColor: theme.border },
                 style as any
             ]}
         />
@@ -162,8 +143,9 @@ export function NeoSegmentedToggle<T extends string>({
     onValueChange,
     style
 }: NeoSegmentedToggleProps<T>) {
+    const theme = Colors.light;
     return (
-        <View style={[styles.toggleContainer, style]}>
+        <View style={[styles.toggleContainer, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }, style]}>
             {options.map((option) => {
                 const isActive = option.value === value;
                 return (
@@ -176,11 +158,12 @@ export function NeoSegmentedToggle<T extends string>({
                             <View
                                 style={[
                                     styles.activeToggle,
-                                    { backgroundColor: option.activeColor || '#fff' }
+                                    { backgroundColor: option.activeColor || theme.primary },
+                                    SharedStyles.softShadow,
                                 ]}
                             />
                         )}
-                        <Text style={[styles.toggleText, { color: isActive ? '#000' : 'rgba(255, 255, 255, 0.4)' }]}>
+                        <Text style={[styles.toggleText, { color: isActive ? '#fff' : theme.textSecondary }]}>
                             {option.label}
                         </Text>
                     </Pressable>
@@ -193,73 +176,59 @@ export function NeoSegmentedToggle<T extends string>({
 const styles = StyleSheet.create({
     card: {
         padding: 16,
-        borderRadius: 0,
-        marginVertical: 8,
+        borderRadius: 16,
+        marginVertical: 0,
     },
     buttonContainer: {
         height: 54,
         width: '100%',
-        position: 'relative',
         marginVertical: 8,
     },
-    buttonShadow: {
-        position: 'absolute',
-        top: 4,
-        left: 4,
-        right: -4,
-        bottom: -4,
-        backgroundColor: '#000000',
-    },
     buttonContent: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        flex: 1,
+        borderRadius: 14,
         justifyContent: 'center',
         alignItems: 'center',
     },
     buttonText: {
-        fontWeight: '900',
+        fontWeight: '700',
         fontSize: 16,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
+        color: '#fff',
+        letterSpacing: 0.3,
     },
     input: {
         height: 50,
         paddingHorizontal: 16,
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '500',
         marginVertical: 8,
+        borderRadius: 12,
+        borderWidth: 1,
     },
     toggleContainer: {
         flexDirection: 'row',
-        height: 49.5,
-        backgroundColor: '#000',
+        height: 48,
+        borderRadius: 14,
         alignItems: 'center',
-        marginVertical: 15, // Provide space for the popping element
-        overflow: 'visible',
+        marginVertical: 12,
+        padding: 4,
+        borderWidth: 1,
     },
     toggleButton: {
         flex: 1,
         height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
-        overflow: 'visible', // Ensure the background can pop
     },
     activeToggle: {
-        position: 'absolute', // Popping from the rail
-        height: 52,
-        width: '100%', // Fills its flex segment
-        ...SharedStyles.neoBorder,
-        ...SharedStyles.neoShadow,
-        zIndex: 10,
+        position: 'absolute',
+        height: '100%',
+        width: '100%',
+        borderRadius: 10,
     },
     toggleText: {
-        fontSize: 13,
-        fontWeight: '900',
-        textTransform: 'uppercase',
-        letterSpacing: .5,
-        zIndex: 20, // Always above the active block
+        fontSize: 14,
+        fontWeight: '600',
+        zIndex: 20,
     },
 });

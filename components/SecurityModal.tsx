@@ -1,5 +1,5 @@
 import { NeoCard } from '@/components/ui/NeobrutalistComponents';
-import { Colors, SharedStyles } from '@/constants/Colors';
+import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
@@ -176,19 +176,18 @@ const styles = StyleSheet.create({
         padding: 8,
     },
     title: {
-        fontSize: 24,
-        fontWeight: '900',
-        textTransform: 'uppercase',
+        fontSize: 22,
+        fontWeight: '700',
         marginBottom: 8,
         marginTop: 20,
+        letterSpacing: -0.3,
     },
     subtitle: {
-        fontSize: 14,
-        fontWeight: '700',
+        fontSize: 13,
+        fontWeight: '500',
         textAlign: 'center',
         marginBottom: 32,
         paddingHorizontal: 20,
-        textTransform: 'uppercase',
     },
     dotsContainer: {
         flexDirection: 'row',
@@ -196,9 +195,9 @@ const styles = StyleSheet.create({
         marginBottom: 40,
     },
     dot: {
-        width: 16,
-        height: 16,
-        borderRadius: 0,
+        width: 14,
+        height: 14,
+        borderRadius: 7,
         borderWidth: 2,
     },
     keypad: {
@@ -211,17 +210,16 @@ const styles = StyleSheet.create({
     key: {
         width: 72,
         height: 72,
-        borderRadius: 0,
+        borderRadius: 36,
         justifyContent: 'center',
         alignItems: 'center',
-        ...SharedStyles.neoBorder,
     },
     keyPlaceholder: {
         width: 64,
         height: 64,
     },
     keyText: {
-        fontSize: 28,
-        fontWeight: '900',
+        fontSize: 26,
+        fontWeight: '600',
     },
 });

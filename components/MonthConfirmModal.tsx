@@ -96,7 +96,7 @@ export default function MonthConfirmModal() {
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
                 <NeoCard style={[styles.container, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
-                    <View style={[styles.iconContainer, SharedStyles.neoBorder, { backgroundColor: theme.tint }]}>
+                    <View style={[styles.iconContainer, { backgroundColor: theme.primarySoft, borderRadius: 20 }]}>
                         <Text style={styles.icon}>📅</Text>
                     </View>
 
@@ -132,21 +132,21 @@ export default function MonthConfirmModal() {
                                             }}
                                             style={[
                                                 styles.checkAllBtn,
-                                                SharedStyles.neoBorder,
                                                 {
                                                     backgroundColor: selectedIds.size === lastMonthIncome.length
                                                         ? theme.tint
-                                                        : theme.card
+                                                        : theme.backgroundSecondary,
+                                                    borderRadius: 20,
                                                 }
                                             ]}
                                         >
                                             <Ionicons
                                                 name={selectedIds.size === lastMonthIncome.length ? "checkmark" : "add"}
                                                 size={14}
-                                                color={selectedIds.size === lastMonthIncome.length ? '#000' : theme.tint}
+                                                color={selectedIds.size === lastMonthIncome.length ? '#fff' : theme.tint}
                                             />
                                             <Text style={[styles.checkAllText, {
-                                                color: selectedIds.size === lastMonthIncome.length ? '#000' : theme.tint
+                                                color: selectedIds.size === lastMonthIncome.length ? '#fff' : theme.tint
                                             }]}>
                                                 {selectedIds.size === lastMonthIncome.length ? "Deselect All" : "Select All"}
                                             </Text>
@@ -173,8 +173,8 @@ export default function MonthConfirmModal() {
                                                 </View>
                                                 <View style={[
                                                     styles.checkbox,
-                                                    { borderColor: '#000' },
-                                                    selectedIds.has(t.id) && { backgroundColor: '#000' }
+                                                    { borderColor: theme.border, borderRadius: 6 },
+                                                    selectedIds.has(t.id) && { backgroundColor: theme.tint, borderColor: theme.tint }
                                                 ]}>
                                                     {selectedIds.has(t.id) && (
                                                         <Ionicons name="checkmark" size={16} color="#fff" />
@@ -196,20 +196,20 @@ export default function MonthConfirmModal() {
                                             </TouchableOpacity>
                                         )}
                                     </View>
-                                    <View style={[styles.manualInput, SharedStyles.neoBorder, { backgroundColor: '#fff', padding: 4 }]}>
+                                    <View style={[styles.manualInput, { backgroundColor: theme.backgroundSecondary, borderRadius: 14, borderWidth: 1, borderColor: theme.border, padding: 4 }]}>
                                         <TextInput
-                                            style={[styles.input, { color: '#000' }]}
+                                            style={[styles.input, { color: theme.text }]}
                                             placeholder="Amount"
-                                            placeholderTextColor="#999"
+                                            placeholderTextColor={theme.textMuted}
                                             keyboardType="numeric"
                                             value={manualAmount}
                                             onChangeText={setManualAmount}
                                         />
-                                        <View style={[styles.divider, { backgroundColor: '#000' }]} />
+                                        <View style={[styles.divider, { backgroundColor: theme.borderLight }]} />
                                         <TextInput
-                                            style={[styles.input, { color: '#000' }]}
+                                            style={[styles.input, { color: theme.text }]}
                                             placeholder="Note (e.g. Salary)"
-                                            placeholderTextColor="#999"
+                                            placeholderTextColor={theme.textMuted}
                                             value={manualNote}
                                             onChangeText={setManualNote}
                                         />
@@ -245,7 +245,7 @@ export default function MonthConfirmModal() {
 const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
@@ -257,25 +257,22 @@ const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
         padding: 24,
         alignItems: 'center',
         overflow: 'hidden',
+        borderRadius: 24,
     },
     iconContainer: {
-        width: 64,
-        height: 64,
-        borderRadius: 0,
+        width: 60,
+        height: 60,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16,
-        ...neoStyles.neoBorder,
     },
-    icon: {
-        fontSize: 32,
-    },
+    icon: { fontSize: 32 },
     title: {
-        fontSize: 24,
-        fontWeight: '900',
+        fontSize: 20,
+        fontWeight: '700',
         textAlign: 'center',
         marginBottom: 8,
-        textTransform: 'uppercase',
+        letterSpacing: -0.3,
     },
     subtitle: {
         fontSize: 14,
@@ -289,17 +286,9 @@ const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
         height: 300,
         marginBottom: 20,
     },
-    scrollArea: {
-        width: '100%',
-        maxHeight: 400,
-    },
-    scrollContent: {
-        paddingBottom: 10,
-    },
-    section: {
-        width: '100%',
-        marginBottom: 20,
-    },
+    scrollArea: { width: '100%', maxHeight: 400 },
+    scrollContent: { paddingBottom: 10 },
+    section: { width: '100%', marginBottom: 20 },
     sectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -308,53 +297,36 @@ const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
     },
     label: {
         fontSize: 12,
-        fontWeight: '900',
+        fontWeight: '600',
         textTransform: 'uppercase',
-        letterSpacing: 1,
+        letterSpacing: 0.5,
     },
     checkAllBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 10,
+        paddingHorizontal: 12,
         paddingVertical: 6,
-        borderRadius: 0,
-        shadowColor: '#000',
-        shadowOffset: { width: 2, height: 2 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-        elevation: 3,
     },
     checkAllText: {
         fontSize: 11,
-        fontWeight: '900',
+        fontWeight: '600',
         marginLeft: 4,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
     },
     incomeItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 16,
-        marginBottom: 12,
+        padding: 14,
+        marginBottom: 8,
+        borderRadius: 12,
     },
-    incomeInfo: {
-        flex: 1,
-    },
-    incomeNote: {
-        fontSize: 16,
-        fontWeight: '900',
-        marginBottom: 2,
-    },
-    incomeAmount: {
-        fontSize: 14,
-        fontWeight: '500',
-    },
+    incomeInfo: { flex: 1 },
+    incomeNote: { fontSize: 15, fontWeight: '600', marginBottom: 2 },
+    incomeAmount: { fontSize: 13, fontWeight: '500' },
     checkbox: {
-        width: 24,
-        height: 24,
-        borderRadius: 0,
-        borderWidth: 2,
+        width: 22,
+        height: 22,
+        borderWidth: 1.5,
         justifyContent: 'center',
         alignItems: 'center',
         marginLeft: 12,
@@ -364,30 +336,15 @@ const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         padding: 14,
-        borderRadius: 0,
-        ...neoStyles.neoBorder,
+        borderRadius: 12,
+        borderWidth: 1,
         borderStyle: 'dashed',
         marginTop: 4,
     },
-    addManualText: {
-        fontSize: 15,
-        fontWeight: '600',
-        marginLeft: 8,
-    },
-    manualInput: {
-        borderRadius: 0,
-        ...neoStyles.neoBorder,
-        padding: 4,
-    },
-    input: {
-        padding: 12,
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    divider: {
-        height: 1.5,
-        marginHorizontal: 12,
-    },
+    addManualText: { fontSize: 15, fontWeight: '600', marginLeft: 8 },
+    manualInput: {},
+    input: { padding: 12, fontSize: 16, fontWeight: '500' },
+    divider: { height: 1, marginHorizontal: 12 },
     footer: {
         fontSize: 12,
         textAlign: 'center',

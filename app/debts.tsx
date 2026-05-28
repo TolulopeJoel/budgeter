@@ -1,8 +1,8 @@
 import TransactionModal from '@/components/TransactionModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { NeoCard } from '@/components/ui/NeobrutalistComponents';
 import { Colors, SharedStyles } from '@/constants/Colors';
 import { Transaction, useBudget } from '@/context/BudgetContext';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -26,40 +26,36 @@ export default function Debts() {
     };
 
     const formatCurrency = (amount: number, forceShow: boolean = false) => {
-        if (isHistoryPrivacyEnabled && !forceShow) return '₦ █████';
+        if (isHistoryPrivacyEnabled && !forceShow) return '₦ ••••••';
         return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top + 10 }]}>
+        <View style={[styles.container, { backgroundColor: theme.backgroundSecondary, paddingTop: insets.top }]}>
+            {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    router.back();
-                }}>
-                    <IconSymbol name="chevron.left" size={28} color={theme.text} />
+                <TouchableOpacity
+                    style={[styles.backBtn, { backgroundColor: theme.card }, SharedStyles.softShadow]}
+                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }}
+                >
+                    <Ionicons name="chevron-back" size={20} color={theme.text} />
                 </TouchableOpacity>
-                <Text style={[styles.pageTitle, { color: theme.text }]}>Lent Out</Text>
-                <View style={{ width: 28 }} />
+                <Text style={[styles.headerTitle, { color: theme.text }]}>Lent Out</Text>
+                <View style={{ width: 40 }} />
             </View>
 
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                {/* Total Summary */}
-                <NeoCard style={styles.summaryCard} backgroundColor={theme.card}>
-                    <View style={styles.summaryHeader}>
-                        <Text style={[styles.summaryLabel, { color: theme.text }]}>To Collect</Text>
-                    </View>
-                    <Text style={[styles.summaryAmount, { color: theme.success }]}>
-                        {formatCurrency(totalDebt, true)}
-                    </Text>
-                </NeoCard>
+            <ScrollView style={styles.content} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+                {/* Summary Card */}
+                <View style={[styles.summaryCard, { backgroundColor: theme.hero }, SharedStyles.softShadowMd]}>
+                    <Text style={styles.summaryLabel}>Total to Collect</Text>
+                    <Text style={styles.summaryAmount}>{formatCurrency(totalDebt, true)}</Text>
+                    <Text style={styles.summarySub}>{debts.length} {debts.length === 1 ? 'record' : 'records'}</Text>
+                </View>
 
                 {/* Debts List */}
                 {debts.length > 0 && (
-                    <View style={styles.section}>
-                        <Text style={[styles.sectionTitle, { color: theme.text }]}>History</Text>
-
-                        {debts.map(debt => (
+                    <View style={[styles.listCard, { backgroundColor: theme.card }, SharedStyles.softShadow]}>
+                        {debts.map((debt, idx) => (
                             <TouchableOpacity
                                 key={debt.id}
                                 onPress={() => {
@@ -68,46 +64,52 @@ export default function Debts() {
                                     setShowTransactionModal(true);
                                 }}
                             >
-                                <NeoCard style={styles.debtCard}>
-                                    <View style={styles.debtContent}>
-                                        <View style={[styles.iconContainer, SharedStyles.neoBorder, { backgroundColor: '#fff' }]}>
-                                            <IconSymbol name={getCategoryIcon(debt.category) as any} size={20} color={theme.danger} />
-                                        </View>
-
-                                        <View style={styles.debtInfo}>
-                                            <Text style={[styles.debtCategory, { color: theme.text }]}>
-                                                {isHistoryPrivacyEnabled ? 'REDACTED' : debt.note}
-                                            </Text>
-                                            <Text style={[styles.debtDate, { color: theme.icon }]}>
-                                                {new Date(debt.date).toLocaleDateString('en-NG', {
-                                                    month: 'short',
-                                                    day: 'numeric'
-                                                })}
-                                            </Text>
-                                        </View>
-
-                                        <Text style={[styles.debtAmount, { color: theme.danger }]}>
-                                            {formatCurrency(debt.amount)}
+                                <View style={[
+                                    styles.debtRow,
+                                    idx < debts.length - 1 && { borderBottomWidth: 1, borderBottomColor: theme.borderLight }
+                                ]}>
+                                    <View style={[styles.iconCircle, { backgroundColor: theme.dangerSoft }]}>
+                                        <IconSymbol name={getCategoryIcon(debt.category) as any} size={18} color={theme.danger} />
+                                    </View>
+                                    <View style={styles.debtInfo}>
+                                        <Text style={[styles.debtNote, { color: theme.text }]}>
+                                            {isHistoryPrivacyEnabled ? '— redacted —' : (debt.note || debt.category)}
+                                        </Text>
+                                        <Text style={[styles.debtDate, { color: theme.textMuted }]}>
+                                            {new Date(debt.date).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' })}
                                         </Text>
                                     </View>
-                                </NeoCard>
+                                    <Text style={[styles.debtAmount, { color: theme.danger }]}>
+                                        {formatCurrency(debt.amount)}
+                                    </Text>
+                                </View>
                             </TouchableOpacity>
                         ))}
                     </View>
                 )}
 
+                {debts.length === 0 && (
+                    <View style={[styles.emptyState, { backgroundColor: theme.card }, SharedStyles.softShadow]}>
+                        <Ionicons name="cash-outline" size={36} color={theme.textMuted} style={{ marginBottom: 12 }} />
+                        <Text style={[styles.emptyTitle, { color: theme.text }]}>No debts recorded</Text>
+                        <Text style={[styles.emptySub, { color: theme.textMuted }]}>Tap below to add a debt record</Text>
+                    </View>
+                )}
+
+                {/* Add Button */}
                 <TouchableOpacity
+                    style={[styles.addBtn, { borderColor: theme.border }]}
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         setEditingTransaction(null);
                         setShowTransactionModal(true);
                     }}
                 >
-                    <NeoCard style={[styles.debtCard, { borderStyle: 'dashed' } as any]}>
-                        <Text style={[styles.debtCategory, { color: theme.tint }]}>+ Add New Debt Record</Text>
-                    </NeoCard>
+                    <Ionicons name="add-circle-outline" size={18} color={theme.tint} />
+                    <Text style={[styles.addBtnText, { color: theme.tint }]}>Add Debt Record</Text>
                 </TouchableOpacity>
             </ScrollView>
+
             <TransactionModal
                 visible={showTransactionModal}
                 onClose={() => setShowTransactionModal(false)}
@@ -118,112 +120,68 @@ export default function Debts() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
+    container: { flex: 1 },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingBottom: 20,
+        paddingVertical: 16,
     },
-    pageTitle: {
-        fontSize: 20,
-        fontWeight: '900',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-    },
-    content: {
-        flex: 1,
-        paddingHorizontal: 20,
-    },
-    summaryCard: {
-        padding: 20,
-        marginBottom: 24,
-    },
-    summaryHeader: {
-        marginBottom: 8,
-    },
-    summaryLabel: {
-        fontSize: 14,
-        fontWeight: '700',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-    summaryAmount: {
-        fontSize: 36,
-        fontWeight: '900',
-        marginTop: 4,
-    },
-    section: {
-        marginBottom: 24,
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: '900',
-        textTransform: 'uppercase',
-        marginBottom: 12,
-    },
-    debtCard: {
-        marginBottom: 12,
-    },
-    debtContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    iconContainer: {
+    backBtn: {
         width: 40,
         height: 40,
-        borderRadius: 0,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    headerTitle: { fontSize: 18, fontWeight: '700', letterSpacing: -0.2 },
+    content: { flex: 1, paddingHorizontal: 20 },
+    summaryCard: {
+        borderRadius: 20,
+        padding: 22,
+        marginBottom: 16,
+    },
+    summaryLabel: { fontSize: 13, fontWeight: '500', color: 'rgba(255,255,255,0.6)', marginBottom: 6 },
+    summaryAmount: { fontSize: 34, fontWeight: '700', color: '#fff', letterSpacing: -1 },
+    summarySub: { fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 4, fontWeight: '500' },
+    listCard: { borderRadius: 16, overflow: 'hidden', marginBottom: 12 },
+    debtRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+    },
+    iconCircle: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
     },
-    debtInfo: {
-        flex: 1,
-    },
-    debtCategory: {
-        fontSize: 16,
-        fontWeight: '800',
-    },
-    debtDate: {
-        fontSize: 12,
-        fontWeight: '500',
-    },
-    debtAmount: {
-        fontSize: 16,
-        fontWeight: '700',
-    },
+    debtInfo: { flex: 1 },
+    debtNote: { fontSize: 15, fontWeight: '600' },
+    debtDate: { fontSize: 12, fontWeight: '400', marginTop: 2 },
+    debtAmount: { fontSize: 15, fontWeight: '700' },
     emptyState: {
-        padding: 40,
         borderRadius: 16,
+        padding: 40,
         alignItems: 'center',
-        marginTop: 40,
+        marginBottom: 12,
     },
-    emptyTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginTop: 16,
-        marginBottom: 8,
+    emptyTitle: { fontSize: 15, fontWeight: '600', marginBottom: 4 },
+    emptySub: { fontSize: 13, textAlign: 'center' },
+    addBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderStyle: 'dashed',
+        marginTop: 4,
     },
-    emptyText: {
-        fontSize: 14,
-        textAlign: 'center',
-        marginBottom: 24,
-    },
-    emptyButton: {
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 12,
-    },
-    emptyButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
+    addBtnText: { fontSize: 15, fontWeight: '600' },
 });

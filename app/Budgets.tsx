@@ -1,7 +1,7 @@
 import { IconPicker } from '@/components/IconPicker';
 import InputModal from '@/components/InputModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { NeoCard, NeoSegmentedToggle } from '@/components/ui/NeobrutalistComponents';
+import { NeoSegmentedToggle } from '@/components/ui/NeobrutalistComponents';
 import { Colors, SharedStyles } from '@/constants/Colors';
 import { useBudget } from '@/context/BudgetContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,7 +34,6 @@ export default function Budgets() {
     const [newCategoryName, setNewCategoryName] = useState('');
     const [newCategoryIcon, setNewCategoryIcon] = useState('ellipsis.circle.fill');
 
-    // Manage Categories State
     const [showManageCategories, setShowManageCategories] = useState(false);
     const [showRenameModal, setShowRenameModal] = useState(false);
     const [renamingCategory, setRenamingCategory] = useState<string | null>(null);
@@ -56,7 +55,6 @@ export default function Budgets() {
             setNewCategoryIcon('ellipsis.circle.fill');
             setShowNewCategoryModal(false);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            // Immediately open budget editor for new category
             handleEditBudget(newCategoryName.trim());
         }
     };
@@ -74,17 +72,10 @@ export default function Budgets() {
     const handleRemoveBudget = async (category: string) => {
         Alert.alert(
             'Remove Budget Limit',
-            `Are you sure you want to remove the budget limit for ${category}?`,
+            `Remove the budget limit for ${category}?`,
             [
                 { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Remove',
-                    style: 'destructive',
-                    onPress: async () => {
-                        await deleteBudget(category);
-                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                    }
-                }
+                { text: 'Remove', style: 'destructive', onPress: async () => { await deleteBudget(category); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } }
             ]
         );
     };
@@ -103,23 +94,16 @@ export default function Budgets() {
     const handleDeleteCategory = (category: string) => {
         Alert.alert(
             'Delete Category',
-            `Are you sure you want to delete "${category}"? This will update all associated transactions to "Others"`,
+            `Delete "${category}"? Transactions will be moved to "Others".`,
             [
                 { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        await deleteCategory(category);
-                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                    }
-                }
+                { text: 'Delete', style: 'destructive', onPress: async () => { await deleteCategory(category); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } }
             ]
         );
     };
 
     const formatCurrency = (amount: number) => {
-        if (isBudgetsPrivacyEnabled) return '₦ █████';
+        if (isBudgetsPrivacyEnabled) return '₦ ••••••';
         return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
     };
 
@@ -134,7 +118,6 @@ export default function Budgets() {
         return category?.icon || 'ellipsis.circle.fill';
     };
 
-    // Unified categories list for management
     const allCategories = categories
         .filter(cat => cat.name !== 'Salary')
         .map(cat => {
@@ -146,98 +129,92 @@ export default function Budgets() {
                 limit: budget?.limit || 0,
                 type: budget?.type || 'flexible',
                 spent: status.spent,
+                percentage: status.percentage,
                 hasBudget: !!budget && budget.limit > 0
             };
         })
         .sort((a, b) => {
-            // Active budgets first
             if (a.hasBudget && !b.hasBudget) return -1;
             if (!a.hasBudget && b.hasBudget) return 1;
-            // Then by spent amount
             return b.spent - a.spent;
         });
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top + 10 }]}>
+        <View style={[styles.container, { backgroundColor: theme.backgroundSecondary, paddingTop: insets.top }]}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    router.back();
-                }}>
-                    <IconSymbol name="chevron.left" size={28} color={theme.text} />
+                <TouchableOpacity
+                    style={[styles.backBtn, { backgroundColor: theme.card }, SharedStyles.softShadow]}
+                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }}
+                >
+                    <Ionicons name="chevron-back" size={20} color={theme.text} />
                 </TouchableOpacity>
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>Budget Limits</Text>
-                <View style={{ width: 28 }} />
+                <Text style={[styles.headerTitle, { color: theme.text }]}>Budget Limits</Text>
+                <View style={{ width: 40 }} />
             </View>
 
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                {/* Budget Limits */}
-                <View style={styles.section}>
-                    {allCategories.map(item => (
+            <ScrollView style={styles.content} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+                {allCategories.map(item => {
+                    const budgetColor = getBudgetColor(item.percentage);
+                    return (
                         <TouchableOpacity
                             key={item.name}
-                            onPress={() => {
-                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                handleEditBudget(item.name);
-                            }}
+                            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); handleEditBudget(item.name); }}
                         >
-                            <NeoCard style={styles.categoryCard}>
-                                <View style={styles.categoryIconContainer}>
-                                    <IconSymbol name={item.icon as any} size={20} color={theme.tint} />
+                            <View style={[styles.categoryCard, { backgroundColor: theme.card }, SharedStyles.softShadow]}>
+                                <View style={[styles.catIconCircle, { backgroundColor: (item.hasBudget ? budgetColor : theme.textMuted) + '15' }]}>
+                                    <IconSymbol name={item.icon as any} size={18} color={item.hasBudget ? budgetColor : theme.textMuted} />
                                 </View>
                                 <View style={styles.categoryInfo}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                                         <Text style={[styles.categoryName, { color: theme.text }]}>{item.name}</Text>
-                                        {(item.hasBudget && item.type === 'fixed') && (
-                                            <View style={[SharedStyles.neoBorder, { backgroundColor: theme.primary, paddingHorizontal: 6, paddingVertical: 2 }]}>
-                                                <Text style={{ fontSize: 10, color: '#000', fontWeight: '800' }}>
-                                                    FIXED
-                                                </Text>
+                                        {item.hasBudget && item.type === 'fixed' && (
+                                            <View style={[styles.fixedPill, { backgroundColor: theme.primarySoft }]}>
+                                                <Text style={[styles.fixedPillText, { color: theme.tint }]}>Fixed</Text>
                                             </View>
                                         )}
                                     </View>
-                                    <Text style={[styles.categorySubtext, { color: theme.icon }]}>
+                                    <Text style={[styles.categorySub, { color: theme.textMuted }]}>
                                         {item.hasBudget
-                                            ? `${formatCurrency(Math.max(0, item.limit - item.spent))} left`
-                                            : (item.spent > 0 ? `${formatCurrency(item.spent)} spent` : 'No spending')
-                                        }
-                                        {item.hasBudget && ` • Limit: ${formatCurrency(item.limit)}`}
+                                            ? `${formatCurrency(Math.max(0, item.limit - item.spent))} left · Limit ${formatCurrency(item.limit)}`
+                                            : (item.spent > 0 ? `${formatCurrency(item.spent)} spent` : 'No spending')}
                                     </Text>
+                                    {item.hasBudget && (
+                                        <View style={[styles.progressTrack, { backgroundColor: theme.backgroundSecondary, marginTop: 8 }]}>
+                                            <View style={[styles.progressFill, { width: `${item.percentage}%`, backgroundColor: budgetColor }]} />
+                                        </View>
+                                    )}
                                 </View>
                                 {item.hasBudget ? (
                                     <TouchableOpacity
-                                        style={[styles.iconButton, SharedStyles.neoBorder, { backgroundColor: theme.danger }]}
+                                        style={[styles.trashBtn, { backgroundColor: theme.dangerSoft }]}
                                         onPress={() => handleRemoveBudget(item.name)}
                                     >
-                                        <IconSymbol name="trash" size={16} color="#000" />
+                                        <Ionicons name="trash-outline" size={16} color={theme.danger} />
                                     </TouchableOpacity>
                                 ) : (
-                                    <IconSymbol name="plus.circle" size={24} color={theme.tint} />
+                                    <View style={[styles.addCircle, { backgroundColor: theme.primarySoft }]}>
+                                        <Ionicons name="add" size={18} color={theme.tint} />
+                                    </View>
                                 )}
-                            </NeoCard>
+                            </View>
                         </TouchableOpacity>
-                    ))}
+                    );
+                })}
 
+                <View style={{ gap: 8, marginTop: 8 }}>
                     <TouchableOpacity
-                        onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                            setShowNewCategoryModal(true);
-                        }}
+                        style={[styles.outlineBtn, { borderColor: theme.border }]}
+                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowNewCategoryModal(true); }}
                     >
-                        <NeoCard style={[styles.categoryCard, { borderStyle: 'dashed' } as any]}>
-                            <Text style={[styles.categoryName, { color: theme.tint }]}>+ Create New Category</Text>
-                        </NeoCard>
+                        <Ionicons name="add-circle-outline" size={18} color={theme.tint} />
+                        <Text style={[styles.outlineBtnText, { color: theme.tint }]}>Create New Category</Text>
                     </TouchableOpacity>
-
                     <TouchableOpacity
-                        onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                            setShowManageCategories(true);
-                        }}
+                        style={[styles.outlineBtn, { borderColor: theme.border }]}
+                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowManageCategories(true); }}
                     >
-                        <NeoCard style={[styles.categoryCard, { borderStyle: 'dashed' } as any]}>
-                            <Text style={[styles.categoryName, { color: theme.text }]}>Manage Categories</Text>
-                        </NeoCard>
+                        <Ionicons name="settings-outline" size={18} color={theme.textSecondary} />
+                        <Text style={[styles.outlineBtnText, { color: theme.textSecondary }]}>Manage Categories</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -245,14 +222,11 @@ export default function Budgets() {
             {/* Edit Budget Modal */}
             <InputModal
                 visible={editingCategory !== null}
-                title={`Set Budget for ${editingCategory}`}
+                title={`Budget for ${editingCategory}`}
                 value={editAmount}
                 onChangeText={setEditAmount}
                 onConfirm={handleSaveBudget}
-                onCancel={() => {
-                    setEditingCategory(null);
-                    setEditAmount('');
-                }}
+                onCancel={() => { setEditingCategory(null); setEditAmount(''); }}
                 placeholder="0"
                 keyboardType="numeric"
                 prefix="₦"
@@ -265,16 +239,12 @@ export default function Budgets() {
                         { label: 'Fixed', value: 'fixed', activeColor: theme.primary },
                     ]}
                     value={editType}
-                    onValueChange={(val) => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setEditType(val);
-                    }}
-                    style={{ marginBottom: 24 }}
+                    onValueChange={(val) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setEditType(val); }}
+                    style={{ marginBottom: 16 }}
                 />
-
-                <Text style={[styles.helperText, { color: theme.icon }]}>
+                <Text style={[styles.helperText, { color: theme.textMuted }]}>
                     {editType === 'fixed'
-                        ? "Fixed budgets are reserved from your 'Safe to Spend' immediately, even if not yet spent."
+                        ? "Fixed budgets are reserved from 'Safe to Spend' immediately, even if not yet spent."
                         : "Flexible budgets only deduct from 'Safe to Spend' as you actually spend money."}
                 </Text>
             </InputModal>
@@ -286,66 +256,52 @@ export default function Budgets() {
                 value={newCategoryName}
                 onChangeText={setNewCategoryName}
                 onConfirm={handleAddCategory}
-                onCancel={() => {
-                    setShowNewCategoryModal(false);
-                    setShowIconPicker(false);
-                }}
+                onCancel={() => { setShowNewCategoryModal(false); setShowIconPicker(false); }}
                 placeholder="Category Name"
                 confirmText="Create"
                 leftElement={
                     <TouchableOpacity
-                        style={[styles.sketchIconPlaceholder, { backgroundColor: theme.tint + '10' }]}
+                        style={[styles.iconPickerBtn, { backgroundColor: theme.primarySoft }]}
                         onPress={() => setShowIconPicker(!showIconPicker)}
                     >
-                        <IconSymbol name={newCategoryIcon as any} size={28} color={theme.tint} />
+                        <IconSymbol name={newCategoryIcon as any} size={24} color={theme.tint} />
                     </TouchableOpacity>
                 }
             >
                 {showIconPicker && (
-                    <View style={styles.sketchIconPickerContainer}>
+                    <View style={{ marginTop: 16, maxHeight: 250 }}>
                         <IconPicker
                             selectedIcon={newCategoryIcon}
-                            onSelect={(icon) => {
-                                setNewCategoryIcon(icon);
-                                setShowIconPicker(false);
-                            }}
+                            onSelect={(icon) => { setNewCategoryIcon(icon); setShowIconPicker(false); }}
                         />
                     </View>
                 )}
             </InputModal>
 
-            {/* Rename Category Modal */}
+            {/* Rename Modal */}
             <InputModal
                 visible={showRenameModal}
                 title=""
                 value={renameInput}
                 onChangeText={setRenameInput}
                 onConfirm={handleRenameCategory}
-                onCancel={() => {
-                    setShowRenameModal(false);
-                    setRenamingCategory(null);
-                    setRenameInput('');
-                    setShowIconPicker(false);
-                }}
+                onCancel={() => { setShowRenameModal(false); setRenamingCategory(null); setRenameInput(''); setShowIconPicker(false); }}
                 placeholder="Category Name"
                 confirmText="Rename"
                 leftElement={
                     <TouchableOpacity
-                        style={[styles.sketchIconPlaceholder, { backgroundColor: theme.card, borderColor: theme.border }]}
+                        style={[styles.iconPickerBtn, { backgroundColor: theme.backgroundSecondary }]}
                         onPress={() => setShowIconPicker(!showIconPicker)}
                     >
-                        <IconSymbol name={renameIcon as any} size={28} color={theme.tint} />
+                        <IconSymbol name={renameIcon as any} size={24} color={theme.tint} />
                     </TouchableOpacity>
                 }
             >
                 {showIconPicker && (
-                    <View style={styles.sketchIconPickerContainer}>
+                    <View style={{ marginTop: 16, maxHeight: 250 }}>
                         <IconPicker
                             selectedIcon={renameIcon}
-                            onSelect={(icon) => {
-                                setRenameIcon(icon);
-                                setShowIconPicker(false);
-                            }}
+                            onSelect={(icon) => { setRenameIcon(icon); setShowIconPicker(false); }}
                         />
                     </View>
                 )}
@@ -353,14 +309,17 @@ export default function Budgets() {
 
             {/* Manage Categories Modal */}
             <Modal visible={showManageCategories} animationType="slide" presentationStyle="pageSheet">
-                <View style={[styles.fullScreenModal, { backgroundColor: theme.background, paddingTop: insets.top }]}>
-                    <View style={styles.modalHeader}>
-                        <Text style={[styles.modalTitle, { color: theme.text }]}>Manage Categories</Text>
-                        <TouchableOpacity onPress={() => setShowManageCategories(false)}>
-                            <Ionicons name="close" size={24} color={theme.text} />
+                <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top }]}>
+                    <View style={styles.header}>
+                        <View style={{ width: 40 }} />
+                        <Text style={[styles.headerTitle, { color: theme.text }]}>Manage Categories</Text>
+                        <TouchableOpacity
+                            style={[styles.closeBtn, { backgroundColor: theme.backgroundSecondary }]}
+                            onPress={() => setShowManageCategories(false)}
+                        >
+                            <Ionicons name="close" size={18} color={theme.text} />
                         </TouchableOpacity>
                     </View>
-
                     <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                         {categories.map(category => (
                             <TouchableOpacity
@@ -372,26 +331,18 @@ export default function Budgets() {
                                     setShowRenameModal(true);
                                 }}
                             >
-                                <NeoCard style={[styles.categoryRow]}>
-                                    <View style={styles.categoryRowLeft}>
-                                        <View style={[styles.categoryIconContainer, { marginRight: 12 }]}>
-                                            <IconSymbol name={category.icon as any} size={20} color={theme.tint} />
-                                        </View>
-                                        <Text style={[styles.categoryRowText, { color: theme.text }]}>{category.name}</Text>
+                                <View style={[styles.categoryCard, { backgroundColor: theme.card }, SharedStyles.softShadow]}>
+                                    <View style={[styles.catIconCircle, { backgroundColor: theme.primarySoft }]}>
+                                        <IconSymbol name={category.icon as any} size={18} color={theme.tint} />
                                     </View>
-                                    <View style={styles.categoryActions}>
-                                        <TouchableOpacity
-                                            style={[
-                                                styles.iconButton,
-                                                SharedStyles.neoBorder,
-                                                { backgroundColor: theme.danger }
-                                            ]}
-                                            onPress={() => handleDeleteCategory(category.name)}
-                                        >
-                                            <IconSymbol name="trash" size={16} color="#000" />
-                                        </TouchableOpacity>
-                                    </View>
-                                </NeoCard>
+                                    <Text style={[styles.categoryName, { color: theme.text, flex: 1 }]}>{category.name}</Text>
+                                    <TouchableOpacity
+                                        style={[styles.trashBtn, { backgroundColor: theme.dangerSoft }]}
+                                        onPress={() => handleDeleteCategory(category.name)}
+                                    >
+                                        <Ionicons name="trash-outline" size={16} color={theme.danger} />
+                                    </TouchableOpacity>
+                                </View>
                             </TouchableOpacity>
                         ))}
                     </ScrollView>
@@ -402,150 +353,92 @@ export default function Budgets() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
+    container: { flex: 1 },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingBottom: 20,
+        paddingVertical: 16,
     },
-    title: {
-        fontSize: 24,
-        fontWeight: '900',
-        textTransform: 'uppercase',
-    },
-    pageTitle: {
-        fontSize: 20,
-        fontWeight: '900',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingBottom: 24,
-    },
-    modalTitle: {
-        fontSize: 24,
-        fontWeight: '900',
-        textTransform: 'uppercase',
-    },
-    content: {
-        flex: 1,
-        paddingHorizontal: 20,
-    },
-    section: {
-        marginBottom: 32,
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: '900',
-        textTransform: 'uppercase',
-        marginBottom: 16,
-    },
-    categoryIconContainer: {
+    backBtn: {
         width: 40,
         height: 40,
-        borderRadius: 0,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    closeBtn: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        letterSpacing: -0.2,
+    },
+    content: { flex: 1, paddingHorizontal: 20 },
+    categoryCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: 16,
+        padding: 14,
+        marginBottom: 10,
+    },
+    catIconCircle: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
-        backgroundColor: '#fff',
-        ...SharedStyles.neoBorder,
     },
-    iconButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 0,
+    categoryInfo: { flex: 1 },
+    categoryName: { fontSize: 15, fontWeight: '600' },
+    categorySub: { fontSize: 12, fontWeight: '400', marginTop: 2 },
+    progressTrack: { height: 5, borderRadius: 5, overflow: 'hidden' },
+    progressFill: { height: '100%', borderRadius: 5, position: 'absolute', left: 0, top: 0 },
+    fixedPill: {
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 20,
+    },
+    fixedPillText: { fontSize: 11, fontWeight: '600' },
+    trashBtn: {
+        width: 34,
+        height: 34,
+        borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    categoryCard: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 16,
-        marginBottom: 8,
-    },
-    categoryInfo: {
-        flex: 1,
-    },
-    categoryName: {
-        fontSize: 16,
-        fontWeight: '800',
-    },
-    categorySpent: {
-        fontSize: 12,
-        fontWeight: '600',
-        marginTop: 2,
-    },
-    categorySubtext: {
-        fontSize: 12,
-        fontWeight: '500',
-        marginTop: 2,
-    },
-    helperText: {
-        fontSize: 14,
-        lineHeight: 20,
-        marginBottom: 24,
-    },
-    fullScreenModal: {
-        flex: 1,
-    },
-    categoryRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 16,
-        marginBottom: 12,
-    },
-    categoryRowText: {
-        fontSize: 16,
-        fontWeight: '800',
-    },
-    categoryRowLeft: {
-        flexDirection: 'row',
+    addCircle: {
+        width: 34,
+        height: 34,
+        borderRadius: 10,
+        justifyContent: 'center',
         alignItems: 'center',
     },
-    categoryActions: {
+    outlineBtn: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderStyle: 'dashed',
     },
-    renameContainer: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-    },
-    renameInput: {
-        flex: 1,
-        fontSize: 16,
-        padding: 8,
-        ...SharedStyles.neoBorder,
-        borderRadius: 0,
-        backgroundColor: '#fff',
-    },
-    typeTag: {
-        fontSize: 12,
-        fontWeight: '500',
-    },
-    sketchIconPlaceholder: {
-        width: 64,
-        height: 64,
-        borderRadius: 0,
+    outlineBtnText: { fontSize: 15, fontWeight: '600' },
+    helperText: { fontSize: 13, lineHeight: 20, marginBottom: 16 },
+    iconPickerBtn: {
+        width: 56,
+        height: 56,
+        borderRadius: 14,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 16,
-        ...SharedStyles.neoBorder,
-    },
-    sketchIconPickerContainer: {
-        marginTop: 16,
-        maxHeight: 250,
+        marginRight: 12,
     },
 });

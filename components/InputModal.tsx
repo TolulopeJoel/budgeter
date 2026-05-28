@@ -52,15 +52,15 @@ export default function InputModal({
                 <NeoCard style={[styles.content, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
                     {title && <Text style={[styles.title, { color: theme.text }]}>{title}</Text>}
 
-                    <View style={[styles.inputContainer, SharedStyles.neoBorder, SharedStyles.neoShadow, { backgroundColor: '#fff', padding: 12 }]}>
+                    <View style={[styles.inputContainer, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border, padding: 12 }]}>
                         {leftElement}
                         {prefix && (
-                            <Text style={[styles.prefix, { color: '#000' }]}>{prefix}</Text>
+                            <Text style={[styles.prefix, { color: theme.text }]}>{prefix}</Text>
                         )}
                         <TextInput
-                            style={[styles.input, { color: '#000' }]}
+                            style={[styles.input, { color: theme.text }]}
                             placeholder={placeholder}
-                            placeholderTextColor="#999"
+                            placeholderTextColor={theme.textMuted}
                             keyboardType={keyboardType}
                             value={value}
                             onChangeText={onChangeText}
@@ -74,7 +74,7 @@ export default function InputModal({
                         <NeoButton
                             title={cancelText}
                             onPress={onCancel}
-                            backgroundColor={theme.card}
+                            backgroundColor={theme.backgroundSecondary}
                             style={{ flex: 1 }}
                         />
                         <NeoButton
@@ -97,26 +97,26 @@ export default function InputModal({
 const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.45)',
         justifyContent: 'flex-end',
     },
     content: {
-        borderTopLeftRadius: 0,
-        borderTopRightRadius: 0,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
         padding: 24,
     },
     title: {
         fontSize: 20,
-        fontWeight: '900',
-        textTransform: 'uppercase',
+        fontWeight: '700',
         marginBottom: 24,
+        letterSpacing: -0.3,
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 16,
-        ...neoStyles.neoBorder,
-        ...neoStyles.neoShadow,
+        borderRadius: 14,
+        borderWidth: 1,
     },
     prefix: {
         fontSize: 32,

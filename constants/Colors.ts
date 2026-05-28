@@ -1,42 +1,57 @@
-const tintColorLight = '#FF2E63';
-const chicCream = '#FDF6E3';
-const ink = '#0F172A'; // Deep "Ink" for borders and grounding
-
 export const Colors = {
     light: {
-        text: ink,
-        background: chicCream,
-        tint: tintColorLight,
-        icon: ink,
-        tabIconDefault: ink,
-        tabIconSelected: tintColorLight,
+        // Core
+        text: '#0F172A',
+        textSecondary: '#64748B',
+        textMuted: '#94A3B8',
+        background: '#FFFFFF',
+        backgroundSecondary: '#F7F8FA',
         card: '#FFFFFF',
-        border: ink,
-        primary: tintColorLight, // Pink
-        success: '#08D9D6', // Cyan
-        danger: '#E84545', // Semantic Red
-        warning: '#FFDE7D', // Yellow
-        ink: ink,
+
+        // Brand
+        tint: '#6366F1',         // Indigo — primary accent
+        primary: '#6366F1',
+        primarySoft: '#EEF2FF', // Soft indigo background
+
+        // Hero card
+        hero: '#0B1437',         // Deep navy
+
+        // Semantic
+        success: '#10B981',      // Emerald
+        successSoft: '#ECFDF5',
+        danger: '#F43F5E',       // Rose
+        dangerSoft: '#FFF1F2',
+        warning: '#F59E0B',      // Amber
+        warningSoft: '#FFFBEB',
+
+        // UI
+        border: '#E2E8F0',
+        borderLight: '#F1F5F9',
+        icon: '#64748B',
+        tabIconDefault: '#94A3B8',
+        tabIconSelected: '#6366F1',
     },
 };
 
 export const SharedStyles = {
-    neoBorder: {
-        borderWidth: 2,
-        borderColor: ink,
+    // Soft shadow (replaces neobrutalist hard shadow)
+    softShadow: {
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
     },
-    neoShadow: {
-        shadowColor: ink,
-        shadowOffset: { width: 4, height: 4 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-        elevation: 4,
+    softShadowMd: {
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 16,
+        elevation: 5,
     },
-    neoShadowLarge: {
-        shadowColor: ink,
-        shadowOffset: { width: 6, height: 6 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-        elevation: 6,
+    // Card base
+    card: {
+        borderRadius: 16,
+        backgroundColor: '#FFFFFF',
     },
 };

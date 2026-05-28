@@ -1,7 +1,7 @@
 import CategoryPicker from '@/components/CategoryPicker';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { NeoButton, NeoCard } from '@/components/ui/NeobrutalistComponents';
-import { Colors, SharedStyles } from '@/constants/Colors';
+import { Colors } from '@/constants/Colors';
 import { Transaction, TransactionType, useBudget } from '@/context/BudgetContext';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
@@ -189,17 +189,17 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
 
                                     <View style={styles.inputGroup}>
                                         <Text style={[styles.label, { color: theme.text }]}>Amount</Text>
-                                        <View style={[styles.amountInputContainer, SharedStyles.neoBorder, { backgroundColor: '#fff', padding: 12 }]}>
+                                        <View style={[styles.amountInputContainer, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border, borderWidth: 1, borderRadius: 14, padding: 12 }]}>
                                             <Text style={[styles.currencySymbol, { color: '#000' }]}>₦</Text>
                                             <TextInput
                                                 style={[
                                                     styles.amountInput,
                                                     {
-                                                        color: '#000',
+                                                        color: theme.text,
                                                     },
                                                 ]}
                                                 placeholder="0"
-                                                placeholderTextColor="#999"
+                                                placeholderTextColor={theme.textMuted}
                                                 keyboardType="numeric"
                                                 value={amount}
                                                 onChangeText={(value) => {
@@ -233,15 +233,16 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                                         <TextInput
                                             style={[
                                                 styles.input,
-                                                SharedStyles.neoBorder,
                                                 {
-                                                    color: '#000',
-                                                    backgroundColor: '#fff',
-                                                    borderColor: noteError ? theme.danger : '#000',
+                                                    color: theme.text,
+                                                    backgroundColor: theme.backgroundSecondary,
+                                                    borderColor: noteError ? theme.danger : theme.border,
+                                                    borderWidth: 1,
+                                                    borderRadius: 12,
                                                 }
                                             ]}
                                             placeholder={type === 'income' ? "Where did this income come from?" : (type === 'debt' ? "Who did you lend this to?" : "What was this for?")}
-                                            placeholderTextColor="#999"
+                                            placeholderTextColor={theme.textMuted}
                                             value={note}
                                             onChangeText={(value) => {
                                                 setNote(value);
@@ -256,21 +257,21 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                                             <Text style={[styles.label, { color: theme.text }]}>Date & Time</Text>
                                             <View style={styles.dateTimeRow}>
                                                 <TouchableOpacity
-                                                    style={[styles.dateTimeButton, SharedStyles.neoBorder, { backgroundColor: '#fff' }]}
+                                                    style={[styles.dateTimeButton, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border, borderWidth: 1, borderRadius: 12 }]}
                                                     onPress={() => setShowDatePicker(true)}
                                                 >
-                                                    <IconSymbol name="calendar" size={20} color="#000" />
-                                                    <Text style={[styles.dateTimeText, { color: '#000' }]}>
+                                                    <IconSymbol name="calendar" size={20} color={theme.textSecondary} />
+                                                    <Text style={[styles.dateTimeText, { color: theme.text }]}>
                                                         {date.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                     </Text>
                                                 </TouchableOpacity>
 
                                                 <TouchableOpacity
-                                                    style={[styles.dateTimeButton, SharedStyles.neoBorder, { backgroundColor: '#fff' }]}
+                                                    style={[styles.dateTimeButton, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border, borderWidth: 1, borderRadius: 12 }]}
                                                     onPress={() => setShowTimePicker(true)}
                                                 >
-                                                    <IconSymbol name="time" size={20} color="#000" />
-                                                    <Text style={[styles.dateTimeText, { color: '#000' }]}>
+                                                    <IconSymbol name="time" size={20} color={theme.textSecondary} />
+                                                    <Text style={[styles.dateTimeText, { color: theme.text }]}>
                                                         {date.toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' })}
                                                     </Text>
                                                 </TouchableOpacity>
@@ -346,8 +347,8 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     modalContent: {
-        borderTopLeftRadius: 0,
-        borderTopRightRadius: 0,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
         padding: 24,
         maxHeight: '90%',
     },
@@ -358,9 +359,9 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     title: {
-        fontSize: 24,
-        fontWeight: '900',
-        textTransform: 'uppercase',
+        fontSize: 20,
+        fontWeight: '700',
+        letterSpacing: -0.3,
     },
     typeSelector: {
         flexDirection: 'row',
@@ -370,12 +371,12 @@ const styles = StyleSheet.create({
     typeButton: {
         paddingVertical: 12,
         alignItems: 'center',
+        borderRadius: 12,
     },
     typeText: {
-        fontWeight: '900',
+        fontWeight: '700',
         fontSize: 13,
-        textTransform: 'uppercase',
-        color: '#000',
+        color: '#fff',
     },
     disabledTypeSelector: {
         opacity: 0.8,
@@ -458,12 +459,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         padding: 12,
-        borderRadius: 0,
         gap: 8,
     },
     dateTimeText: {
-        fontSize: 15,
-        fontWeight: '900',
-        textTransform: 'uppercase',
+        fontSize: 14,
+        fontWeight: '600',
     },
 });
