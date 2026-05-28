@@ -35,7 +35,7 @@ export default function Debts() {
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity
-                    style={[styles.backBtn, { backgroundColor: theme.card }, SharedStyles.softShadow]}
+                    style={[styles.backBtn, { backgroundColor: theme.card }]}
                     onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }}
                 >
                     <Ionicons name="chevron-back" size={20} color={theme.text} />
@@ -54,7 +54,7 @@ export default function Debts() {
 
                 {/* Debts List */}
                 {debts.length > 0 && (
-                    <View style={[styles.listCard, { backgroundColor: theme.card }, SharedStyles.softShadow]}>
+                    <View style={[styles.listCard, { backgroundColor: theme.card }]}>
                         {debts.map((debt, idx) => (
                             <TouchableOpacity
                                 key={debt.id}
@@ -89,7 +89,7 @@ export default function Debts() {
                 )}
 
                 {debts.length === 0 && (
-                    <View style={[styles.emptyState, { backgroundColor: theme.card }, SharedStyles.softShadow]}>
+                    <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
                         <Ionicons name="cash-outline" size={36} color={theme.textMuted} style={{ marginBottom: 12 }} />
                         <Text style={[styles.emptyTitle, { color: theme.text }]}>No debts recorded</Text>
                         <Text style={[styles.emptySub, { color: theme.textMuted }]}>Tap below to add a debt record</Text>
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     summaryLabel: { fontSize: 13, fontWeight: '500', color: 'rgba(255,255,255,0.6)', marginBottom: 6 },
     summaryAmount: { fontSize: 34, fontWeight: '700', color: '#fff', letterSpacing: -1 },
     summarySub: { fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 4, fontWeight: '500' },
-    listCard: { borderRadius: 16, overflow: 'hidden', marginBottom: 12 },
+    listCard: { borderRadius: 16, overflow: 'hidden', marginBottom: 12, borderWidth: 1, borderColor: '#E2E8F0' },
     debtRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -169,6 +169,8 @@ const styles = StyleSheet.create({
         padding: 40,
         alignItems: 'center',
         marginBottom: 12,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
     },
     emptyTitle: { fontSize: 15, fontWeight: '600', marginBottom: 4 },
     emptySub: { fontSize: 13, textAlign: 'center' },

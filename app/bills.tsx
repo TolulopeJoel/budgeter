@@ -108,7 +108,7 @@ export default function RecurringBills() {
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity
-                    style={[styles.backBtn, { backgroundColor: theme.card }, SharedStyles.softShadow]}
+                    style={[styles.backBtn, { backgroundColor: theme.card }]}
                     onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }}
                 >
                     <Ionicons name="chevron-back" size={20} color={theme.text} />
@@ -140,7 +140,7 @@ export default function RecurringBills() {
 
                 {/* Bills List */}
                 {sortedBills.length > 0 && (
-                    <View style={[styles.listCard, { backgroundColor: theme.card }, SharedStyles.softShadow]}>
+                    <View style={[styles.listCard, { backgroundColor: theme.card }]}>
                         {sortedBills.map((bill, idx) => {
                             const paid = isBillPaid(bill.id, currentMonthKey);
                             return (
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
     countBadgeText: { fontSize: 12, fontWeight: '600', color: '#fff' },
     miniTrack: { height: 5, borderRadius: 5, overflow: 'hidden' },
     miniFill: { height: '100%', borderRadius: 5 },
-    listCard: { borderRadius: 16, overflow: 'hidden', marginBottom: 12 },
+    listCard: { borderRadius: 16, overflow: 'hidden', marginBottom: 12, borderWidth: 1, borderColor: '#E2E8F0' },
     billRow: {
         flexDirection: 'row',
         alignItems: 'center',

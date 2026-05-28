@@ -25,7 +25,7 @@ export const NeoCard = ({ children, style, backgroundColor }: NeoCardProps) => {
     return (
         <View style={[
             styles.card,
-            { backgroundColor: bg },
+            { backgroundColor: bg, borderWidth: 1, borderColor: Colors.light.border },
             SharedStyles.softShadow,
             style
         ]}>

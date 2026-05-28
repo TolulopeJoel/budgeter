@@ -34,14 +34,8 @@ export const Colors = {
 };
 
 export const SharedStyles = {
-    // Soft shadow (replaces neobrutalist hard shadow)
-    softShadow: {
-        shadowColor: '#0F172A',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        elevation: 3,
-    },
+    // Flat definition — no shadow, just border
+    softShadow: {},
     softShadowMd: {
         shadowColor: '#0F172A',
         shadowOffset: { width: 0, height: 4 },

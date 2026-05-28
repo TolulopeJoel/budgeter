@@ -359,7 +359,7 @@ export default function Dashboard() {
           <View style={styles.quickActions}>
             <Link href="/budgets" asChild style={{ flex: 1 }}>
               <TouchableOpacity style={{ flex: 1 }} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
-                <View style={[styles.actionTile, { backgroundColor: theme.card }, SharedStyles.softShadow]}>
+                <View style={[styles.actionTile, { backgroundColor: theme.card }]}>
                   <View style={[styles.actionIconBg, { backgroundColor: theme.primarySoft }]}>
                     <Ionicons name="pie-chart" size={20} color={theme.tint} />
                   </View>
@@ -369,7 +369,7 @@ export default function Dashboard() {
             </Link>
             <Link href="/bills" asChild style={{ flex: 1 }}>
               <TouchableOpacity style={{ flex: 1 }} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
-                <View style={[styles.actionTile, { backgroundColor: theme.card }, SharedStyles.softShadow]}>
+                <View style={[styles.actionTile, { backgroundColor: theme.card }]}>
                   <View style={[styles.actionIconBg, { backgroundColor: theme.warningSoft }]}>
                     <Ionicons name="receipt" size={20} color={theme.warning} />
                   </View>
@@ -379,7 +379,7 @@ export default function Dashboard() {
             </Link>
             <Link href="/debts" asChild style={{ flex: 1 }}>
               <TouchableOpacity style={{ flex: 1 }} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
-                <View style={[styles.actionTile, { backgroundColor: theme.card }, SharedStyles.softShadow]}>
+                <View style={[styles.actionTile, { backgroundColor: theme.card }]}>
                   <View style={[styles.actionIconBg, { backgroundColor: theme.successSoft }]}>
                     <Ionicons name="cash" size={20} color={theme.success} />
                   </View>
@@ -468,8 +468,7 @@ export default function Dashboard() {
                     >
                       <View style={[
                         styles.budgetCard,
-                        { backgroundColor: theme.card, borderColor: isUnbudgeted ? theme.borderLight : 'transparent' },
-                        SharedStyles.softShadow,
+                        { backgroundColor: theme.card },
                         isUnbudgeted && styles.budgetCardDashed,
                       ]}>
                         <View style={styles.budgetCardRow}>
@@ -603,7 +602,7 @@ export default function Dashboard() {
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.txCard, { backgroundColor: theme.card }, SharedStyles.softShadow]}>
+          <View style={[styles.txCard, { backgroundColor: theme.card }]}>
             {recentTransactions.length > 0 ? (
               recentTransactions.map((t, idx) => (
                 <TouchableOpacity
@@ -674,7 +673,7 @@ export default function Dashboard() {
               return groupTransactionsByDate(filtered).map(group => (
                 <View key={group.label}>
                   <Text style={[styles.dateGroupLabel, { color: theme.textMuted }]}>{group.label}</Text>
-                  <View style={[styles.txCard, { backgroundColor: theme.card }, SharedStyles.softShadow]}>
+                  <View style={[styles.txCard, { backgroundColor: theme.card }]}>
                     {group.data.map((t, idx) => (
                       <TouchableOpacity
                         key={t.id}
@@ -790,7 +789,7 @@ export default function Dashboard() {
                         {dayNet >= 0 ? '+' : ''}{formatCurrency(dayNet, 'history')}
                       </Text>
                     </View>
-                    <View style={[styles.txCard, { backgroundColor: theme.card }, SharedStyles.softShadow]}>
+                    <View style={[styles.txCard, { backgroundColor: theme.card }]}>
                       {group.data.map((t, idx) => (
                         <TouchableOpacity
                           key={t.id}
@@ -1091,6 +1090,8 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     gap: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0', // theme.border
   },
   actionIconBg: {
     width: 44,
@@ -1129,6 +1130,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0', // theme.border
   },
   budgetCardDashed: {
     borderWidth: 1,
@@ -1239,6 +1242,8 @@ const styles = StyleSheet.create({
   txCard: {
     borderRadius: 16,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E2E8F0', // theme.border
   },
   txRow: {
     flexDirection: 'row',

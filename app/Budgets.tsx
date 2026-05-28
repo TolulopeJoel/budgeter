@@ -2,7 +2,7 @@ import { IconPicker } from '@/components/IconPicker';
 import InputModal from '@/components/InputModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { NeoSegmentedToggle } from '@/components/ui/NeobrutalistComponents';
-import { Colors, SharedStyles } from '@/constants/Colors';
+import { Colors } from '@/constants/Colors';
 import { useBudget } from '@/context/BudgetContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -143,7 +143,7 @@ export default function Budgets() {
         <View style={[styles.container, { backgroundColor: theme.backgroundSecondary, paddingTop: insets.top }]}>
             <View style={styles.header}>
                 <TouchableOpacity
-                    style={[styles.backBtn, { backgroundColor: theme.card }, SharedStyles.softShadow]}
+                    style={[styles.backBtn, { backgroundColor: theme.card }]}
                     onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }}
                 >
                     <Ionicons name="chevron-back" size={20} color={theme.text} />
@@ -160,7 +160,7 @@ export default function Budgets() {
                             key={item.name}
                             onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); handleEditBudget(item.name); }}
                         >
-                            <View style={[styles.categoryCard, { backgroundColor: theme.card }, SharedStyles.softShadow]}>
+                            <View style={[styles.categoryCard, { backgroundColor: theme.card }]}>
                                 <View style={[styles.catIconCircle, { backgroundColor: (item.hasBudget ? budgetColor : theme.textMuted) + '15' }]}>
                                     <IconSymbol name={item.icon as any} size={18} color={item.hasBudget ? budgetColor : theme.textMuted} />
                                 </View>
@@ -331,7 +331,7 @@ export default function Budgets() {
                                     setShowRenameModal(true);
                                 }}
                             >
-                                <View style={[styles.categoryCard, { backgroundColor: theme.card }, SharedStyles.softShadow]}>
+                                <View style={[styles.categoryCard, { backgroundColor: theme.card }]}>
                                     <View style={[styles.catIconCircle, { backgroundColor: theme.primarySoft }]}>
                                         <IconSymbol name={category.icon as any} size={18} color={theme.tint} />
                                     </View>
@@ -387,6 +387,8 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         padding: 14,
         marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
     },
     catIconCircle: {
         width: 40,

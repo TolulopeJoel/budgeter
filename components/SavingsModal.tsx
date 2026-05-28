@@ -342,6 +342,8 @@ const createStyles = (theme: any, neoStyles: any) => StyleSheet.create({
         padding: 14,
         marginBottom: 10,
         borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
     },
     transactionNote: { fontSize: 15, fontWeight: '600', marginBottom: 3 },
     transactionDate: { fontSize: 12 },
