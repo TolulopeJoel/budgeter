@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Debts() {
     const router = useRouter();
-    const { transactions, getDebts, categories, isHistoryPrivacyEnabled } = useBudget();
+    const { transactions, getDebts, categories, isMainCardPrivacyEnabled } = useBudget();
     const theme = Colors.light;
     const insets = useSafeAreaInsets();
     const [showTransactionModal, setShowTransactionModal] = useState(false);
@@ -26,7 +26,7 @@ export default function Debts() {
     };
 
     const formatCurrency = (amount: number, forceShow: boolean = false) => {
-        if (isHistoryPrivacyEnabled && !forceShow) return '₦ ••••••';
+        if (isMainCardPrivacyEnabled && !forceShow) return '₦ ••••••';
         return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
     };
 
@@ -73,7 +73,7 @@ export default function Debts() {
                                     </View>
                                     <View style={styles.debtInfo}>
                                         <Text style={[styles.debtNote, { color: theme.text }]}>
-                                            {isHistoryPrivacyEnabled ? '— redacted —' : (debt.note || debt.category)}
+                                            {isMainCardPrivacyEnabled ? '— redacted —' : (debt.note || debt.category)}
                                         </Text>
                                         <Text style={[styles.debtDate, { color: theme.textMuted }]}>
                                             {new Date(debt.date).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' })}
