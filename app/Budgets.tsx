@@ -135,8 +135,17 @@ export default function Budgets() {
             };
         })
         .sort((a, b) => {
-            if (a.hasBudget && !b.hasBudget) return -1;
-            if (!a.hasBudget && b.hasBudget) return 1;
+            const getPriority = (item: typeof a) => {
+                if (!item.hasBudget) return 2; // Unbudgeted
+                const status = item.velocityStatus;
+                if (status === 'over') return 0;
+                if (status === 'danger') return 1;
+                if (status === 'warning') return 3;
+                return 4; // good
+            };
+
+            const diff = getPriority(a) - getPriority(b);
+            if (diff !== 0) return diff;
             return b.spent - a.spent;
         });
 

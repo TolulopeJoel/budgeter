@@ -437,17 +437,18 @@ export default function Dashboard() {
 
               {allBudgetItems
                 .sort((a, b) => {
-                  if (a.isUnbudgeted && !b.isUnbudgeted) return 1;
-                  if (!a.isUnbudgeted && b.isUnbudgeted) return -1;
-                  if (a.isUnbudgeted && b.isUnbudgeted) return b.status.spent - a.status.spent;
-                  const aUrgent = a.status.percentage >= 50;
-                  const bUrgent = b.status.percentage >= 50;
-                  if (aUrgent && !bUrgent) return -1;
-                  if (!aUrgent && bUrgent) return 1;
-                  if (aUrgent && bUrgent) return b.projectedTotal - a.projectedTotal;
-                  const percentDiff = b.status.percentage - a.status.percentage;
-                  if (percentDiff !== 0) return percentDiff;
-                  return b.projectedTotal - a.projectedTotal;
+                  const getPriority = (item: typeof a) => {
+                    if (item.isUnbudgeted) return 2; // Unbudgeted/Untracked
+                    const status = item.status.velocityStatus;
+                    if (status === 'over') return 0;
+                    if (status === 'danger') return 1;
+                    if (status === 'warning') return 3;
+                    return 4; // good
+                  };
+
+                  const diff = getPriority(a) - getPriority(b);
+                  if (diff !== 0) return diff;
+                  return b.status.spent - a.status.spent;
                 })
                 .map((item) => {
                   const { status, isUnbudgeted } = item;
