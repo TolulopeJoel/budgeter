@@ -107,9 +107,9 @@ export default function Budgets() {
         return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
     };
 
-    const getBudgetColor = (percentage: number) => {
-        if (percentage >= 90) return theme.danger;
-        if (percentage >= 80) return theme.warning;
+    const getBudgetColor = (status: { velocityStatus: 'good' | 'warning' | 'danger' | 'over' }) => {
+        if (status.velocityStatus === 'over' || status.velocityStatus === 'danger') return theme.danger;
+        if (status.velocityStatus === 'warning') return theme.warning;
         return theme.tint;
     };
 
@@ -130,6 +130,7 @@ export default function Budgets() {
                 type: budget?.type || 'flexible',
                 spent: status.spent,
                 percentage: status.percentage,
+                velocityStatus: status.velocityStatus,
                 hasBudget: !!budget && budget.limit > 0
             };
         })
@@ -154,7 +155,7 @@ export default function Budgets() {
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
                 {allCategories.map(item => {
-                    const budgetColor = getBudgetColor(item.percentage);
+                    const budgetColor = getBudgetColor(item);
                     return (
                         <TouchableOpacity
                             key={item.name}

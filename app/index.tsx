@@ -93,9 +93,10 @@ export default function Dashboard() {
     return Math.min((spent / limit) * 100, 100);
   };
 
-  const getBudgetColor = (percentage: number) => {
-    if (percentage >= 100) return theme.danger;
-    if (percentage >= 80) return theme.warning;
+  const getBudgetColor = (status: { velocityStatus: 'good' | 'warning' | 'danger' | 'over' }) => {
+    if (status.velocityStatus === 'over') return theme.danger + 'B3';
+    if (status.velocityStatus === 'danger') return theme.danger + 'B3';
+    if (status.velocityStatus === 'warning') return theme.warning + 'B3';
     return theme.tint;
   };
 
@@ -281,39 +282,34 @@ export default function Dashboard() {
           </View>
         ) : (
           <View style={[styles.heroCard, { backgroundColor: theme.hero }, SharedStyles.softShadowMd]}>
-            <TouchableOpacity
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                toggleMainCardPrivacy();
-              }}
-              activeOpacity={0.9}
-            >
-              <View style={styles.heroTopRow}>
+            <View style={styles.heroTopRow}>
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  toggleMainCardPrivacy();
+                }}
+                activeOpacity={0.7}
+              >
                 <Text style={styles.heroLabel}>Safe to Spend</Text>
-                <Ionicons
-                  name={isMainCardPrivacyEnabled ? 'eye-off-outline' : 'eye-outline'}
-                  size={16}
-                  color="rgba(255,255,255,0.5)"
-                />
-              </View>
+              </TouchableOpacity>
+            </View>
 
-              <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 4 }}>
-                <Text style={styles.heroAmount}>
-                  {formatCurrency(safeToSpend, 'dashboard')}
-                </Text>
-                {!isMainCardPrivacyEnabled && safeToSpend > 0 && (() => {
-                  const d = new Date();
-                  const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-                  const daysLeft = daysInMonth - d.getDate() + 1;
-                  const perDay = safeToSpend / daysLeft;
-                  return (
-                    <Text style={styles.heroPerDay}>
-                      {formatCurrency(perDay)}/day
-                    </Text>
-                  );
-                })()}
-              </View>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 4 }}>
+              <Text style={styles.heroAmount}>
+                {formatCurrency(safeToSpend, 'dashboard')}
+              </Text>
+              {!isMainCardPrivacyEnabled && safeToSpend > 0 && (() => {
+                const d = new Date();
+                const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+                const daysLeft = daysInMonth - d.getDate() + 1;
+                const perDay = safeToSpend / daysLeft;
+                return (
+                  <Text style={styles.heroPerDay}>
+                    {formatCurrency(perDay)}/day
+                  </Text>
+                );
+              })()}
+            </View>
 
             {/* Stats Row */}
             <View style={styles.heroStatsRow}>
@@ -419,7 +415,7 @@ export default function Dashboard() {
                 category: cat,
                 limit: 0,
                 type: 'flexible' as const,
-                status: { spent, limit: 0, percentage: 0, type: 'flexible' as const },
+                status: { spent, limit: 0, percentage: 0, type: 'flexible' as const, velocityStatus: 'good' as const },
                 projectedTotal: spent,
                 isUnbudgeted: true
               };
@@ -455,7 +451,8 @@ export default function Dashboard() {
                 })
                 .map((item) => {
                   const { status, isUnbudgeted } = item;
-                  const budgetColor = isUnbudgeted ? theme.textMuted : getBudgetColor(status.percentage);
+                  const budgetColor = isUnbudgeted ? theme.textMuted : getBudgetColor(status);
+                  const iconColor = isUnbudgeted ? theme.textMuted : theme.tint;
 
                   return (
                     <TouchableOpacity
@@ -472,8 +469,8 @@ export default function Dashboard() {
                         isUnbudgeted && styles.budgetCardDashed,
                       ]}>
                         <View style={styles.budgetCardRow}>
-                          <View style={[styles.catIconCircle, { backgroundColor: (isUnbudgeted ? theme.textMuted : budgetColor) + '18' }]}>
-                            <IconSymbol name={getCategoryIcon(item.category) as any} size={18} color={isUnbudgeted ? theme.textMuted : budgetColor} />
+                          <View style={[styles.catIconCircle, { backgroundColor: iconColor + '18' }]}>
+                            <IconSymbol name={getCategoryIcon(item.category) as any} size={18} color={iconColor} />
                           </View>
                           <View style={styles.budgetInfo}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -490,7 +487,7 @@ export default function Dashboard() {
                                 : `${formatCurrency(status.spent, 'budgets')} of ${formatCurrency(status.limit, 'budgets')}`}
                             </Text>
                           </View>
-                          <Text style={[styles.budgetPct, { color: isHistorical ? theme.textMuted : budgetColor }]}>
+                          <Text style={[styles.budgetPct, { color: isHistorical ? theme.textMuted : (isUnbudgeted ? theme.textSecondary : theme.tint) }]}>
                             {isUnbudgeted ? formatCurrency(status.spent, 'budgets') : `${status.percentage.toFixed(0)}%`}
                           </Text>
                         </View>

@@ -68,7 +68,7 @@ export interface BudgetContextType {
     deleteCategory: (name: string) => Promise<void>;
     setBudgetLimit: (category: string, limit: number, type: BudgetType) => Promise<void>;
     deleteBudget: (category: string) => Promise<void>;
-    getBudgetStatus: (category: string) => { spent: number; limit: number; percentage: number; type: BudgetType };
+    getBudgetStatus: (category: string) => { spent: number; limit: number; percentage: number; type: BudgetType; velocityStatus: 'good' | 'warning' | 'danger' | 'over' };
 
     // Recurring Bills
     recurringBills: RecurringBill[];
@@ -472,7 +472,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         await saveBudgets(updated);
     };
 
-    const getBudgetStatus = (category: string) => {
+    const getBudgetStatus = (category: string): { spent: number; limit: number; percentage: number; type: BudgetType; velocityStatus: 'good' | 'warning' | 'danger' | 'over' } => {
         const budget = budgets.find(b => b.category === category);
         const limit = budget?.limit || 0;
         const type = budget?.type || 'flexible';
@@ -484,7 +484,37 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         const percentage = limit > 0 ? (spent / limit) * 100 : 0;
 
-        return { spent, limit, percentage, type };
+        let velocityStatus: 'good' | 'warning' | 'danger' | 'over' = 'good';
+
+        if (limit > 0) {
+            if (spent >= limit) {
+                velocityStatus = 'over';
+            } else {
+                const now = new Date();
+                const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                const period = selectedPeriod || currentPeriod;
+
+                // Only calculate velocity for the current month
+                if (period && period.month === currentMonthKey) {
+                    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                    const currentDay = now.getDate();
+                    const timePercentage = (currentDay / daysInMonth) * 100;
+                    const diff = percentage - timePercentage;
+
+                    if (diff > 15) {
+                        velocityStatus = 'danger';
+                    } else if (diff > 5) {
+                        velocityStatus = 'warning';
+                    }
+                } else {
+                    // For historical months, use fixed thresholds or just mark as good if under limit
+                    if (percentage >= 90) velocityStatus = 'danger';
+                    else if (percentage >= 80) velocityStatus = 'warning';
+                }
+            }
+        }
+
+        return { spent, limit, percentage, type, velocityStatus };
     };
 
     // Recurring Bills functions
