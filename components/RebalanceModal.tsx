@@ -29,60 +29,60 @@ export default function RebalanceModal({
     const theme = Colors.light;
     const insets = useSafeAreaInsets();
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-    const [borrowAmount, setBorrowAmount] = useState(overspentAmount.toString());
+    const [borrowAmount, setBorrowAmount] = useState(Math.round(overspentAmount).toString());
 
     const lenders = budgets
         .filter(b => b.category !== overspentCategory && b.limit > 0)
         .map(b => {
             const status = getBudgetStatus(b.category);
 
-            // Calculate "Safe to Lend"
             const d = new Date();
             const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-            const timePct = (d.getDate() / daysInMonth) * 100;
+            const currentDay = d.getDate();
+            const daysRemaining = daysInMonth - currentDay || 1;
 
-            // 1. Velocity Safety: Limit that keeps us under "Danger" (timePct + 15)
-            const safeThreshold = timePct + 15;
-            const minLimitForVelocity = (status.spent * 100) / safeThreshold;
-            const velocitySafeLend = Math.max(0, b.limit - minLimitForVelocity);
+            const daily = b.limit / daysInMonth;
+            const remaining = Math.max(0, b.limit - status.spent);
 
-            // 2. Budget Safety: Actual money not yet spent
-            const actualRemaining = Math.max(0, b.limit - status.spent);
+            const balancedAmt = Math.max(0, remaining - (daily * 0.5 * daysRemaining));
+            const aggressiveAmt = Math.max(0, remaining - (daily * 0.1 * daysRemaining));
 
-            // The absolute safe amount is the tighter of the two
-            const safeToLend = Math.min(velocitySafeLend, actualRemaining);
+            const getNewDaily = (borrowAmt: number) => Math.max(0, (remaining - borrowAmt) / daysRemaining);
 
             return {
                 category: b.category,
-                remaining: actualRemaining,
-                safeToLend,
+                remaining,
+                daily,
+                daysRemaining,
+                getNewDaily,
+                presets: {
+                    balanced: balancedAmt,
+                    aggressive: aggressiveAmt
+                },
                 limit: b.limit,
                 spent: status.spent
             };
         })
-        .filter(l => l.safeToLend > 10) // Only show if they can lend at least 10
-        .sort((a, b) => b.safeToLend - a.safeToLend);
+        .filter(l => l.presets.aggressive > 10)
+        .sort((a, b) => b.presets.balanced - a.presets.balanced);
+
+    const selectedLender = lenders.find(l => l.category === selectedCategory);
+    const parsedBorrowAmount = parseFloat(borrowAmount) || 0;
+
+    // Disable if no category is picked, amount is 0/empty, or exceeds lender availability
+    const isOverLimit = selectedLender ? parsedBorrowAmount > selectedLender.remaining : false;
+    const isButtonDisabled = !selectedCategory || parsedBorrowAmount <= 0 || isOverLimit;
 
     const handleConfirm = () => {
-        const amt = parseFloat(borrowAmount);
-        const selectedLender = lenders.find(l => l.category === selectedCategory);
-
-        if (selectedCategory && selectedLender && !isNaN(amt) && amt > 0) {
-            // Cap at safeToLend or show alert? Let's cap it or warn.
-            if (amt > selectedLender.safeToLend) {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-                alert(`That's too much! ${selectedCategory} can only safely lend ${formatCurrency(selectedLender.safeToLend)} without falling into danger itself.`);
-                return;
-            }
-
+        if (selectedCategory && !isButtonDisabled) {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            onRebalance(selectedCategory, amt);
+            onRebalance(selectedCategory, parsedBorrowAmount);
             onClose();
         }
     };
 
     const formatCurrency = (amount: number) => {
-        return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+        return `₦${Math.round(amount).toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
     };
 
     return (
@@ -97,8 +97,26 @@ export default function RebalanceModal({
                     </View>
 
                     <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-                        You are over in <Text style={{ fontWeight: '700', color: theme.danger }}>{overspentCategory}</Text> by {formatCurrency(overspentAmount)}.
+                        You are over in <Text style={{ fontWeight: '800', color: theme.text }}>{overspentCategory}</Text> by <Text style={{ fontWeight: '800', color: theme.text }}>{formatCurrency(overspentAmount)}</Text>.
                     </Text>
+
+                    {(() => {
+                        const targetStatus = getBudgetStatus(overspentCategory);
+                        const d = new Date();
+                        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+                        const currentDay = d.getDate();
+                        const daysRemaining = daysInMonth - currentDay || 1;
+                        const newLimit = targetStatus.limit + parsedBorrowAmount;
+                        const newDaily = Math.max(0, (newLimit - targetStatus.spent) / daysRemaining);
+
+                        return (
+                            <View style={[styles.targetImpact, { borderLeftColor: theme.tint }]}>
+                                <Text style={[styles.targetImpactText, { color: theme.textSecondary }]}>
+                                    New daily allowance will be <Text style={{ fontWeight: '800', color: theme.text }}>{formatCurrency(newDaily)}/day</Text> for the remaining {daysRemaining} days.
+                                </Text>
+                            </View>
+                        );
+                    })()}
 
                     <View style={[styles.amountContainer, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}>
                         <Text style={[styles.amountPrefix, { color: theme.text }]}>₦</Text>
@@ -119,30 +137,68 @@ export default function RebalanceModal({
                     <ScrollView style={styles.lenderList} showsVerticalScrollIndicator={false}>
                         {lenders.length > 0 ? (
                             lenders.map(l => (
-                                <TouchableOpacity
-                                    key={l.category}
-                                    style={[
-                                        styles.lenderItem,
-                                        {
-                                            backgroundColor: selectedCategory === l.category ? theme.primarySoft : theme.backgroundSecondary,
-                                            borderColor: selectedCategory === l.category ? theme.tint : theme.border
-                                        }
-                                    ]}
-                                    onPress={() => {
-                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                        setSelectedCategory(l.category);
-                                    }}
-                                >
-                                    <View style={styles.lenderInfo}>
-                                        <Text style={[styles.lenderName, { color: theme.text }]}>{l.category}</Text>
-                                        <Text style={[styles.lenderSub, { color: theme.textMuted }]}>
-                                            {formatCurrency(l.safeToLend)} safe to lend
-                                        </Text>
-                                    </View>
+                                <View key={l.category} style={styles.lenderContainer}>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.lenderItem,
+                                            {
+                                                backgroundColor: selectedCategory === l.category ? theme.primarySoft : theme.backgroundSecondary,
+                                                borderColor: selectedCategory === l.category ? theme.tint : theme.border
+                                            }
+                                        ]}
+                                        onPress={() => {
+                                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                            setSelectedCategory(l.category);
+                                            setBorrowAmount(Math.round(Math.min(l.presets.balanced, overspentAmount)).toString());
+                                        }}
+                                    >
+                                        <View style={styles.lenderInfo}>
+                                            <Text style={[styles.lenderName, { color: theme.text }]}>{l.category}</Text>
+                                            <Text style={[styles.lenderSub, { color: theme.textMuted }]}>
+                                                {formatCurrency(l.remaining)} available
+                                            </Text>
+                                        </View>
+                                        {selectedCategory === l.category && (
+                                            <Ionicons name="checkmark-circle" size={24} color={theme.tint} />
+                                        )}
+                                    </TouchableOpacity>
+
                                     {selectedCategory === l.category && (
-                                        <Ionicons name="checkmark-circle" size={24} color={theme.tint} />
+                                        <View style={styles.presetContainer}>
+                                            <TouchableOpacity
+                                                style={[
+                                                    styles.presetChip,
+                                                    {
+                                                        borderColor: Math.round(l.presets.balanced) === Math.round(parsedBorrowAmount) ? theme.tint : theme.border,
+                                                        backgroundColor: Math.round(l.presets.balanced) === Math.round(parsedBorrowAmount) ? theme.backgroundSecondary : '#fff'
+                                                    }
+                                                ]}
+                                                onPress={() => setBorrowAmount(Math.round(l.presets.balanced).toString())}
+                                            >
+                                                <Text style={[styles.presetLabel, { color: theme.textMuted }]}>BALANCE</Text>
+                                                <Text style={[styles.presetAllowance, { color: theme.text }]}>
+                                                    {formatCurrency(l.getNewDaily(l.presets.balanced))}/d
+                                                </Text>
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity
+                                                style={[
+                                                    styles.presetChip,
+                                                    {
+                                                        borderColor: Math.round(l.presets.aggressive) === Math.round(parsedBorrowAmount) ? theme.tint : theme.border,
+                                                        backgroundColor: Math.round(l.presets.aggressive) === Math.round(parsedBorrowAmount) ? theme.backgroundSecondary : '#fff'
+                                                    }
+                                                ]}
+                                                onPress={() => setBorrowAmount(Math.round(l.presets.aggressive).toString())}
+                                            >
+                                                <Text style={[styles.presetLabel, { color: theme.textMuted }]}>PUSH IT</Text>
+                                                <Text style={[styles.presetAllowance, { color: theme.text }]}>
+                                                    {formatCurrency(l.getNewDaily(l.presets.aggressive))}/d
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
                                     )}
-                                </TouchableOpacity>
+                                </View>
                             ))
                         ) : (
                             <View style={styles.emptyState}>
@@ -159,10 +215,16 @@ export default function RebalanceModal({
                             style={{ flex: 1 }}
                         />
                         <NeoButton
-                            title={selectedCategory ? `Borrow ${formatCurrency(parseFloat(borrowAmount) || 0)}` : 'Select a Budget'}
+                            title={
+                                !selectedCategory
+                                    ? 'Select a Budget'
+                                    : isOverLimit
+                                        ? 'Insufficient Funds'
+                                        : `Borrow ${formatCurrency(parsedBorrowAmount)}`
+                            }
                             onPress={handleConfirm}
                             backgroundColor={theme.tint}
-                            disabled={!selectedCategory}
+                            disabled={isButtonDisabled}
                             style={{ flex: 2 }}
                         />
                     </View>
@@ -188,27 +250,37 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: 10,
     },
     title: {
-        fontSize: 22,
-        fontWeight: '800',
+        fontSize: 24,
+        fontWeight: '900',
         letterSpacing: -0.5,
     },
     closeBtn: {
         padding: 4,
     },
     subtitle: {
-        fontSize: 15,
+        fontSize: 16,
         lineHeight: 22,
-        marginBottom: 16,
+        fontWeight: '500',
+    },
+    targetImpact: {
+        borderLeftWidth: 4,
+        paddingLeft: 12,
+        marginTop: 8,
+        marginBottom: 24,
+    },
+    targetImpactText: {
+        fontSize: 14,
+        lineHeight: 20,
     },
     amountContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,
         borderRadius: 16,
-        marginBottom: 20,
+        marginBottom: 24,
         borderWidth: 2,
     },
     amountPrefix: {
@@ -232,12 +304,14 @@ const styles = StyleSheet.create({
     lenderList: {
         marginBottom: 24,
     },
+    lenderContainer: {
+        marginBottom: 12,
+    },
     lenderItem: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,
         borderRadius: 16,
-        marginBottom: 10,
         borderWidth: 2,
     },
     lenderInfo: {
@@ -250,6 +324,30 @@ const styles = StyleSheet.create({
     lenderSub: {
         fontSize: 13,
         marginTop: 2,
+    },
+    presetContainer: {
+        flexDirection: 'row',
+        gap: 8,
+        marginTop: 8,
+        paddingHorizontal: 4,
+    },
+    presetChip: {
+        flex: 1,
+        padding: 10,
+        borderRadius: 12,
+        borderWidth: 2,
+        backgroundColor: '#fff',
+        alignItems: 'center',
+    },
+    presetLabel: {
+        fontSize: 10,
+        fontWeight: '800',
+        marginBottom: 2,
+        letterSpacing: 0.5,
+    },
+    presetAllowance: {
+        fontSize: 11,
+        fontWeight: '700',
     },
     footer: {
         flexDirection: 'row',
