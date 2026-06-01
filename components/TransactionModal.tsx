@@ -16,7 +16,6 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    TouchableWithoutFeedback,
     View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -50,7 +49,6 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
         setNoteError(false);
     }, [visible]);
 
-
     useEffect(() => {
         if (editingTransaction) {
             setType(editingTransaction.type);
@@ -59,7 +57,6 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
             setNote(editingTransaction.note || '');
             setDate(new Date(editingTransaction.date));
         } else {
-            // Reset for new transaction
             setType('expense');
             setAmount('');
             setCategory('');
@@ -145,196 +142,193 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={{ flex: 1 }}
             >
-                <TouchableWithoutFeedback onPress={onClose}>
-                    <View style={styles.modalOverlay}>
-                        <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
-                            <NeoCard style={[styles.modalContent, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
-                                <View style={styles.header}>
-                                    <Text style={[styles.title, { color: theme.text }]}>
-                                        {editingTransaction ? 'Edit Transaction' : 'New Transaction'}
-                                    </Text>
-                                    <TouchableOpacity onPress={onClose}>
-                                        <Text style={{ fontSize: 24, padding: 4 }}>✕</Text>
-                                    </TouchableOpacity>
-                                </View>
+                <View style={styles.modalOverlay}>
+                    <NeoCard style={[styles.modalContent, { backgroundColor: theme.card, paddingBottom: insets.bottom + 24 }]}>
+                        <View style={styles.header}>
+                            <Text style={[styles.title, { color: theme.text }]}>
+                                {editingTransaction ? 'Edit Transaction' : 'New Transaction'}
+                            </Text>
+                            <TouchableOpacity onPress={onClose}>
+                                <Text style={{ fontSize: 24, padding: 4 }}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
 
-                                <ScrollView
-                                    showsVerticalScrollIndicator={false}
-                                    keyboardShouldPersistTaps="handled"
-                                >
-                                    <View style={[styles.typeSelector]}>
-                                        {(['expense', 'income', 'debt'] as TransactionType[]).map((t) => (
-                                            <TouchableOpacity
-                                                key={t}
-                                                disabled={!!editingTransaction}
-                                                onPress={() => setType(t)}
-                                                style={{ flex: 1 }}
-                                            >
-                                                <NeoCard
-                                                    style={[
-                                                        styles.typeButton,
-                                                        editingTransaction && type !== t && { opacity: 0.1 }
-                                                    ]}
-                                                    backgroundColor={type === t ? (t === 'expense' ? theme.danger : (t === 'income' ? theme.success : theme.primary)) : '#fff'}
-                                                >
-                                                    <Text style={[
-                                                        styles.typeText,
-                                                    ]}>
-                                                        {t.charAt(0).toUpperCase() + t.slice(1)}
-                                                    </Text>
-                                                </NeoCard>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </View>
+                        <ScrollView
+                            showsVerticalScrollIndicator={false}
+                            keyboardShouldPersistTaps="handled"
+                        >
+                            <View style={[styles.typeSelector]}>
+                                {(['expense', 'income', 'debt'] as TransactionType[]).map((t) => {
+                                    const isActive = type === t;
+                                    const buttonBg = isActive
+                                        ? (t === 'expense' ? theme.danger : (t === 'income' ? theme.success : theme.primary))
+                                        : theme.backgroundSecondary;
+                                    const textColor = isActive ? '#fff' : theme.textSecondary;
 
-                                    <View style={styles.inputGroup}>
-                                        <Text style={[styles.label, { color: theme.text }]}>Amount</Text>
-                                        <View style={[styles.amountInputContainer, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border, borderWidth: 1, borderRadius: 14, padding: 12 }]}>
-                                            <Text style={[styles.currencySymbol, { color: '#000' }]}>₦</Text>
-                                            <TextInput
+                                    return (
+                                        <TouchableOpacity
+                                            key={t}
+                                            disabled={!!editingTransaction}
+                                            onPress={() => setType(t)}
+                                            style={{ flex: 1 }}
+                                        >
+                                            <NeoCard
                                                 style={[
-                                                    styles.amountInput,
-                                                    {
-                                                        color: theme.text,
-                                                    },
+                                                    styles.typeButton,
+                                                    editingTransaction && !isActive && { opacity: 0.1 }
                                                 ]}
-                                                placeholder="0"
-                                                placeholderTextColor={theme.textMuted}
-                                                keyboardType="numeric"
-                                                value={amount}
-                                                onChangeText={(value) => {
-                                                    setAmount(value);
-                                                    if (value) setAmountError(false);
-                                                }}
-                                            />
-                                        </View>
-                                    </View>
-
-                                    {type === 'expense' && (
-                                        <View style={styles.inputGroup}>
-                                            <CategoryPicker
-                                                label="Category"
-                                                value={category}
-                                                onSelect={(c) => {
-                                                    setCategory(c);
-                                                    setCategoryError(false);
-                                                }}
-                                                categories={categories}
-                                                error={categoryError}
-                                                placeholder="PIck ME"
-                                            />
-                                        </View>
-                                    )}
-
-                                    <View style={styles.inputGroup}>
-                                        <Text style={[styles.label, { color: theme.text }]}>
-                                            {type === 'expense' ? 'Note (Optional)' : 'Note'}
-                                        </Text>
-                                        <TextInput
-                                            style={[
-                                                styles.input,
-                                                {
-                                                    color: theme.text,
-                                                    backgroundColor: theme.backgroundSecondary,
-                                                    borderColor: noteError ? theme.danger : theme.border,
-                                                    borderWidth: 1,
-                                                    borderRadius: 12,
-                                                }
-                                            ]}
-                                            placeholder={type === 'income' ? "Where did this income come from?" : (type === 'debt' ? "Who did you lend this to?" : "What was this for?")}
-                                            placeholderTextColor={theme.textMuted}
-                                            value={note}
-                                            onChangeText={(value) => {
-                                                setNote(value);
-                                                if (value) setNoteError(false);
-                                            }}
-                                            multiline
-                                        />
-                                    </View>
-
-                                    {editingTransaction && (
-                                        <View style={styles.inputGroup}>
-                                            <Text style={[styles.label, { color: theme.text }]}>Date & Time</Text>
-                                            <View style={styles.dateTimeRow}>
-                                                <TouchableOpacity
-                                                    style={[styles.dateTimeButton, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border, borderWidth: 1, borderRadius: 12 }]}
-                                                    onPress={() => setShowDatePicker(true)}
-                                                >
-                                                    <IconSymbol name="calendar" size={20} color={theme.textSecondary} />
-                                                    <Text style={[styles.dateTimeText, { color: theme.text }]}>
-                                                        {date.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                                    </Text>
-                                                </TouchableOpacity>
-
-                                                <TouchableOpacity
-                                                    style={[styles.dateTimeButton, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border, borderWidth: 1, borderRadius: 12 }]}
-                                                    onPress={() => setShowTimePicker(true)}
-                                                >
-                                                    <IconSymbol name="time" size={20} color={theme.textSecondary} />
-                                                    <Text style={[styles.dateTimeText, { color: theme.text }]}>
-                                                        {date.toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' })}
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            </View>
-
-                                            {showDatePicker && (
-                                                <DateTimePicker
-                                                    value={date}
-                                                    mode="date"
-                                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                                    onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
-                                                        setShowDatePicker(Platform.OS === 'ios');
-                                                        if (selectedDate) {
-                                                            const newDate = new Date(date);
-                                                            newDate.setFullYear(selectedDate.getFullYear());
-                                                            newDate.setMonth(selectedDate.getMonth());
-                                                            newDate.setDate(selectedDate.getDate());
-                                                            setDate(newDate);
-                                                        }
-                                                    }}
-                                                />
-                                            )}
-
-                                            {showTimePicker && (
-                                                <DateTimePicker
-                                                    value={date}
-                                                    mode="time"
-                                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                                    onChange={(event: DateTimePickerEvent, selectedTime?: Date) => {
-                                                        setShowTimePicker(Platform.OS === 'ios');
-                                                        if (selectedTime) {
-                                                            const newDate = new Date(date);
-                                                            newDate.setHours(selectedTime.getHours());
-                                                            newDate.setMinutes(selectedTime.getMinutes());
-                                                            setDate(newDate);
-                                                        }
-                                                    }}
-                                                />
-                                            )}
-                                        </View>
-                                    )}
-
-                                    <View style={styles.buttonContainer}>
-                                        <NeoButton
-                                            title={editingTransaction ? 'Update' : 'Save'}
-                                            onPress={handleSave}
-                                            backgroundColor={theme.tint}
-                                        />
-
-                                        {editingTransaction && (
-                                            <TouchableOpacity
-                                                style={[styles.deleteButton]}
-                                                onPress={handleDelete}
+                                                backgroundColor={buttonBg}
                                             >
-                                                <Text style={[styles.deleteButtonText, { color: theme.danger }]}>Delete Transaction</Text>
-                                            </TouchableOpacity>
-                                        )}
+                                                <Text style={[styles.typeText, { color: textColor }]}>
+                                                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                                                </Text>
+                                            </NeoCard>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={[styles.label, { color: theme.text }]}>Amount</Text>
+                                <View style={[styles.amountInputContainer, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border, borderWidth: 1, borderRadius: 14, padding: 12 }]}>
+                                    <Text style={[styles.currencySymbol, { color: '#000' }]}>₦</Text>
+                                    <TextInput
+                                        style={[styles.amountInput, { color: theme.text }]}
+                                        placeholder="0"
+                                        placeholderTextColor={theme.textMuted}
+                                        keyboardType="numeric"
+                                        value={amount}
+                                        onChangeText={(value) => {
+                                            setAmount(value);
+                                            if (value) setAmountError(false);
+                                        }}
+                                    />
+                                </View>
+                            </View>
+
+                            {type === 'expense' && (
+                                <View style={styles.inputGroup}>
+                                    <CategoryPicker
+                                        label="Category"
+                                        value={category}
+                                        onSelect={(c) => {
+                                            setCategory(c);
+                                            setCategoryError(false);
+                                        }}
+                                        categories={categories}
+                                        error={categoryError}
+                                        placeholder="PIck ME"
+                                    />
+                                </View>
+                            )}
+
+                            <View style={styles.inputGroup}>
+                                <Text style={[styles.label, { color: theme.text }]}>
+                                    {type === 'expense' ? 'Note (Optional)' : 'Note'}
+                                </Text>
+                                <TextInput
+                                    style={[
+                                        styles.input,
+                                        {
+                                            color: theme.text,
+                                            backgroundColor: theme.backgroundSecondary,
+                                            borderColor: noteError ? theme.danger : theme.border,
+                                            borderWidth: 1,
+                                            borderRadius: 12,
+                                        }
+                                    ]}
+                                    placeholder={type === 'income' ? "Where did this income come from?" : (type === 'debt' ? "Who did you lend this to?" : "What was this for?")}
+                                    placeholderTextColor={theme.textMuted}
+                                    value={note}
+                                    onChangeText={(value) => {
+                                        setNote(value);
+                                        if (value) setNoteError(false);
+                                    }}
+                                    multiline
+                                />
+                            </View>
+
+                            {editingTransaction && (
+                                <View style={styles.inputGroup}>
+                                    <Text style={[styles.label, { color: theme.text }]}>Date & Time</Text>
+                                    <View style={styles.dateTimeRow}>
+                                        <TouchableOpacity
+                                            style={[styles.dateTimeButton, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border, borderWidth: 1, borderRadius: 12 }]}
+                                            onPress={() => setShowDatePicker(true)}
+                                        >
+                                            <IconSymbol name="calendar" size={20} color={theme.textSecondary} />
+                                            <Text style={[styles.dateTimeText, { color: theme.text }]}>
+                                                {date.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            </Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            style={[styles.dateTimeButton, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border, borderWidth: 1, borderRadius: 12 }]}
+                                            onPress={() => setShowTimePicker(true)}
+                                        >
+                                            <IconSymbol name="time" size={20} color={theme.textSecondary} />
+                                            <Text style={[styles.dateTimeText, { color: theme.text }]}>
+                                                {date.toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' })}
+                                            </Text>
+                                        </TouchableOpacity>
                                     </View>
-                                </ScrollView>
-                            </NeoCard>
-                        </TouchableWithoutFeedback>
-                    </View>
-                </TouchableWithoutFeedback>
+
+                                    {showDatePicker && (
+                                        <DateTimePicker
+                                            value={date}
+                                            mode="date"
+                                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                            onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+                                                setShowDatePicker(Platform.OS === 'ios');
+                                                if (selectedDate) {
+                                                    const newDate = new Date(date);
+                                                    newDate.setFullYear(selectedDate.getFullYear());
+                                                    newDate.setMonth(selectedDate.getMonth());
+                                                    newDate.setDate(selectedDate.getDate());
+                                                    setDate(newDate);
+                                                }
+                                            }}
+                                        />
+                                    )}
+
+                                    {showTimePicker && (
+                                        <DateTimePicker
+                                            value={date}
+                                            mode="time"
+                                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                            onChange={(event: DateTimePickerEvent, selectedTime?: Date) => {
+                                                setShowTimePicker(Platform.OS === 'ios');
+                                                if (selectedTime) {
+                                                    const newDate = new Date(date);
+                                                    newDate.setHours(selectedTime.getHours());
+                                                    newDate.setMinutes(selectedTime.getMinutes());
+                                                    setDate(newDate);
+                                                }
+                                            }}
+                                        />
+                                    )}
+                                </View>
+                            )}
+
+                            <View style={styles.buttonContainer}>
+                                <NeoButton
+                                    title={editingTransaction ? 'Update' : 'Save'}
+                                    onPress={handleSave}
+                                    backgroundColor={theme.tint}
+                                />
+
+                                {editingTransaction && (
+                                    <TouchableOpacity
+                                        style={[styles.deleteButton]}
+                                        onPress={handleDelete}
+                                    >
+                                        <Text style={[styles.deleteButtonText, { color: theme.danger }]}>Delete Transaction</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        </ScrollView>
+                    </NeoCard>
+                </View>
             </KeyboardAvoidingView>
         </Modal>
     );
@@ -376,7 +370,6 @@ const styles = StyleSheet.create({
     typeText: {
         fontWeight: '700',
         fontSize: 13,
-        color: '#fff',
     },
     disabledTypeSelector: {
         opacity: 0.8,
