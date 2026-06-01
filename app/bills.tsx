@@ -197,6 +197,14 @@ export default function RecurringBills() {
                     </View>
                 )}
 
+                {sortedBills.length === 0 && (
+                    <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
+                        <Ionicons name="thumbs-up-outline" size={32} color={theme.textMuted} style={{ marginBottom: 8 }} />
+                        <Text style={[styles.emptyTitle, { color: theme.text }]}>Everything is paid up.</Text>
+                        <Text style={[styles.emptySub, { color: theme.textMuted }]}>No pending bills waiting to haunt you. Absolute flex.</Text>
+                    </View>
+                )}
+
                 {/* Add Bill Button */}
                 <TouchableOpacity
                     style={[styles.addBtn, { borderColor: theme.border }]}
@@ -411,4 +419,15 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+    emptyState: {
+        borderRadius: 16,
+        paddingVertical: 40,
+        paddingHorizontal: 24,
+        alignItems: 'center',
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+    },
+    emptyTitle: { fontSize: 16, fontWeight: '700', marginBottom: 6, letterSpacing: -0.2 },
+    emptySub: { fontSize: 13, textAlign: 'center', lineHeight: 18 },
 });

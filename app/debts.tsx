@@ -90,9 +90,9 @@ export default function Debts() {
 
                 {debts.length === 0 && (
                     <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
-                        <Ionicons name="cash-outline" size={36} color={theme.textMuted} style={{ marginBottom: 12 }} />
-                        <Text style={[styles.emptyTitle, { color: theme.text }]}>No debts recorded</Text>
-                        <Text style={[styles.emptySub, { color: theme.textMuted }]}>Tap below to add a debt record</Text>
+                        <Ionicons name="cash-outline" size={32} color={theme.textMuted} style={{ marginBottom: 8 }} />
+                        <Text style={[styles.emptyTitle, { color: theme.text }]}>Look at you, drama-free.</Text>
+                        <Text style={[styles.emptySub, { color: theme.textMuted }]}>Nobody owes you a dime. Absolute win. Tap below if you want to play bank again</Text>
                     </View>
                 )}
 
@@ -166,14 +166,15 @@ const styles = StyleSheet.create({
     debtAmount: { fontSize: 15, fontWeight: '700' },
     emptyState: {
         borderRadius: 16,
-        padding: 40,
+        paddingVertical: 40,
+        paddingHorizontal: 24,
         alignItems: 'center',
         marginBottom: 12,
         borderWidth: 1,
         borderColor: '#E2E8F0',
     },
-    emptyTitle: { fontSize: 15, fontWeight: '600', marginBottom: 4 },
-    emptySub: { fontSize: 13, textAlign: 'center' },
+    emptyTitle: { fontSize: 16, fontWeight: '700', marginBottom: 6, letterSpacing: -0.2 },
+    emptySub: { fontSize: 13, textAlign: 'center', lineHeight: 18 },
     addBtn: {
         flexDirection: 'row',
         alignItems: 'center',
