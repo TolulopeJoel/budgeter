@@ -221,7 +221,7 @@ export default function TransactionModal({ visible, onClose, editingTransaction 
                                                 }}
                                                 categories={categories}
                                                 error={categoryError}
-                                                placeholder="Odogwu 😏"
+                                                placeholder="PIck ME"
                                             />
                                         </View>
                                     )}

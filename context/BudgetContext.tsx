@@ -68,6 +68,7 @@ export interface BudgetContextType {
     deleteCategory: (name: string) => Promise<void>;
     setBudgetLimit: (category: string, limit: number, type: BudgetType) => Promise<void>;
     deleteBudget: (category: string) => Promise<void>;
+    rebalanceBudgets: (fromCategory: string, toCategory: string, amount: number) => Promise<void>;
     getBudgetStatus: (category: string) => { spent: number; limit: number; percentage: number; type: BudgetType; velocityStatus: 'good' | 'warning' | 'danger' | 'over' };
 
     // Recurring Bills
@@ -468,6 +469,21 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const deleteBudget = async (category: string) => {
         const updated = budgets.filter(b => b.category !== category);
+        setBudgets(updated);
+        await saveBudgets(updated);
+    };
+
+    const rebalanceBudgets = async (fromCategory: string, toCategory: string, amount: number) => {
+        const updated = budgets.map(b => {
+            if (b.category === fromCategory) {
+                return { ...b, limit: Math.max(0, b.limit - amount) };
+            }
+            if (b.category === toCategory) {
+                return { ...b, limit: b.limit + amount };
+            }
+            return b;
+        });
+
         setBudgets(updated);
         await saveBudgets(updated);
     };
@@ -1054,6 +1070,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 deleteCategory,
                 setBudgetLimit,
                 deleteBudget,
+                rebalanceBudgets,
                 getBudgetStatus,
 
                 recurringBills,

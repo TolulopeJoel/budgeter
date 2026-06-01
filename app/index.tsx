@@ -1,5 +1,6 @@
 import InputModal from '@/components/InputModal';
 import MonthConfirmModal from '@/components/MonthConfirmModal';
+import RebalanceModal from '@/components/RebalanceModal';
 import SavingsModal from '@/components/SavingsModal';
 import SecurityModal from '@/components/SecurityModal';
 import TransactionModal from '@/components/TransactionModal';
@@ -53,10 +54,14 @@ export default function Dashboard() {
     toggleMainCardPrivacy,
     toggleBudgetsPrivacy,
     toggleHistoryPrivacy,
+    rebalanceBudgets,
   } = useBudget();
 
   const insets = useSafeAreaInsets();
   const theme = Colors.light;
+
+  const [showRebalanceModal, setShowRebalanceModal] = useState(false);
+  const [rebalanceTarget, setRebalanceTarget] = useState<{ category: string, amount: number } | null>(null);
 
   const [showAllTransactions, setShowAllTransactions] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
@@ -528,12 +533,42 @@ export default function Dashboard() {
                             return (
                               <View style={styles.velocityRow}>
                                 <View style={[styles.velocityDot, { backgroundColor: theme.warning }]} />
-                                <Text style={[styles.velocityText, { color: theme.warning }]}>
+                                <Text style={[styles.velocityText, { color: theme.warning, flex: 1 }]}>
                                   {overBy} ahead · recover in {daysToRecover}d
                                 </Text>
+                                <TouchableOpacity
+                                  style={[styles.healBtn, { backgroundColor: theme.warningSoft }]}
+                                  onPress={() => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                    setRebalanceTarget({ category: item.category, amount: overAmount });
+                                    setShowRebalanceModal(true);
+                                  }}
+                                >
+                                  <Text style={[styles.healBtnText, { color: theme.warning }]}>Heal</Text>
+                                </TouchableOpacity>
                               </View>
                             );
-                          } else if (spentPct < 100) {
+                          } else if (spentPct > 100) {
+                            const overAmount = status.spent - status.limit;
+                            return (
+                              <View style={styles.velocityRow}>
+                                <View style={[styles.velocityDot, { backgroundColor: theme.danger }]} />
+                                <Text style={[styles.velocityText, { color: theme.danger, flex: 1 }]}>
+                                  Over budget by {formatCurrency(overAmount)}
+                                </Text>
+                                <TouchableOpacity
+                                  style={[styles.healBtn, { backgroundColor: theme.danger + '18' }]}
+                                  onPress={() => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                    setRebalanceTarget({ category: item.category, amount: overAmount });
+                                    setShowRebalanceModal(true);
+                                  }}
+                                >
+                                  <Text style={[styles.healBtnText, { color: theme.danger }]}>Rebalance</Text>
+                                </TouchableOpacity>
+                              </View>
+                            );
+                          } else {
                             const remaining = status.limit - status.spent;
                             const perDay = remaining / daysLeft;
                             return (
@@ -927,6 +962,17 @@ export default function Dashboard() {
           <Ionicons name="add" size={26} color="#fff" />
         </TouchableOpacity>
       )}
+      {rebalanceTarget && (
+        <RebalanceModal
+          visible={showRebalanceModal}
+          onClose={() => setShowRebalanceModal(false)}
+          overspentCategory={rebalanceTarget.category}
+          overspentAmount={rebalanceTarget.amount}
+          budgets={budgets}
+          getBudgetStatus={getBudgetStatus}
+          onRebalance={(from: string, amt: number) => rebalanceBudgets(from, rebalanceTarget.category, amt)}
+        />
+      )}
     </>
   );
 }
@@ -1199,6 +1245,16 @@ const styles = StyleSheet.create({
   velocityText: {
     fontSize: 12,
     fontWeight: '500',
+  },
+  healBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    marginLeft: 8,
+  },
+  healBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
   },
   billsBreakdown: {
     marginTop: 12,
