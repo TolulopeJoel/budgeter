@@ -52,11 +52,30 @@ export const NeoButton = ({
     disabled
 }: NeoButtonProps) => {
     const theme = Colors.light;
-    const bg = backgroundColor || theme.primary;
+
+    // Determine background color based on state
+    const targetBg = backgroundColor || theme.primary;
+    const bg = disabled ? theme.borderLight : targetBg;
+
+    // Helper to determine if text should be dark or light based on background brightness
+    const getTextColor = (hexColor: string) => {
+        if (disabled) return theme.textMuted;
+
+        const color = hexColor.replace('#', '');
+        if (color.length !== 6) return '#fff';
+
+        const r = parseInt(color.substring(0, 2), 16);
+        const g = parseInt(color.substring(2, 4), 16);
+        const b = parseInt(color.substring(4, 6), 16);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+        return brightness > 180 ? theme.text : '#fff';
+    };
 
     const animatedValue = React.useRef(new Animated.Value(1)).current;
 
     const onPressIn = () => {
+        if (disabled) return;
         Animated.spring(animatedValue, {
             toValue: 0.97,
             useNativeDriver: true,
@@ -66,6 +85,7 @@ export const NeoButton = ({
     };
 
     const onPressOut = () => {
+        if (disabled) return;
         Animated.spring(animatedValue, {
             toValue: 1,
             useNativeDriver: true,
@@ -87,11 +107,17 @@ export const NeoButton = ({
                 {
                     backgroundColor: bg,
                     transform: [{ scale: animatedValue }],
-                    opacity: disabled ? 0.5 : 1,
+                    // Removed dynamic opacity layout to prevent washed out text visibility
                 },
                 SharedStyles.softShadow,
             ]}>
-                <Text style={[styles.buttonText, textStyle]}>{title}</Text>
+                <Text style={[
+                    styles.buttonText,
+                    { color: getTextColor(targetBg) },
+                    textStyle
+                ]}>
+                    {title}
+                </Text>
             </Animated.View>
         </Pressable>
     );
@@ -193,7 +219,6 @@ const styles = StyleSheet.create({
     buttonText: {
         fontWeight: '700',
         fontSize: 16,
-        color: '#fff',
         letterSpacing: 0.3,
     },
     input: {
