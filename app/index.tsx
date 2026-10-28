@@ -13,7 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { Link } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Dashboard() {
@@ -55,6 +55,8 @@ export default function Dashboard() {
     toggleBudgetsPrivacy,
     toggleHistoryPrivacy,
     rebalanceBudgets,
+    exportData,
+    importData,
   } = useBudget();
 
   const insets = useSafeAreaInsets();
@@ -204,6 +206,24 @@ export default function Dashboard() {
       console.error('Error exporting CSV:', error);
       alert('Failed to export CSV. Please try again.');
     }
+  };
+
+  const handleImportBackup = () => {
+    Alert.alert(
+      "Import Backup",
+      "This will replace all your current data with the data from the backup file. This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Import",
+          style: "destructive",
+          onPress: async () => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            await importData();
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -755,6 +775,23 @@ export default function Dashboard() {
               >
                 <Ionicons name="share-outline" size={16} color={theme.tint} />
                 <Text style={[styles.exportBtnText, { color: theme.tint }]}>CSV</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  exportData();
+                }}
+                style={[styles.exportBtn, { backgroundColor: theme.primarySoft }]}
+              >
+                <Ionicons name="cloud-upload-outline" size={16} color={theme.tint} />
+                <Text style={[styles.exportBtnText, { color: theme.tint }]}>Backup</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleImportBackup}
+                style={[styles.exportBtn, { backgroundColor: theme.primarySoft }]}
+              >
+                <Ionicons name="cloud-download-outline" size={16} color={theme.tint} />
+                <Text style={[styles.exportBtnText, { color: theme.tint }]}>Restore</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {

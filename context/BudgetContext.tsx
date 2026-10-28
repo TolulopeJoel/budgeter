@@ -1,4 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 // Types
@@ -125,6 +128,10 @@ export interface BudgetContextType {
     toggleMainCardPrivacy: () => Promise<void>;
     toggleBudgetsPrivacy: () => Promise<void>;
     toggleHistoryPrivacy: () => Promise<void>;
+
+    // Backup & Restore
+    exportData: () => Promise<void>;
+    importData: () => Promise<void>;
 
     loading: boolean;
 }
@@ -1055,6 +1062,106 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             .reduce((acc, t) => acc + t.amount, 0);
     };
 
+    const exportData = async () => {
+        try {
+            const keys = [
+                '@budgeter_transactions',
+                '@budgeter_categories',
+                '@budgeter_budgets',
+                '@budgeter_budgets_by_month',
+                '@budgeter_recurring_bills',
+                '@budgeter_recurring_bills_by_month',
+                '@budgeter_current_period',
+                '@budgeter_savings_transactions',
+                '@budgeter_monthly_savings_goal',
+                '@budgeter_savings_goals_by_month',
+                '@budgeter_initial_balance',
+                '@budgeter_user_pin',
+                '@budgeter_privacy_main',
+                '@budgeter_privacy_budgets',
+                '@budgeter_privacy_history',
+            ];
+
+            const allData: Record<string, string | null> = {};
+            const values = await Promise.all(keys.map(key => AsyncStorage.getItem(key)));
+
+            keys.forEach((key, index) => {
+                allData[key] = values[index];
+            });
+
+            const backup = {
+                version: '1.0',
+                timestamp: new Date().toISOString(),
+                data: allData,
+            };
+
+            const backupString = JSON.stringify(backup, null, 2);
+            const fileName = `budgeter_backup_${new Date().toISOString().split('T')[0]}.json`;
+            const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+
+            await FileSystem.writeAsStringAsync(fileUri, backupString, { encoding: FileSystem.EncodingType.UTF8 });
+
+            if (await Sharing.isAvailableAsync()) {
+                await Sharing.shareAsync(fileUri, {
+                    mimeType: 'application/json',
+                    dialogTitle: 'Export Budgeter Backup',
+                    UTI: 'public.json',
+                });
+            } else {
+                alert('Sharing is not available on this device');
+            }
+        } catch (error) {
+            console.error('Export failed:', error);
+            alert('Export failed. Please try again.');
+        }
+    };
+
+    const importData = async () => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: 'application/json',
+                copyToCacheDirectory: true,
+            });
+
+            if (result.canceled) return;
+
+            const fileUri = result.assets[0].uri;
+            const content = await FileSystem.readAsStringAsync(fileUri);
+            const backup = JSON.parse(content);
+
+            // Validation
+            if (!backup.data || typeof backup.data !== 'object') {
+                throw new Error('Invalid backup file format');
+            }
+
+            const data = backup.data;
+            const keysToRestore = Object.keys(data);
+
+            if (keysToRestore.length === 0) {
+                throw new Error('Backup file is empty');
+            }
+
+            // Restore data to AsyncStorage
+            await Promise.all(
+                keysToRestore.map(async (key) => {
+                    const value = data[key];
+                    if (value === null) {
+                        await AsyncStorage.removeItem(key);
+                    } else {
+                        await AsyncStorage.setItem(key, value);
+                    }
+                })
+            );
+
+            // Reload all data into state
+            await loadData();
+            alert('Import successful! Your data has been restored.');
+        } catch (error) {
+            console.error('Import failed:', error);
+            alert('Import failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+        }
+    };
+
     return (
         <BudgetContext.Provider
             value={{
@@ -1122,6 +1229,9 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 toggleMainCardPrivacy,
                 toggleBudgetsPrivacy,
                 toggleHistoryPrivacy,
+
+                exportData,
+                importData,
             }}
         >
             {children}
